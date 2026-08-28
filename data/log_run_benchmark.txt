@@ -1,0 +1,36 @@
+[MF chiN=100 gaussian] 0.8 s
+[MF chiN=100 voigt] 55.6 s
+[MF chiN=100 lorentzian] 176.6 s
+[cumulant chiN=100] 156.1 s
+chiN/2pi=0.1 kHz gaussian   T_1/e = 110 us
+chiN/2pi=0.1 kHz voigt      T_1/e = 100 us
+chiN/2pi=0.1 kHz lorentzian T_1/e = 70 us
+[MF chiN=700 gaussian] 0.7 s
+[MF chiN=700 voigt] 54.2 s
+[MF chiN=700 lorentzian] 179.0 s
+[cumulant chiN=700] 160.2 s
+chiN/2pi=0.7 kHz gaussian   T_1/e = 110 us
+chiN/2pi=0.7 kHz voigt      T_1/e = 100 us
+chiN/2pi=0.7 kHz lorentzian T_1/e = 70 us
+[MF chiN=2000 gaussian] 0.9 s
+[MF chiN=2000 voigt] 54.9 s
+[MF chiN=2000 lorentzian] 176.7 s
+[cumulant chiN=2000] 167.3 s
+chiN/2pi=2.0 kHz gaussian   T_1/e = 120 us
+chiN/2pi=2.0 kHz voigt      T_1/e = 110 us
+chiN/2pi=2.0 kHz lorentzian T_1/e = 70 us
+[MF chiN=4000 gaussian] 0.8 s
+[MF chiN=4000 voigt] 52.7 s
+[MF chiN=4000 lorentzian] 170.6 s
+[cumulant chiN=4000] 144.8 s
+chiN/2pi=4.0 kHz gaussian   T_1/e = 5000 us
+chiN/2pi=4.0 kHz voigt      T_1/e = 4800 us
+chiN/2pi=4.0 kHz lorentzian T_1/e = 80 us
+[MF chiN=7000 gaussian] 1.1 s
+[MF chiN=7000 voigt] 49.7 s
+[MF chiN=7000 lorentzian] 171.0 s
+[cumulant chiN=7000] 151.0 s
+chiN/2pi=7.0 kHz gaussian   T_1/e = 2740 us
+chiN/2pi=7.0 kHz voigt      T_1/e = 2730 us
+chiN/2pi=7.0 kHz lorentzian T_1/e = 2780 us
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/benchmark.npz
