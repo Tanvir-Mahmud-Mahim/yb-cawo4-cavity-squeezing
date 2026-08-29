@@ -43,7 +43,12 @@ python run_scaling.py      # Fig. 5 data
 python run_designmap.py    # Fig. 6 data
 python run_inhomog.py      # Fig. 7(a) data
 python run_readout.py      # Fig. 7(b,c) data
-python make_figures.py     # all figures -> figures/
+python make_figures.py        # data figures (Figs. 2 to 7) -> figures/
+python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_device.*
+
+# Figures use the Times New Roman font. If it is not installed, Matplotlib falls back
+# to DejaVu Sans; install the font (for example from a Windows machine, C:\Windows\Fonts)
+# into ~/.fonts and clear ~/.cache/matplotlib to reproduce the published look.
 python extract_numbers.py  # every number quoted in the paper -> data/numbers.json
 ```
 `run_all.sh` chains the data scripts (about 6 hours on two cores; set
