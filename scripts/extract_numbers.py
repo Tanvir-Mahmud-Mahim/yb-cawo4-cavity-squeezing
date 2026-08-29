@@ -18,6 +18,7 @@ if b is not None:
         con = b[f"mf_voigt_{c}"]
         idx = np.where(con < np.exp(-1))[0]
         num[f"T1E_{c//1000}"] = round(float(t[idx[0]] * 1e3), 2) if len(idx) else None
+        num[f"T1E_{c//1000}B"] = round(float(t[idx[0]] * 1e3), 1) if len(idx) else None
     tc = b["cum_t"]
     m = tc <= 3.0e-3
     num["ANTISQ_7"] = round(first_dB(np.interp(3e-3, tc, b["cum_varmax_7000"])), 1)
@@ -61,6 +62,7 @@ if d is not None and "a_xi_homogeneous_echo" in d:
                 num[f"LG_AT22{tag}"] = round(first_dB(np.min(r22[:, 3])), 1)
             num[f"LG_DELTA_TABLE{tag}"] = sorted([[float(a / 1e6), round(first_dB(x), 1)] for a, x in zip(r[:, 1], r[:, 3])])
         num["LG_GAIN"] = round(num["LG_AT22"] - num["LG_BEST"], 1)
+        num["LG_AT22_ABS"] = abs(num["LG_AT22"])
         num["LG_GAIN2"] = round(num["LG_AT222"] - num["LG_BEST2"], 1)
     if "c_rows" in d:
         rows = d["c_rows"]

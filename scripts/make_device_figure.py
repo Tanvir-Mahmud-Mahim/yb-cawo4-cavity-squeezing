@@ -1,4 +1,4 @@
-"""Figure 1: three-dimensional device schematics and pulse sequences.
+"""Figure 1: three-dimensional device schematics.
 
 Panel (a) follows the system overview of Fukumori et al. (arXiv:2604.26909,
 Fig. 1a): a metal block with a central loop (rectangular pocket) that holds the
@@ -6,11 +6,13 @@ crystal, two circular outer loops on either side connected to it by narrow gaps,
 the optical beam through the crystal along the loop axis, and microwave
 antennas at the outer loops.  Every number written on the figure is taken from
 that paper (crystal 4.4 x 4.6 x 5 mm, 4.96 ppm 171Yb, 973 nm, kappa/2pi = 660 kHz,
-Delta/2pi = 22 MHz, g/2pi = 15 mHz, V_m = 275 mm^3, base temperature < 30 mK,
-spin temperature 80 mK).  Exact proportions of the block are schematic.  Panel (b) is the planar superconducting
-resonator considered in the design map (a proposal, not a fabricated device).
-Panel (c) shows the two pulse sequences used in the paper.
+g/2pi = 15 mHz, V_m = 275 mm^3, base temperature < 30 mK, spin temperature 80 mK).
+Exact proportions of the block are schematic.  Panel (b) is a magnified crystal
+showing the four processes kept in the model.  Panel (c) is the planar
+superconducting resonator considered in the design map (a proposal, not a
+fabricated device).
 """
+
 from common import *  # noqa
 import matplotlib
 
