@@ -63,6 +63,8 @@ if d is not None and "a_xi_homogeneous_echo" in d:
             num[f"LG_DELTA_TABLE{tag}"] = sorted([[float(a / 1e6), round(first_dB(x), 1)] for a, x in zip(r[:, 1], r[:, 3])])
         num["LG_GAIN"] = round(num["LG_AT22"] - num["LG_BEST"], 1)
         num["LG_AT22_ABS"] = abs(num["LG_AT22"])
+    if "LG_LOR_NOECHO" in num:
+        num["LG_LOR_NOECHO_ABS"] = abs(num["LG_LOR_NOECHO"])
         num["LG_GAIN2"] = round(num["LG_AT222"] - num["LG_BEST2"], 1)
     if "c_rows" in d:
         rows = d["c_rows"]
