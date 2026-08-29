@@ -43,18 +43,22 @@ python run_scaling.py      # Fig. 5 data
 python run_designmap.py    # Fig. 6 data
 python run_inhomog.py      # Fig. 7(a) data
 python run_readout.py      # Fig. 7(b,c) data
-python make_figures.py        # data figures (Figs. 2 to 7) -> figures/
+python run_elimination.py  # Fig. 8(a) data: resonator kept as a quantum mode, no rotating-wave approximation
+python run_reversal.py     # Fig. 8(b) data: ring-down at the detuning reversal of the twist-untwist readout
+python run_robustness.py   # Fig. 8(c,d) data: line shape, T2, finite and imperfect pulses
+python hyperfine_levels.py # zero-field hyperfine levels and Sz/Sx matrix elements -> data/hyperfine_levels.json
+python make_figures.py        # data figures (Figs. 2 to 8) -> figures/
 python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_device.*
 
 # Figures use the Times New Roman font. If it is not installed, Matplotlib falls back
 # to DejaVu Sans; install the font (for example from a Windows machine, C:\Windows\Fonts)
 # into ~/.fonts and clear ~/.cache/matplotlib to reproduce the published look.
-python extract_numbers.py  # every number quoted in the paper -> data/numbers.json
+python extract_numbers.py  # every number quoted in the paper and supplement -> data/numbers.json
 ```
 `run_all.sh` chains the data scripts (about 6 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22148969 (all versions; v1.1.0: https://doi.org/10.5281/zenodo.22157408)
+https://doi.org/10.5281/zenodo.22148969 (all versions; v1.2.0: https://doi.org/10.5281/zenodo.22163998)
 
 ## Minimal example
 
