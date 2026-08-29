@@ -1,11 +1,13 @@
 """Figure 1: three-dimensional device schematics and pulse sequences.
 
-Panel (a) is a cutaway of the loop-gap resonator experiment of Fukumori et al.
-(arXiv:2604.26909): every dimension and parameter written on the figure is taken
-from that paper (crystal 4.4 x 4.6 x 5 mm, 4.96 ppm 171Yb, 973 nm optical beam,
-kappa/2pi = 660 kHz, Delta/2pi = 22 MHz, g/2pi = 15 mHz, V_m = 275 mm^3,
-mixing-chamber base temperature < 30 mK, spin temperature 80 mK).  The shape of
-the resonator body is schematic.  Panel (b) is the planar superconducting
+Panel (a) follows the system overview of Fukumori et al. (arXiv:2604.26909,
+Fig. 1a): a metal block with a central loop (rectangular pocket) that holds the
+crystal, two circular outer loops on either side connected to it by narrow gaps,
+the optical beam through the crystal along the loop axis, and microwave
+antennas at the outer loops.  Every number written on the figure is taken from
+that paper (crystal 4.4 x 4.6 x 5 mm, 4.96 ppm 171Yb, 973 nm, kappa/2pi = 660 kHz,
+Delta/2pi = 22 MHz, g/2pi = 15 mHz, V_m = 275 mm^3, base temperature < 30 mK,
+spin temperature 80 mK).  Exact proportions of the block are schematic.  Panel (b) is the planar superconducting
 resonator considered in the design map (a proposal, not a fabricated device).
 Panel (c) shows the two pulse sequences used in the paper.
 """
@@ -106,6 +108,10 @@ def cylinder_wall(scene, axis, centre, r, a0, a1, th0, th1, colour, n=28, inner=
             def P(a, t):
                 return [a, centre[0] + r * np.cos(t), centre[1] + r * np.sin(t)]
             nrm = np.array([0, np.cos(tm), np.sin(tm)])
+        elif axis == "y":
+            def P(a, t):
+                return [centre[0] + r * np.cos(t), a, centre[1] + r * np.sin(t)]
+            nrm = np.array([np.cos(tm), 0, np.sin(tm)])
         else:
             def P(a, t):
                 return [centre[0] + r * np.cos(t), centre[1] + r * np.sin(t), a]
@@ -158,76 +164,83 @@ def wavy(fig, p0, p1, colour, n=7, amp=0.006, lw=1.0, arrow=True):
 
 
 # ---------------------------------------------------------------------------
+def keyhole_rect_with_circle(x0, x1, z0, z1, y, cx, cz, r, n=36):
+    """Front-face band (plane y = const) with a circular hole, as one polygon
+    (the hole is reached through a zero-width slit from the top edge)."""
+    th = np.linspace(np.pi / 2, np.pi / 2 + 2 * np.pi, n + 1)
+    pts = [[x0, y, z1], [cx, y, z1]]
+    pts += [[cx + r * np.cos(t), y, cz + r * np.sin(t)] for t in th]
+    pts += [[cx, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0]]
+    return pts
+
+
 def loop_gap_scene():
-    """Cutaway of the loop-gap resonator (front half, y < 0, removed).
-    Returns a list of (scene, zorder) drawn back to front."""
+    """Loop-gap resonator after Fukumori et al., Fig. 1a: block with a central
+    rectangular loop (crystal pocket), two circular outer loops and thin gaps,
+    all running through the block along y.  Returns [(scene, zorder), ...]."""
     out = []
-    X0, X1, Y0, Y1, Z0, Z1 = -12, 12, 0, 8, 0, 26
-    rc, ro, g = 3.6, 2.2, 0.5          # central loop, outer loops, gap width (mm)
-    zc, zo1, zo2 = 13.0, 4.0, 22.0     # loop centres along z (bore axis along x)
+    X0, X1, Y0, Y1, Z0, Z1 = -17, 17, 0, 12, 0, 20   # block (mm, schematic)
+    zc = 10.0                                         # loop axis height
+    wx, wz = 6.0, 7.0                                 # central pocket half-widths (x, z)
+    ro, xo = 3.0, 12.0                                # outer loops: radius, |x| of centre
+    gh = 0.35                                         # gap half-height
     # 1) plate
     S = Scene()
-    S.box(-24, 24, -14, 16, -2.0, 0.0, PLATE, faces=["top", "front", "left", "right"])
+    S.box(-26, 26, -16, 18, -2.0, 0.0, PLATE, faces=["top", "front", "left", "right"])
     out.append((S, 1))
-    # 2) resonator body: far parts first (back, bottom, left end, inner walls)
+    # 2) block far parts: back, bottom, left end, inner walls of the openings
     S = Scene()
-    S.box(X0, X1, Y0, Y1, Z0, Z1, CU, faces=["back", "bottom"])
-    Snear = Scene()
-    Snear.box(X0, X1, Y0, Y1, Z0, Z1, CU, faces=["top"])
-    for xe, sign in [(X0, -1), (X1, 1)]:
-        th = np.linspace(np.pi / 2, 3 * np.pi / 2, 24)
-        pts = [[xe, Y0, Z0], [xe, Y0, zo1 - ro]]
-        pts += [[xe, ro * np.cos(t) * -1, zo1 + ro * np.sin(t)] for t in th[::-1]]
-        pts += [[xe, Y0, zo1 + ro], [xe, Y0, zc - rc]]
-        pts += [[xe, rc * np.cos(t) * -1, zc + rc * np.sin(t)] for t in th[::-1]]
-        pts += [[xe, Y0, zc + rc], [xe, Y0, zo2 - ro]]
-        pts += [[xe, ro * np.cos(t) * -1, zo2 + ro * np.sin(t)] for t in th[::-1]]
-        pts += [[xe, Y0, zo2 + ro], [xe, Y0, Z1], [xe, Y1, Z1], [xe, Y1, Z0]]
-        (S if sign < 0 else Snear).add(pts, CU, normal=[sign, 0, 0])
-    # inner walls of the three loops (half cylinders on the y >= 0 side)
-    for (zz, rr) in [(zc, rc), (zo1, ro), (zo2, ro)]:
-        cylinder_wall(S, "x", (0, zz), rr, X0, X1, 0, np.pi, CU_DARK, n=30, inner=True)
+    S.box(X0, X1, Y0, Y1, Z0, Z1, CU, faces=["back", "bottom", "left"])
+    for xc in (-xo, xo):
+        cylinder_wall(S, "y", (xc, zc), ro, Y0, Y1, 0, 2 * np.pi, CU_DARK, n=36, inner=True)
+    # walls of the rectangular pocket
+    for poly, nrm in [
+        ([[-wx, Y0, zc - wz], [wx, Y0, zc - wz], [wx, Y1, zc - wz], [-wx, Y1, zc - wz]], [0, 0, 1]),   # floor
+        ([[-wx, Y0, zc + wz], [wx, Y0, zc + wz], [wx, Y1, zc + wz], [-wx, Y1, zc + wz]], [0, 0, -1]),  # ceiling
+        ([[-wx, Y0, zc - wz], [-wx, Y1, zc - wz], [-wx, Y1, zc + wz], [-wx, Y0, zc + wz]], [1, 0, 0]),  # left wall
+        ([[wx, Y0, zc - wz], [wx, Y1, zc - wz], [wx, Y1, zc + wz], [wx, Y0, zc + wz]], [-1, 0, 0]),     # right wall
+    ]:
+        S.add(poly, CU_DARK, normal=nrm)
+    # gap slots: thin channels through the block between the pocket and each loop
+    for xa, xb in [(-xo + ro, -wx), (wx, xo - ro)]:
+        S.add([[xa, Y0, zc - gh], [xb, Y0, zc - gh], [xb, Y1, zc - gh], [xa, Y1, zc - gh]], CU_DARK * 0.7, normal=[0, 0, 1])
+        S.add([[xa, Y0, zc + gh], [xb, Y0, zc + gh], [xb, Y1, zc + gh], [xa, Y1, zc + gh]], CU_DARK * 0.7, normal=[0, 0, -1])
     out.append((S, 2))
-    # near parts: cut face (y = 0) between the openings with the two gap slots, top, right end, ports
-    S = Snear
-    pieces = [(Z0, zo1 - ro), (zo1 + ro, zc - rc), (zc + rc, zo2 - ro), (zo2 + ro, Z1)]
-    for (za, zb) in pieces:
-        zg = 0.5 * (za + zb)
-        if (za, zb) in [pieces[1], pieces[2]]:
-            for (a, b) in [(za, zg - g / 2), (zg + g / 2, zb)]:
-                S.add([[X0, 0, a], [X1, 0, a], [X1, 0, b], [X0, 0, b]], CU_LIGHT, normal=[0, -1, 0])
-            S.add([[X0, g, zg - g / 2], [X1, g, zg - g / 2], [X1, g, zg + g / 2], [X0, g, zg + g / 2]], CU_DARK * 0.8, normal=[0, -1, 0])
-        else:
-            S.add([[X0, 0, za], [X1, 0, za], [X1, 0, zb], [X0, 0, zb]], CU_LIGHT, normal=[0, -1, 0])
-    # SMA ports on the top face feeding the top outer loop (placement illustrative)
-    for xx in [-6.0, 6.0]:
-        cylinder_wall(S, "z", (xx, 4.0), 1.3, Z1, Z1 + 2.6, 0, 2 * np.pi, np.array([0.75, 0.75, 0.78]), n=18, inner=False)
-        disc(S, "z", (xx, 4.0), 1.3, Z1 + 2.6, np.array([0.80, 0.80, 0.83]), normal_sign=1)
-        cylinder_wall(S, "z", (xx, 4.0), 0.5, Z1 + 2.6, Z1 + 5.0, 0, 2 * np.pi, np.array([0.55, 0.55, 0.58]), n=12, inner=False)
-    out.append((S, 2.5))
-    # 3) crystal (a x a x c = 4.4 x 4.6 x 5 mm; c-axis along the bore)
+    # 3) crystal inside the pocket: a x a x c = 4.4 x 4.6 x 5 mm, c axis along y (beam)
     S = Scene()
-    cz = zc
-    S.box(-2.5, 2.5, -2.3, 2.3, cz - 2.2, cz + 2.2, CRYSTAL, edge=CRYSTAL_EDGE, lw=0.5, alpha=0.55)
+    cy = 0.5 * (Y0 + Y1)
+    S.box(-2.2, 2.2, cy - 2.5, cy + 2.5, zc - 2.3, zc + 2.3, CRYSTAL, edge=CRYSTAL_EDGE, lw=0.5, alpha=0.6)
     out.append((S, 3))
-    # 4) beam and collimators
+    # 4) front face with the three openings and the gap slits, top and right faces
     S = Scene()
-    cylinder_wall(S, "x", (0, cz), 0.35, -30, 30, 0, 2 * np.pi, np.array([0.85, 0.05, 0.15]), n=14, inner=False, alpha=0.9)
-    for xa, xb in [(-34, -30), (30, 34)]:
-        cylinder_wall(S, "x", (0, cz), 1.6, xa, xb, 0, 2 * np.pi, np.array([0.55, 0.55, 0.58]), n=18, inner=False)
-        disc(S, "x", (0, cz), 1.6, xa if xa < 0 else xb, np.array([0.55, 0.55, 0.58]), normal_sign=-1 if xa < 0 else 1)
+    yf = Y0
+    S.add(keyhole_rect_with_circle(X0, -wx, Z0, Z1, yf, -xo, zc, ro), CU, normal=[0, -1, 0])
+    S.add(keyhole_rect_with_circle(wx, X1, Z0, Z1, yf, xo, zc, ro), CU, normal=[0, -1, 0])
+    S.add([[-wx, yf, Z0], [wx, yf, Z0], [wx, yf, zc - wz], [-wx, yf, zc - wz]], CU, normal=[0, -1, 0])
+    S.add([[-wx, yf, zc + wz], [wx, yf, zc + wz], [wx, yf, Z1], [-wx, yf, Z1]], CU, normal=[0, -1, 0])
+    for xa, xb in [(-xo + ro, -wx), (wx, xo - ro)]:
+        S.add([[xa, yf - 0.02, zc - gh], [xb, yf - 0.02, zc - gh], [xb, yf - 0.02, zc + gh], [xa, yf - 0.02, zc + gh]], CU_DARK * 0.5, flat=True)
+    S.box(X0, X1, Y0, Y1, Z0, Z1, CU, faces=["top", "right"])
     out.append((S, 4))
-    return out, dict(zc=zc, zo1=zo1, zo2=zo2, rc=rc, ro=ro, X0=X0, X1=X1, Y1=Y1, Z1=Z1)
+    # 5) optical beam along y: behind the block (occluded by it), inside the pocket
+    #    (seen through the front opening) and in front of the block
+    beam = np.array([0.85, 0.05, 0.15])
+    S = Scene()
+    cylinder_wall(S, "y", (0, zc), 0.35, Y1 + 0.05, 32, 0, 2 * np.pi, beam, n=14, inner=False, alpha=0.9)
+    out.append((S, 1.5))
+    S = Scene()
+    cylinder_wall(S, "y", (0, zc), 0.35, Y0, Y1, 0, 2 * np.pi, beam, n=14, inner=False, alpha=0.9)
+    out.append((S, 3.5))
+    S = Scene()
+    cylinder_wall(S, "y", (0, zc), 0.35, -22, Y0 - 0.05, 0, 2 * np.pi, beam, n=14, inner=False, alpha=0.9)
+    out.append((S, 5))
+    return out, dict(zc=zc, xo=xo, ro=ro, wx=wx, wz=wz, X0=X0, X1=X1, Y0=Y0, Y1=Y1, Z1=Z1)
 
 
 def sc_scene():
-    """Planar superconducting resonator on a thin CaWO4 chip (proposed)."""
+    """Planar superconducting resonator on a thin CaWO4 chip (proposed, not built)."""
     S = Scene()
-    # chip 6 x 6 x 0.5 mm scaled: x,y in [-3,3], z in [0,0.5]
     S.box(-3, 3, -3, 3, 0, 0.5, CRYSTAL, edge=CRYSTAL_EDGE, lw=0.4, alpha=0.75, faces=["top", "front", "right", "left", "back"])
-    # gold back reflector under the chip
-    S.box(-3, 3, -3, 3, -0.06, 0, PLATE, faces=["front", "right"])
-    # niobium film: two capacitor pads and a meander inductor between them
     t = 0.5 + 0.02
     S.box(-2.7, -1.7, -2.4, 2.4, 0.5, t, NB, faces=["top", "front", "right"])
     S.box(1.7, 2.7, -2.4, 2.4, 0.5, t, NB, faces=["top", "front", "left"])
@@ -238,131 +251,154 @@ def sc_scene():
         if k < len(ys) - 1:
             xa = 1.7 - w if k % 2 == 0 else -1.7
             S.box(xa, xa + w, yy, ys[k + 1], 0.5, t, NB, faces=["top", "front"])
-    # spins inside the chip below the inductor (arrow glyphs are added in 2-D)
     return S
 
 
 def draw_spins_2d(fig, ax, pts3d, colour=ORANGE, size=0.008):
-    """Small up-arrows at 3-D positions, drawn in figure coordinates."""
     for p in pts3d:
         d = fig.transFigure.inverted().transform(p2d(ax, *p))
         fig.add_artist(FancyArrowPatch((d[0], d[1] - size), (d[0], d[1] + size), transform=fig.transFigure,
                                        arrowstyle="-|>", mutation_scale=4, lw=0.5, color=colour))
 
 
+def marker(fig, xy, num, colour="k", r=0.011, fs=6.0):
+    """Circled number placed at figure coordinates xy."""
+    fig.add_artist(matplotlib.patches.Circle(xy, r, transform=fig.transFigure, fc="white", ec=colour, lw=0.7, zorder=30))
+    fig.text(xy[0], xy[1], str(num), fontsize=fs, ha="center", va="center", color=colour, zorder=31, fontweight="bold")
+
+
+def marker3d(fig, ax, xyz, num, offset=(0.0, 0.0), colour="k"):
+    """Circled number next to a 3-D point, joined by a short leader if offset."""
+    p = fig.transFigure.inverted().transform(p2d(ax, *xyz))
+    q = (p[0] + offset[0], p[1] + offset[1])
+    if abs(offset[0]) + abs(offset[1]) > 0.012:
+        fig.add_artist(FancyArrowPatch(q, p, transform=fig.transFigure, arrowstyle="-", lw=0.6, color=colour, shrinkA=4, shrinkB=0, zorder=29))
+    marker(fig, q, num, colour=colour)
+    return q
+
+
+def text3d(fig, ax, xyz, txt, colour="k", fontsize=6.0, ha="center", va="center", rotation=0, **kw):
+    """Text placed directly on a 3-D point (for annotating a layer in place)."""
+    p = fig.transFigure.inverted().transform(p2d(ax, *xyz))
+    fig.text(p[0], p[1], txt, fontsize=fontsize, ha=ha, va=va, color=colour, rotation=rotation, zorder=32, **kw)
+
+
 # ---------------------------------------------------------------------------
 def make():
-    fig = plt.figure(figsize=(7.0, 5.6))
+    fig = plt.figure(figsize=(7.0, 3.9))
 
     # ---------------- (a) loop-gap resonator ----------------
-    ax = fig.add_axes([-0.03, 0.27, 0.62, 0.70], projection="3d")
+    ax = fig.add_axes([-0.03, 0.17, 0.65, 0.88], projection="3d")
     ax.computed_zorder = False
     scenes, G = loop_gap_scene()
     for S, zo in scenes:
         S.draw(ax, zorder=zo)
     ax.set_proj_type("ortho")
-    ax.view_init(elev=22, azim=-118)
-    ax.set_xlim(-24, 24)
-    ax.set_ylim(-16, 20)
-    ax.set_zlim(-4, 32)
-    ax.set_box_aspect((48, 36, 36))
+    ax.view_init(elev=18, azim=-112)
+    ax.set_xlim(-27, 27)
+    ax.set_ylim(-19, 20)
+    ax.set_zlim(-3, 22)
+    ax.set_box_aspect((54, 39, 25))
     ax.set_axis_off()
     fig.canvas.draw()
+    zc, xo, ro, wx, wz = G["zc"], G["xo"], G["ro"], G["wx"], G["wz"]
+    Y0, Y1, X0, X1, Z1 = G["Y0"], G["Y1"], G["X0"], G["X1"], G["Z1"]
 
-    zc = G["zc"]
-    c0 = fig.transFigure.inverted().transform(p2d(ax, 0, -2.3, zc))
+    fig.text(0.008, 0.985, "(a)", fontsize=9, fontweight="bold", va="top")
+    # in-layer annotations
+    text3d(fig, ax, (0, Y1, Z1 + 1.5), "loop-gap microwave resonator", colour="k", fontsize=6.4, va="bottom", fontweight="bold")
+    text3d(fig, ax, (0, 0.5 * (Y0 + Y1), Z1), r"$\kappa/2\pi = 660$ kHz, $V_{\rm m} = 275$ mm$^3$", colour="w", fontsize=5.6, va="center")
+    text3d(fig, ax, (0, -11, 0), "mixing-chamber plate of a dilution refrigerator, base temperature < 30 mK", colour="k", fontsize=6.0, va="center")
+    text3d(fig, ax, (0, Y0, zc - wz - 0.9), "central loop", colour="w", fontsize=5.4, va="top")
+    text3d(fig, ax, (-xo, Y0, zc - ro - 0.8), "outer loop", colour="w", fontsize=5.4, va="top")
+    text3d(fig, ax, (xo, Y0, zc - ro - 0.8), "outer loop", colour="w", fontsize=5.4, va="top")
+    text3d(fig, ax, (-(xo - ro + wx) / 2, Y0, zc - 1.4), "gap", colour="w", fontsize=5.2, va="top")
+    text3d(fig, ax, ((xo - ro + wx) / 2, Y0, zc - 1.4), "gap", colour="w", fontsize=5.2, va="top")
+    # numbered markers close to the components
+    marker3d(fig, ax, (0, Y0 - 0.5, zc - 0.5), 1, offset=(-0.045, -0.065))          # crystal
+    marker3d(fig, ax, (X0 + 3, Y0, Z1 - 2.5), 2, offset=(0.0, 0.0))                   # resonator
+    marker3d(fig, ax, (0, -20, zc), 3, offset=(0.0, -0.045), colour=RED)              # beam
+    marker3d(fig, ax, (xo, Y0 - 1, zc), 4, offset=(0.04, -0.05), colour=BLUE)         # microwave port
+    marker3d(fig, ax, (-xo, Y0 - 1, zc), 4, offset=(-0.045, -0.03), colour=BLUE)
+    marker3d(fig, ax, (23, -13, 0), 5, offset=(0.0, 0.0))                             # plate
+    # microwave I/O: wavy arrows into the outer loops (as in the source figure)
+    for xc, sgn in [(-xo, -1), (xo, 1)]:
+        p = fig.transFigure.inverted().transform(p2d(ax, xc, Y0 - 0.5, zc))
+        wavy(fig, (p[0] + sgn * 0.06, p[1] - 0.075), (p[0], p[1] - 0.008), BLUE, n=4, amp=0.004, lw=1.0)
     # process glyphs at the crystal
-    fig.add_artist(FancyArrowPatch((c0[0] - 0.035, c0[1] - 0.010), (c0[0] + 0.035, c0[1] + 0.010), transform=fig.transFigure,
-                                   arrowstyle="<|-|>", mutation_scale=8, lw=1.2, color=ORANGE, zorder=20))
-    wavy(fig, (c0[0] + 0.03, c0[1] + 0.035), (c0[0] + 0.115, c0[1] + 0.105), BLUE, n=5, lw=1.0)
-    wavy(fig, (c0[0] - 0.125, c0[1] + 0.10), (c0[0] - 0.04, c0[1] + 0.035), PINK, n=5, lw=1.0)
-    fig.add_artist(FancyArrowPatch((c0[0], c0[1] - 0.03), (c0[0], c0[1] - 0.075), transform=fig.transFigure,
-                                   arrowstyle="-|>", mutation_scale=7, lw=1.0, color=GREEN, zorder=20))
+    c0 = fig.transFigure.inverted().transform(p2d(ax, 0, Y0 - 0.5, zc + 1.0))
+    fig.add_artist(FancyArrowPatch((c0[0] - 0.03, c0[1] - 0.006), (c0[0] + 0.03, c0[1] + 0.006), transform=fig.transFigure,
+                                   arrowstyle="<|-|>", mutation_scale=7, lw=1.1, color=ORANGE, zorder=20))
+    wavy(fig, (c0[0] + 0.02, c0[1] + 0.03), (c0[0] + 0.075, c0[1] + 0.085), BLUE, n=4, amp=0.004, lw=0.9)
+    wavy(fig, (c0[0] - 0.085, c0[1] + 0.08), (c0[0] - 0.03, c0[1] + 0.03), PINK, n=4, amp=0.004, lw=0.9)
+    fig.add_artist(FancyArrowPatch((c0[0] + 0.012, c0[1] - 0.02), (c0[0] + 0.012, c0[1] - 0.055), transform=fig.transFigure,
+                                   arrowstyle="-|>", mutation_scale=6, lw=0.9, color=GREEN, zorder=20))
 
-    fig.text(0.012, 0.985, "(a)", fontsize=9, fontweight="bold", va="top")
-    label3d(fig, ax, (17, 0, zc + 0.3), "973 nm pump and readout beam between two fibre\ncollimators (beam covers about 1% of the crystal face)",
-            (0.30, 0.965), colour=RED, ha="left", va="center", fontsize=6.2)
-    label3d(fig, ax, (0, -2.3, zc + 2.2), r"$^{171}$Yb$^{3+}$:CaWO$_4$ crystal, 4.4 $\times$ 4.6 $\times$ 5 mm",
-            (0.24, 0.905), colour=CRYSTAL_EDGE, ha="left", va="center", fontsize=6.4)
-    label3d(fig, ax, (-11, 4, G["Z1"]), "loop-gap microwave resonator\n(front half cut away)", (0.02, 0.80), colour="k", fontsize=6.4)
-    label3d(fig, ax, (6.0, 4.0, G["Z1"] + 5.0), "microwave ports: spin drive and\ntransmission $S_{21}$ (calibrates $N_0$)", (0.40, 0.84), colour="k", fontsize=6.2)
-    label3d(fig, ax, (8, 2.5, G["zo2"] + 1.8), "outer loop", (0.50, 0.72), colour="k", fontsize=6.2)
-    label3d(fig, ax, (11.5, 0.3, zc - 6.0), "gap", (0.50, 0.50), colour="k", fontsize=6.2)
-    label3d(fig, ax, (8, 2.5, G["zo1"] - 1.6), "outer loop", (0.50, 0.42), colour="k", fontsize=6.2)
-    label3d(fig, ax, (-12, 0.0, zc - 3.4), "central loop\n(crystal glued at its centre)", (0.015, 0.47), colour="k", fontsize=6.2)
-    label3d(fig, ax, (22, -12, -1), "mixing-chamber plate, base temperature below 30 mK\n(measured spin temperature 80 mK)",
-            (0.34, 0.285), colour="k", fontsize=6.2, ha="left")
-
-    # ---------------- legend box (top right) ----------------
-    lx, ly, lw_, lh = 0.615, 0.485, 0.375, 0.50
-    fig.add_artist(FancyBboxPatch((lx, ly), lw_, lh, boxstyle="round,pad=0.006", transform=fig.transFigure, fc="#f5f5f5", ec="0.5", lw=0.6))
-    y = ly + lh - 0.022
-    fig.text(lx + 0.012, y, "Loop-gap device (as built):", fontsize=6.6, va="center", fontweight="bold")
-    entries = [
-        (CU, "square", "loop-gap resonator, $\\kappa/2\\pi = 660$ kHz"),
-        (CRYSTAL, "square", "$^{171}$Yb$^{3+}$:CaWO$_4$, 4.96 ppm $^{171}$Yb, $c$-cut faces"),
-        ("#d8101f", "line", "973 nm light: pumping into $|\\!\\downarrow\\rangle$, absorption readout"),
-        ((0.75, 0.75, 0.78), "square", "microwave ports and fibre collimators"),
-        (PLATE, "square", "mixing-chamber plate of a dilution refrigerator"),
+    # ---------------- key (right column, top) ----------------
+    lx, ly, lw_, lh = 0.605, 0.455, 0.39, 0.535
+    fig.add_artist(FancyBboxPatch((lx, ly), lw_, lh, boxstyle="round,pad=0.005", transform=fig.transFigure, fc="#f6f6f6", ec="0.5", lw=0.6))
+    y = ly + lh - 0.02
+    fig.text(lx + 0.01, y, "Key to (a), loop-gap device as built [Fukumori $et\\ al.$]:", fontsize=6.3, va="center", fontweight="bold")
+    y -= 0.006
+    items = [
+        (1, "k", "$^{171}$Yb$^{3+}$:CaWO$_4$ crystal, 4.4 $\\times$ 4.6 $\\times$ 5 mm, 4.96 ppm $^{171}$Yb,\nglued in the central loop, $c$ axis (polished faces) along the beam"),
+        (2, "k", "loop-gap resonator: central loop, two outer loops, narrow gaps;\n$\\kappa/2\\pi = 660$ kHz, $V_{\\rm m} = 275$ mm$^3$, $g/2\\pi = 15$ mHz"),
+        (3, RED, "973 nm optical I/O (fibre collimators): pumping into $|\\!\\downarrow\\rangle$, absorption\nreadout of $|\\!\\uparrow\\rangle$, $|\\!\\downarrow\\rangle$; the beam covers about 1% of the crystal face"),
+        (4, BLUE, "microwave I/O antennas at the outer loops: $\\pi/2$, $\\pi$ pulses;\ntransmission $S_{21}$ calibrates $N_0$"),
+        (5, "k", "mixing-chamber plate, base < 30 mK; spin temperature 80 mK"),
     ]
-    y -= 0.036
-    for col, kind, txt in entries:
-        if kind == "square":
-            fig.add_artist(Rectangle((lx + 0.015, y - 0.010), 0.022, 0.020, transform=fig.transFigure, fc=col, ec="0.3", lw=0.4))
-        else:
-            fig.add_artist(FancyArrowPatch((lx + 0.015, y), (lx + 0.037, y), transform=fig.transFigure, arrowstyle="-", lw=1.5, color=col))
-        fig.text(lx + 0.046, y, txt, fontsize=6.1, va="center")
-        y -= 0.033
-    y -= 0.004
-    fig.text(lx + 0.012, y, "Parameters:", fontsize=6.6, va="center", fontweight="bold")
-    y -= 0.030
-    pars = ["$\\omega_s/2\\pi = 3.084$ GHz, $\\gamma_{\\rm inh}/2\\pi < 5$ kHz, $T_2 > 150$ ms",
-            "$g/2\\pi = 15$ mHz, $V_{\\rm m} = 275$ mm$^3$ (simulated), $N_0 \\leq 7\\times10^{14}$",
-            "$\\Delta/2\\pi = 22$ MHz, $2\\Delta/\\kappa = 67$, $n_{\\rm th} = 0.19$ at 80 mK",
-            "model values: $\\gamma_{\\rm inh}/2\\pi = 5$ kHz, $T_2 = 150$ ms"]
-    for txt in pars:
-        fig.text(lx + 0.015, y, txt, fontsize=6.1, va="center")
-        y -= 0.027
-    y -= 0.002
-    fig.text(lx + 0.012, y, "Processes in the model:", fontsize=6.6, va="center", fontweight="bold")
-    y -= 0.032
+    y -= 0.03
+    for num, col, txt in items:
+        marker(fig, (lx + 0.022, y), num, colour=col)
+        fig.text(lx + 0.04, y, txt, fontsize=5.5, va="center", linespacing=1.15)
+        y -= 0.056 if "\n" in txt else 0.036
+    y += 0.006
+    fig.text(lx + 0.01, y, "Spin and operating parameters:", fontsize=6.3, va="center", fontweight="bold")
+    y -= 0.026
+    for txt in ["$\\omega_s/2\\pi = 3.084$ GHz (zero-field clock transition), $\\gamma_{\\rm inh}/2\\pi < 5$ kHz, $T_2 > 150$ ms",
+                "$\\Delta/2\\pi = 22$ MHz, $2\\Delta/\\kappa = 67$, $N_0 \\leq 7\\times10^{14}$, $n_{\\rm th} = 0.19$ at 80 mK",
+                "model uses $\\gamma_{\\rm inh}/2\\pi = 5$ kHz (Voigt, 30% Lorentzian) and $T_2 = 150$ ms"]:
+        fig.text(lx + 0.012, y, txt, fontsize=5.5, va="center")
+        y -= 0.026
+    y += 0.004
+    fig.text(lx + 0.01, y, "Processes kept in the model (glyphs at the crystal):", fontsize=6.3, va="center", fontweight="bold")
+    y -= 0.026
     procs = [
-        (ORANGE, "<|-|>", "cavity-mediated one-axis twisting, $\\chi\\,\\hat J_+\\hat J_-$"),
-        (BLUE, "wave", "collective emission through the cavity, $\\Gamma_{\\rm SR}$"),
-        (PINK, "wave", "thermal cavity photons, rate $\\Gamma_{\\rm SR}\\,n_{\\rm th}$"),
+        (ORANGE, "<|-|>", "one-axis twisting $\\chi\\,\\hat J_+\\hat J_-$ (cavity-mediated exchange)"),
+        (BLUE, "wave", "collective emission through the detuned cavity, $\\Gamma_{\\rm SR}$"),
+        (PINK, "wave", "thermal cavity photons absorbed collectively, $\\Gamma_{\\rm SR}\\,n_{\\rm th}$"),
         (GREEN, "-|>", "single-spin dephasing, $1/T_2$"),
     ]
     for col, kind, txt in procs:
         if kind == "wave":
-            wavy(fig, (lx + 0.015, y), (lx + 0.040, y), col, n=3, amp=0.004, lw=1.0)
+            wavy(fig, (lx + 0.012, y), (lx + 0.034, y), col, n=3, amp=0.0035, lw=0.9)
         else:
-            fig.add_artist(FancyArrowPatch((lx + 0.015, y), (lx + 0.040, y), transform=fig.transFigure, arrowstyle=kind, mutation_scale=7, lw=1.0, color=col))
-        fig.text(lx + 0.046, y, txt, fontsize=6.1, va="center")
-        y -= 0.032
+            fig.add_artist(FancyArrowPatch((lx + 0.012, y), (lx + 0.034, y), transform=fig.transFigure, arrowstyle=kind, mutation_scale=6, lw=0.9, color=col))
+        fig.text(lx + 0.04, y, txt, fontsize=5.5, va="center")
+        y -= 0.026
 
     # ---------------- level-structure inset (bottom left) ----------------
-    ix = fig.add_axes([0.015, 0.015, 0.30, 0.235])
+    ix = fig.add_axes([0.02, 0.01, 0.27, 0.20])
     ix.set_xlim(0, 10)
     ix.set_ylim(0, 10)
     ix.axis("off")
     ix.add_patch(FancyBboxPatch((0.15, 0.15), 9.7, 9.7, boxstyle="round,pad=0.1", fc="white", ec="0.5", lw=0.6))
-    ix.text(5, 9.2, "energy levels of one $^{171}$Yb$^{3+}$ ion used here", ha="center", va="center", fontsize=6.3)
-    ix.plot([1.6, 4.4], [1.8, 1.8], color="k", lw=1.2)
-    ix.plot([1.6, 4.4], [3.4, 3.4], color="k", lw=1.2)
+    ix.text(5, 9.1, "levels of one $^{171}$Yb$^{3+}$ ion used here", ha="center", va="center", fontsize=6.0)
+    ix.plot([1.8, 4.4], [1.8, 1.8], color="k", lw=1.2)
+    ix.plot([1.8, 4.4], [3.6, 3.6], color="k", lw=1.2)
     ix.text(4.6, 1.8, r"$|\!\downarrow\rangle$", va="center", fontsize=7)
-    ix.text(4.6, 3.4, r"$|\!\uparrow\rangle$", va="center", fontsize=7)
-    ix.annotate("", xy=(3.4, 3.35), xytext=(3.4, 1.85), arrowprops=dict(arrowstyle="<->", lw=0.6, color=BLUE))
-    ix.text(1.45, 2.6, "3.084 GHz\nzero-field\nclock\ntransition", fontsize=5.2, va="center", ha="right", color=BLUE)
-    ix.plot([1.6, 4.4], [7.6, 7.6], color="k", lw=1.2)
-    ix.text(4.6, 7.6, r"$|e\rangle$", va="center", fontsize=7)
-    ix.annotate("", xy=(2.2, 7.55), xytext=(2.2, 1.85), arrowprops=dict(arrowstyle="<->", lw=0.7, color=RED))
-    ix.annotate("", xy=(2.9, 7.55), xytext=(2.9, 3.45), arrowprops=dict(arrowstyle="<->", lw=0.7, color=RED))
-    ix.text(1.3, 5.8, "973 nm\nA, E", fontsize=5.4, color=RED, ha="right", va="center")
-    ix.text(7.3, 5.6, "optical transitions A and E:\ninitialise the spins in " + r"$|\!\downarrow\rangle$" + "\nand read the " + r"$|\!\uparrow\rangle$, $|\!\downarrow\rangle$" + "\npopulations by absorption", fontsize=5.2, ha="center", va="center")
-    ix.text(7.3, 2.3, r"microwave $\pi/2$ and $\pi$" + "\npulses applied through\nthe resonator", fontsize=5.2, ha="center", va="center")
+    ix.text(4.6, 3.6, r"$|\!\uparrow\rangle$", va="center", fontsize=7)
+    ix.annotate("", xy=(3.6, 3.55), xytext=(3.6, 1.85), arrowprops=dict(arrowstyle="<->", lw=0.6, color=BLUE))
+    ix.text(1.6, 2.7, "3.084 GHz\nclock\ntransition", fontsize=5.2, va="center", ha="right", color=BLUE)
+    ix.plot([1.8, 4.4], [7.4, 7.4], color="k", lw=1.2)
+    ix.text(4.6, 7.4, r"$|e\rangle$", va="center", fontsize=7)
+    ix.annotate("", xy=(2.4, 7.35), xytext=(2.4, 1.85), arrowprops=dict(arrowstyle="<->", lw=0.7, color=RED))
+    ix.annotate("", xy=(3.0, 7.35), xytext=(3.0, 3.65), arrowprops=dict(arrowstyle="<->", lw=0.7, color=RED))
+    ix.text(1.6, 5.8, "973 nm\nA, E", fontsize=5.2, color=RED, ha="right", va="center")
+    ix.text(7.4, 5.3, "A, E: optical pumping\nand absorption readout\nof the two populations\n\n" + r"$\pi/2$, $\pi$ microwave pulses" + "\nthrough the resonator", fontsize=5.1, ha="center", va="center", linespacing=1.15)
 
     # ---------------- (b) superconducting resonator (proposed) ----------------
-    bx = fig.add_axes([0.60, 0.13, 0.40, 0.34], projection="3d")
+    bx = fig.add_axes([0.59, 0.14, 0.36, 0.31], projection="3d")
     bx.computed_zorder = False
     S2 = sc_scene()
     S2.draw(bx)
@@ -379,19 +415,20 @@ def make():
     draw_spins_2d(fig, bx, spins, colour=ORANGE, size=0.006)
     sp = fig.transFigure.inverted().transform(p2d(bx, 0, 0, 0.55))
     fig.add_artist(matplotlib.patches.Ellipse(sp, 0.05, 0.02, transform=fig.transFigure, fc=(0.85, 0.05, 0.15, 0.35), ec="none", zorder=20))
-    fig.text(0.612, 0.47, "(b)", fontsize=9, fontweight="bold", va="top")
-    fig.text(0.645, 0.468, "planar superconducting resonator on the same\ncrystal: the design-map case (proposed, not built)", fontsize=6.2, va="top")
-    label3d(fig, bx, (0.0, 0.0, 0.52), "Nb meander inductor; spins under the\nnear-uniform field region are read out\noptically (coupling spread $D$)", (0.63, 0.20), colour="k", fontsize=6.0, va="top")
-    label3d(fig, bx, (-2.2, 0.0, 0.52), "capacitor pads", (0.62, 0.395), colour="k", fontsize=6.0)
-    label3d(fig, bx, (3.0, -2.0, 0.25), r"CaWO$_4$ chip, $N \approx 10^{10}$ spins", (0.83, 0.20), colour=CRYSTAL_EDGE, fontsize=6.0, va="top")
-    fig.text(0.985, 0.405, r"$\kappa/2\pi = 3$ to 300 kHz" + "\n" + r"$g\sqrt{N}/2\pi = 0.1$ to 5 MHz" + "\n20 mK, $T_2 = 150$ ms", fontsize=6.0, ha="right", va="top")
+    fig.text(0.607, 0.445, "(b)", fontsize=9, fontweight="bold", va="top")
+    fig.text(0.64, 0.443, "planar superconducting resonator on the same crystal:\nthe design-map case (proposed, not built)", fontsize=6.0, va="top", linespacing=1.15)
+    text3d(fig, bx, (-2.2, 0.0, 0.55), "pad", colour="w", fontsize=5.2)
+    text3d(fig, bx, (2.2, 0.0, 0.55), "pad", colour="w", fontsize=5.2)
+    text3d(fig, bx, (0, 3.2, 0.9), "CaWO$_4$ chip, $N \\approx 10^{10}$ spins", colour=CRYSTAL_EDGE, fontsize=5.6, ha="center", va="bottom")
+    text3d(fig, bx, (0, -3.4, -0.2), "Nb meander inductor; optical readout spot (red)\nover the near-uniform field region (coupling spread $D$)", colour="k", fontsize=5.4, va="top", ha="center")
+    fig.text(0.995, 0.31, r"$\kappa/2\pi = 3$ to 300 kHz" + "\n" + r"$g\sqrt{N}/2\pi = 0.1$ to 5 MHz" + "\n20 mK, $T_2 = 150$ ms", fontsize=5.8, ha="right", va="center", linespacing=1.2)
 
     # ---------------- (c) pulse sequences ----------------
-    cx = fig.add_axes([0.635, 0.012, 0.355, 0.12])
+    cx = fig.add_axes([0.655, 0.012, 0.335, 0.12])
     cx.set_xlim(-2.6, 10)
     cx.set_ylim(0, 4.4)
     cx.axis("off")
-    fig.text(0.612, 0.135, "(c)", fontsize=9, fontweight="bold", va="top")
+    fig.text(0.607, 0.135, "(c)", fontsize=9, fontweight="bold", va="top")
     for row, (y0, pulses, spans, name) in enumerate([
         (2.7, [(0.6, 0.35, r"$\pi/2$"), (4.35, 0.5, r"$\pi$"), (8.4, 0.35, r"$\pi/2$")], [(1.0, 4.3, r"$t/2$"), (4.9, 8.35, r"$t/2$")], "echo twist"),
         (0.6, [(0.6, 0.35, r"$\pi/2$"), (4.2, 0.35, r"$\phi$"), (8.4, 0.35, "read")], [(1.0, 4.15, r"twist, $+\chi$"), (4.6, 8.35, r"untwist, $-\chi$")], "twist-untwist readout"),
