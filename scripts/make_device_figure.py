@@ -335,7 +335,7 @@ def make():
     fig = plt.figure(figsize=(7.0, 3.8))
 
     # ================= (a) loop-gap resonator experiment =================
-    ax = fig.add_axes([-0.02, 0.28, 0.56, 0.72], projection="3d")
+    ax = fig.add_axes([-0.02, 0.30, 0.56, 0.70], projection="3d")
     scenes, G = loop_gap_scene()
     for S, zo in scenes:
         S.draw(ax, zorder=zo)
@@ -351,16 +351,18 @@ def make():
     spins = [tuple(v) for v in rng.uniform([-1.7, cy - 2.0, zc - 1.8], [1.7, cy + 2.0, zc + 1.8], size=(10, 3))]
     draw_spins_2d(fig, ax, spins, colour=CRYSTAL_EDGE, size=0.006, lw=0.5, ms=3.5)
 
+    q0, q1 = p2d(ax, 0, Y0, zc), p2d(ax, 10, Y0, zc)
+    ang_x = float(np.degrees(np.arctan2(q1[1] - q0[1], q1[0] - q0[0])))
     fig.text(0.008, 0.985, "(a)", fontsize=9, fontweight="bold", va="top")
     fig.text(0.04, 0.985, "the demonstrated experiment: crystal in a loop-gap microwave resonator", fontsize=6.6, va="top")
     # labels written on the parts themselves
-    text3d(fig, ax, (0, 0.5 * (Y0 + Y1), Z1), r"$\kappa/2\pi = 660$ kHz", colour="w", fontsize=5.8, va="center")
-    text3d(fig, ax, (0, -11, 0), "mixing-chamber plate, below 30 mK", colour="k", fontsize=5.8, va="center")
-    text3d(fig, ax, (0, Y0, zc - wz - 1.0), "central loop", colour="w", fontsize=5.4, va="top")
-    text3d(fig, ax, (-xo - 1.0, Y0, zc + ro + 0.9), "outer loop", colour="w", fontsize=5.4, va="bottom")
-    text3d(fig, ax, (xo + 1.0, Y0, zc + ro + 0.9), "outer loop", colour="w", fontsize=5.4, va="bottom")
-    text3d(fig, ax, (-wx - 1.5, Y0, zc - 1.0), "gap", colour="w", fontsize=5.0, va="top", ha="center")
-    text3d(fig, ax, (wx + 1.5, Y0, zc - 1.0), "gap", colour="w", fontsize=5.0, va="top", ha="center")
+    text3d(fig, ax, (0, 0.5 * (Y0 + Y1), Z1), r"$\kappa/2\pi = 660$ kHz", colour="w", fontsize=5.8, va="center", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (0, -11, 0), "mixing-chamber plate, below 30 mK", colour="k", fontsize=5.8, va="center", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (0, Y0, zc - wz - 1.0), "central loop", colour="w", fontsize=5.4, va="top", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (-xo - 1.0, Y0, zc + ro + 0.9), "outer loop", colour="w", fontsize=5.4, va="bottom", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (xo + 1.0, Y0, zc + ro + 0.9), "outer loop", colour="w", fontsize=5.4, va="bottom", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (-wx - 1.5, Y0, zc - 1.0), "gap", colour="w", fontsize=5.0, va="top", ha="center", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (wx + 1.5, Y0, zc - 1.0), "gap", colour="w", fontsize=5.0, va="top", ha="center", rotation=ang_x, rotation_mode="anchor")
     # numbered markers placed on the parts (no long leaders)
     marker3d(fig, ax, (4.6, Y0 + 2.0, zc + 4.6), 1)
     marker3d(fig, ax, (X0 + 3.5, Y0, Z1 - 3.0), 2)
@@ -373,13 +375,16 @@ def make():
         p = fig.transFigure.inverted().transform(p2d(ax, xc, Y0 - 0.5, zc))
         wavy(fig, (p[0] + sgn * 0.075, p[1] - 0.06), (p[0], p[1] - 0.006), BLUE, n=4, amp=0.004, lw=1.0)
     # dashed frame around the crystal, referring to the magnified view (b)
-    corners = [p2d(ax, x, y, z) for x in (-2.2, 2.2) for y in (cy - 2.5, cy + 2.5) for z in (zc - 2.3, zc + 2.3)]
-    corners = np.array([fig.transFigure.inverted().transform(p) for p in corners])
-    m = 0.006
-    x0f, y0f = corners[:, 0].min() - m, corners[:, 1].min() - m
-    x1f, y1f = corners[:, 0].max() + m, corners[:, 1].max() + m
-    fig.add_artist(Rectangle((x0f, y0f), x1f - x0f, y1f - y0f, transform=fig.transFigure, fc="none", ec="w", lw=0.6, ls=(0, (3, 2)), zorder=28))
-    fig.text(x1f, y0f - 0.006, "see (b)", fontsize=5.4, color="w", ha="right", va="top", zorder=33)
+    # single dashed rectangle in the plane of the pocket opening (in front of the crystal),
+    # drawn in perspective, referring to (b)
+    mx, mz = 1.3, 1.3
+    yf = cy - 2.5 - 0.3
+    rect = np.array([[-2.2 - mx, yf, zc - 2.3 - mz], [2.2 + mx, yf, zc - 2.3 - mz],
+                     [2.2 + mx, yf, zc + 2.3 + mz], [-2.2 - mx, yf, zc + 2.3 + mz], [-2.2 - mx, yf, zc - 2.3 - mz]])
+    ln, = ax.plot(rect[:, 0], rect[:, 1], rect[:, 2], color="0.92", lw=0.6, ls=(0, (3, 2)))
+    ln.set_zorder(7)
+    pf = fig.transFigure.inverted().transform(p2d(ax, 2.2 + mx, yf, zc - 2.3 - mz - 0.3))
+    fig.text(pf[0], pf[1], "see (b)", fontsize=5.4, color="0.92", ha="right", va="top", zorder=33, rotation=ang_x, rotation_mode="anchor")
 
     # ================= (b) magnified crystal with the four processes =================
     bx = fig.add_axes([0.545, 0.555, 0.24, 0.38], projection="3d")
@@ -428,18 +433,15 @@ def make():
     draw_spins_2d(fig, cx3, spins, colour=ORANGE, size=0.007, lw=0.5, ms=4)
     fig.text(0.565, 0.50, "(c)", fontsize=9, fontweight="bold", va="top")
     fig.text(0.595, 0.50, "proposed planar superconducting resonator on the same crystal (not built)", fontsize=6.6, va="top")
-    text3d(fig, cx3, (-2.2, 0.0, 0.55), "pad", colour="w", fontsize=5.6)
-    text3d(fig, cx3, (2.2, 0.0, 0.55), "pad", colour="w", fontsize=5.6)
-    p_ind = fig.transFigure.inverted().transform(p2d(cx3, 1.55, 1.35, 0.52))
-    fig.add_artist(matplotlib.lines.Line2D([p_ind[0], p_ind[0] + 0.045], [p_ind[1], p_ind[1] + 0.03], transform=fig.transFigure, color="k", lw=0.5, zorder=29))
-    fig.text(p_ind[0] + 0.048, p_ind[1] + 0.03, "Nb meander inductor", fontsize=5.6, color="k", ha="left", va="center", zorder=33)
-    text3d(fig, cx3, (1.0, 0, 2.3), "optical readout beam", colour=RED, fontsize=5.6, va="center", ha="left")
-    text3d(fig, cx3, (3.05, -0.5, 0.25), "CaWO$_4$", colour=CRYSTAL_EDGE, fontsize=5.8, ha="left", va="center")
-    marker3d(fig, cx3, (-2.95, -2.9, 0.3), 6, offset=(-0.028, -0.015))
-    marker3d(fig, cx3, (1.7, -1.9, 0.25), 7, offset=(0.035, -0.03))
+    marker3d(fig, cx3, (-2.95, -2.9, 0.3), 6, offset=(-0.028, -0.015))          # chip
+    marker3d(fig, cx3, (1.7, -1.9, 0.25), 7, offset=(0.035, -0.03))              # read-out volume
+    marker3d(fig, cx3, (1.2, 1.9, 0.52), 8, offset=(0.045, 0.03))                # meander inductor
+    marker3d(fig, cx3, (-2.2, 0.0, 0.52), 9)                                     # left pad
+    marker3d(fig, cx3, (2.2, 0.0, 0.52), 9)                                      # right pad
+    marker3d(fig, cx3, (0.45, 0, 2.2), 10, offset=(0.04, 0.0), colour=RED)       # optical read-out beam
 
     # ================= key =================
-    kx, ky = 0.012, 0.255
+    kx, ky = 0.012, 0.275
     fig.text(kx, ky, "Key", fontsize=6.4, fontweight="bold", va="center")
     items = [
         (1, "k", "$^{171}$Yb$^{3+}$:CaWO$_4$ crystal, 4.4 $\\times$ 4.6 $\\times$ 5 mm, 4.96 ppm $^{171}$Yb, glued in the central loop"),
@@ -447,14 +449,17 @@ def make():
         (3, RED, "973 nm light through the crystal: optical pumping into $|\\!\\downarrow\\rangle$ and absorption readout of the populations"),
         (4, BLUE, "microwave antennas at the outer loops: spin control pulses and transmission measurement"),
         (5, "k", "mixing-chamber plate of the dilution refrigerator (spin temperature 80 mK, $n_{\\rm th} = 0.19$)"),
-        (6, "k", "CaWO$_4$ chip with a niobium film patterned into a meander inductor between two capacitor pads"),
+        (6, "k", "CaWO$_4$ chip carrying the resonator"),
         (7, "k", "read-out volume under the inductor, where the microwave field is nearly uniform (coupling spread $D$)"),
+        (8, "k", "niobium meander inductor (the part of the resonator that couples to the spins)"),
+        (9, "k", "niobium capacitor pads"),
+        (10, RED, "optical read-out beam through the read-out volume"),
     ]
-    y = ky - 0.031
+    y = ky - 0.028
     for num, col, txt in items:
-        marker(fig, (kx + 0.012, y), num, colour=col, r=0.0095, fs=5.4)
-        fig.text(kx + 0.028, y, txt, fontsize=5.4, va="center")
-        y -= 0.031
+        marker(fig, (kx + 0.012, y), num, colour=col, r=0.0095, fs=5.2)
+        fig.text(kx + 0.028, y, txt, fontsize=5.3, va="center")
+        y -= 0.0265
 
     for ext in ("pdf", "png"):
         fig.savefig(os.path.join(FIG, f"fig_device.{ext}"), bbox_inches="tight", pad_inches=0.02)
