@@ -3,9 +3,9 @@
 Beyond-mean-field simulation of cavity-mediated spin squeezing (one-axis twisting)
 for solid-state clock-transition ensembles, applied to 171Yb3+:CaWO4.
 
-Companion code for: T. M. Mahim, M. M. Rahman, A. S. M. Mohsin, *Design limits of
-cavity-mediated spin squeezing in a solid-state clock-transition ensemble: a
-beyond-mean-field study of 171Yb3+:CaWO4*.
+Companion code for: T. M. Mahim, M. M. Rahman, A. S. M. Mohsin, *How much spin
+squeezing a solid-state spin ensemble in a microwave resonator can deliver: limits
+and design rules for 171Yb3+:CaWO4*.
 
 The package `cavsqueeze` implements
 
