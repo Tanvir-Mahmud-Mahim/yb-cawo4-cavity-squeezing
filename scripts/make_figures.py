@@ -10,7 +10,11 @@ from matplotlib import gridspec  # noqa: E402
 plt.rcParams.update({
     "font.size": 8, "axes.labelsize": 8, "legend.fontsize": 7, "xtick.labelsize": 7, "ytick.labelsize": 7,
     "lines.linewidth": 1.2, "axes.linewidth": 0.6, "figure.dpi": 200, "savefig.dpi": 300,
-    "font.family": "sans-serif", "mathtext.fontset": "dejavusans",
+    "font.family": "Times New Roman", "font.serif": ["Times New Roman"],
+    "mathtext.fontset": "custom", "mathtext.rm": "Times New Roman", "mathtext.it": "Times New Roman:italic",
+    "mathtext.bf": "Times New Roman:bold", "mathtext.fallback": "stix",
+    "pdf.fonttype": 42, "ps.fonttype": 42,
+    "legend.handlelength": 1.6, "legend.columnspacing": 1.0, "legend.handletextpad": 0.5,
 })
 C = ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9", "#000000"]
 
@@ -28,6 +32,18 @@ def panel_label(ax, s, x=-0.22, y=1.04):
     ax.text(x, y, s, transform=ax.transAxes, fontweight="bold", fontsize=9, va="bottom", ha="left")
 
 
+def layout(fig, bottom=0.40, top=0.86, wspace=0.52, right=0.985):
+    """Fixed margins (tight_layout does not account for legends placed outside the axes)."""
+    fig.subplots_adjust(left=0.075, right=right, top=top, bottom=bottom, wspace=wspace)
+
+
+def legend_below(ax, ncol=2, dy=-0.33, **kw):
+    """Legend placed under the x-axis label so that it never covers data."""
+    kw.setdefault("frameon", False)
+    kw.setdefault("fontsize", 6.5)
+    return ax.legend(loc="upper center", bbox_to_anchor=(0.5, dy), ncol=ncol, borderaxespad=0.0, **kw)
+
+
 def savefig(fig, name):
     for ext in ("pdf", "png"):
         fig.savefig(os.path.join(FIG, f"{name}.{ext}"), bbox_inches="tight")
@@ -40,14 +56,14 @@ def fig_validation():
     d = load("validation")
     if d is None:
         return
-    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.1))
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.9))
     ax = axs[0]
     ax.plot(d["a_Q"], dB(d["a_xi_exact"]), "o", ms=3, color=C[6], mfc="none", label="exact (N = 8)")
     ax.plot(d["a_Q"], dB(d["a_xi_cum"]), "-", color=C[0], label="cumulant")
     ax.set_xlabel(r"$Q=\chi N t$")
     ax.set_ylabel(r"$\xi_R^2$ (dB)")
     ax.legend(frameon=False)
-    ax.set_title("disordered spins, all dissipators", fontsize=7)
+    ax.set_title("8 disordered spins, all noise channels", fontsize=7)
     panel_label(ax, "(a)")
     ax = axs[1]
     for k, Nb in enumerate([20, 40, 80]):
@@ -56,19 +72,19 @@ def fig_validation():
     ax.set_xlabel(r"$Q=\chi N t$")
     ax.set_ylabel(r"$\xi_R^2$ (dB)")
     ax.legend(frameon=False)
-    ax.set_title("Dicke exact (o) vs cumulant (-)", fontsize=7)
+    ax.set_title("exact (circles) vs cumulant (lines)", fontsize=7)
     panel_label(ax, "(b)")
     ax = axs[2]
     r = d["c_ratio"]
     ax.loglog(r, d["c_xi_opt"], "o", ms=3.5, color=C[0], label="cumulant, optimum")
     A = float(d["c_prefactor_xi"])
-    ax.loglog(r, A * (1 / r) ** (2 / 3), "-", color=C[0], lw=0.9, label=r"$%.2f\,(\kappa/2\Delta)^{2/3}$" % A)
-    ax.loglog(r, d["c_lewis_swan"], "--", color=C[1], lw=0.9, label=r"$1.89\,(\Gamma_{\rm SR}/\chi)^{2/3}=3.0\,(\kappa/2\Delta)^{2/3}$ (perturbative)")
+    ax.loglog(r, A * (1 / r) ** (2 / 3), "-", color=C[0], lw=0.9, label=r"$%.2f\,(\kappa/2\Delta)^{2/3}$ (this work)" % A)
+    ax.loglog(r, d["c_lewis_swan"], "--", color=C[1], lw=0.9, label=r"$3.0\,(\kappa/2\Delta)^{2/3}$ (perturbative)")
     ax.set_xlabel(r"$2\Delta/\kappa$")
     ax.set_ylabel(r"$\xi^2_{\rm opt}$")
-    ax.legend(frameon=False, fontsize=6)
+    ax.legend(frameon=False, fontsize=6, loc="lower left")
     panel_label(ax, "(c)")
-    fig.tight_layout()
+    layout(fig)
     savefig(fig, "fig_validation")
 
 
@@ -78,7 +94,7 @@ def fig_benchmark():
     if d is None:
         return
     t = d["t"] * 1e3
-    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.1))
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.9))
     ax = axs[0]
     for k, c in enumerate(d["chiN"]):
         ax.plot(t, d[f"mf_voigt_{int(c)}"], color=C[k], label=r"$\chi N_0/2\pi=%.1f$ kHz" % (c / 1e3))
@@ -87,7 +103,7 @@ def fig_benchmark():
     ax.set_ylabel("contrast")
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 1.02)
-    ax.legend(frameon=False, fontsize=5, loc="upper right", bbox_to_anchor=(1.0, 0.98))
+    legend_below(ax, ncol=2, fontsize=6)
     ax.set_title("mean field, Voigt line", fontsize=7)
     panel_label(ax, "(a)")
     ax = axs[1]
@@ -99,7 +115,7 @@ def fig_benchmark():
     ax.set_ylabel("contrast")
     ax.set_ylim(0, 1.02)
     ax.set_title(r"$\chi N_0/2\pi = 7$ kHz", fontsize=7)
-    ax.legend(frameon=False, fontsize=5.5)
+    legend_below(ax, ncol=2, fontsize=6)
     panel_label(ax, "(b)")
     ax = axs[2]
     for k, c in enumerate([2000, 4000, 7000]):
@@ -108,10 +124,10 @@ def fig_benchmark():
     ax.set_xlabel("Ramsey time (ms)")
     ax.set_ylabel(r"variance / $(N_0/4)$ (dB)")
     ax.set_title("anti-squeezed (solid), squeezed (dashed)", fontsize=7)
-    ax.legend(frameon=False, fontsize=5, loc="center left", bbox_to_anchor=(0.0, 0.42))
+    legend_below(ax, ncol=2, fontsize=6)
     ax.set_ylim(-12, 45)
     panel_label(ax, "(c)")
-    fig.tight_layout()
+    layout(fig)
     savefig(fig, "fig_benchmark")
 
 
@@ -121,7 +137,7 @@ def fig_loopgap():
     if d is None or "a_xi_homogeneous_echo" not in d:
         return
     t = d["t_list"] * 1e3
-    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.1))
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.9))
     ax = axs[0]
     for k, (shape, lab) in enumerate([("homogeneous", "homogeneous"), ("gaussian", "Gaussian"), ("voigt", "Voigt"), ("lorentzian", "Lorentzian")]):
         ax.semilogx(t, dB(d[f"a_xi_{shape}_echo"]), color=C[k], label=lab)
@@ -130,7 +146,8 @@ def fig_loopgap():
     ax.set_xlabel("interaction time (ms)")
     ax.set_ylabel(r"$\xi_R^2$ (dB)")
     ax.set_ylim(-12, 8)
-    ax.legend(frameon=False, fontsize=5.5, title="echo (solid), no echo (dotted)", title_fontsize=5.5, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, columnspacing=0.8, handlelength=1.5)
+    ax.set_title("echo (solid), no echo (dotted)", fontsize=7)
+    legend_below(ax, ncol=2, fontsize=6)
     ax.set_ylim(-12, 10)
     panel_label(ax, "(a)")
     if "b_rows" in d:
@@ -146,7 +163,7 @@ def fig_loopgap():
         ax.axvline(22, color="0.6", lw=0.6, ls=":")
         ax.set_xlabel(r"$\Delta/2\pi$ (MHz)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-        ax.legend(frameon=False, fontsize=5, loc="lower left")
+        legend_below(ax, ncol=2, fontsize=6)
         panel_label(ax, "(b)")
     if "c_rows" in d:
         ax = axs[2]
@@ -163,9 +180,9 @@ def fig_loopgap():
         ax2.set_xlabel(r"$\chi N_0/2\pi$ (kHz)", fontsize=7)
         ax.set_xlabel(r"$N_0$")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-        ax.legend(frameon=False, fontsize=6)
+        legend_below(ax, ncol=2, fontsize=6)
         panel_label(ax, "(c)")
-    fig.tight_layout()
+    layout(fig)
     savefig(fig, "fig_loopgap")
 
 
@@ -175,7 +192,7 @@ def fig_scaling():
     if d is None:
         return
     rows = d["a_rows"]
-    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.1))
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.9))
     ax = axs[0]
     for k, ratio in enumerate([100, 1000, 10000]):
         m = (rows[:, 0] == ratio) & (rows[:, 2] == 0)
@@ -191,7 +208,7 @@ def fig_scaling():
         ax.semilogx(r[o, 1] / GAMMA_INH_HZ, dB(r[o, 3]), marker="s" if s == 1 else "^", ms=2.5, ls="--", color=C[1], label=lab + r", $2\Delta/\kappa=10^3$", mfc="none")
     ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
     ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-    ax.legend(frameon=False, fontsize=5, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, columnspacing=0.8, handlelength=1.5)
+    legend_below(ax, ncol=2, fontsize=6)
     panel_label(ax, "(a)")
     if "b_rows" in d:
         ax = axs[1]
@@ -203,12 +220,12 @@ def fig_scaling():
             ax.plot(r[o, 1] * 1e3, dB(r[o, 3]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % ratio)
         ax.set_xlabel("cavity bath temperature (mK)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-        ax.legend(frameon=False, fontsize=6, loc="center left")
+        legend_below(ax, ncol=2, fontsize=6)
         ax2 = ax.twinx()
         Ts = np.linspace(1e-3, 0.5, 200)
         from cavsqueeze import thermal_occupation
         ax2.plot(Ts * 1e3, [thermal_occupation(TWO_PI * OMEGA_S_HZ, T) for T in Ts], color="0.5", lw=0.7, ls="--")
-        ax2.set_ylabel(r"$n_{\rm th}$", color="0.4", fontsize=7)
+        ax2.set_ylabel(r"$n_{\rm th}$ (dashed)", color="0.4", fontsize=7, labelpad=2)
         panel_label(ax, "(b)")
     if "c_rows" in d:
         ax = axs[2]
@@ -220,9 +237,9 @@ def fig_scaling():
             ax.semilogx(r[o, 1] * 1e3, dB(r[o, 2]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % ratio)
         ax.set_xlabel(r"single-spin $T_2$ (ms)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-        ax.legend(frameon=False, fontsize=6)
+        legend_below(ax, ncol=2, fontsize=6)
         panel_label(ax, "(c)")
-    fig.tight_layout()
+    layout(fig, wspace=0.7, right=0.975)
     savefig(fig, "fig_scaling")
 
 
@@ -242,7 +259,7 @@ def fig_designmap():
         Z[i, j] = dB(row[4])
         Tt[i, j] = row[5]
         Dl[i, j] = row[3]
-    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.2))
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.3))
     for ax, M, lab, cmap in [(axs[0], Z, r"$\xi^2_{\rm opt}$ (dB)", "viridis_r"), (axs[1], np.log10(Tt * 1e6), r"$\log_{10}$ optimal time ($\mu$s)", "magma"), (axs[2], np.log10(Dl / 1e6), r"$\log_{10}\,\Delta_{\rm opt}/2\pi$ (MHz)", "cividis")]:
         im = ax.imshow(M, origin="lower", aspect="auto", cmap=cmap)
         ax.set_xticks(range(len(gNs)))
@@ -272,7 +289,7 @@ def fig_designmap():
 def fig_inhomog_readout():
     di = load("inhomog")
     dr = load("readout")
-    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.1))
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.9))
     if di is not None:
         ax = axs[0]
         for k, D in enumerate(di["D"]):
@@ -283,7 +300,8 @@ def fig_inhomog_readout():
             ax.semilogx(di["t"] * 1e6, dB(di[f"xi_u_{int(D)}"]), color=C[k], ls=":")
         ax.set_xlabel(r"interaction time ($\mu$s)")
         ax.set_ylabel(r"$\xi^2$ (dB)")
-        ax.legend(frameon=False, fontsize=5, ncol=3, loc="lower center", bbox_to_anchor=(0.5, 1.0), title="weighted (solid), unweighted (dotted)", title_fontsize=5, columnspacing=0.8, handlelength=1.2)
+        ax.set_title("weighted (solid), unweighted (dotted)", fontsize=7)
+        legend_below(ax, ncol=3, fontsize=6)
         ax.set_ylim(-20, 2)
         panel_label(ax, "(a)")
     if dr is not None:
@@ -300,7 +318,8 @@ def fig_inhomog_readout():
         ax.set_xlabel(r"detection noise $\sigma_{\rm det}/N$")
         ax.set_ylabel("metrological gain (dB)")
         ax.set_ylim(-2, 30)
-        ax.legend(frameon=False, fontsize=5, title="twist-untwist (solid), plain (dotted)", title_fontsize=5, loc="upper right")
+        ax.set_title("twist-untwist (solid), plain (dotted)", fontsize=7)
+        legend_below(ax, ncol=2, fontsize=6)
         panel_label(ax, "(b)")
         ax = axs[2]
         # required resolution for 3 dB gain versus N
@@ -318,12 +337,12 @@ def fig_inhomog_readout():
         Ns = np.array(Ns)[o]
         ax.loglog(Ns, np.array(req_tu)[o], "o-", color=C[0], label="twist-untwist")
         ax.loglog(Ns, np.array(req_pl)[o], "s:", color=C[1], label="plain squeezed readout")
-        ax.loglog(Ns, 0.5 / np.sqrt(Ns), "--", color="0.5", lw=0.8, label=r"$1/(2\sqrt{N})$ (projection noise)")
+        ax.loglog(Ns, 0.5 / np.sqrt(Ns), "--", color="0.5", lw=0.8, label=r"projection noise, $1/(2\sqrt{N})$")
         ax.set_xlabel(r"$N$")
         ax.set_ylabel(r"$\sigma_{\rm det}/N$ for 3 dB gain")
-        ax.legend(frameon=False, fontsize=5, loc="lower left")
+        legend_below(ax, ncol=1, fontsize=6)
         panel_label(ax, "(c)")
-    fig.tight_layout()
+    layout(fig)
     savefig(fig, "fig_inhomog_readout")
 
 
@@ -380,7 +399,6 @@ def fig_concept():
 
 
 if __name__ == "__main__":
-    fig_concept()
     fig_validation()
     fig_benchmark()
     fig_loopgap()
