@@ -174,6 +174,138 @@ if r is not None:
         if isinstance(num.get("EPS_SC"), float) and isinstance(num.get("EPSPL_SC"), float):
             num["TU_FACTOR"] = round(num["EPS_SC"] / num["EPSPL_SC"], 0)
 
+# ---------------- corrections beyond the model ----------------
+def _fmt_loss(x):
+    return "below 0.01" if x < 0.01 else round(float(x), 2)
+
+
+e = load("elimination")
+if e is not None:
+    rows = e["A_rows"]
+    loss = {float(r[0]): float(dB(r[1]) - dB(r[2])) for r in rows}
+    num["ELIM_LOSS_R02"] = round(loss[0.2], 2)
+    num["ELIM_LOSS_R01"] = round(loss[0.1], 2)
+    num["ELIM_LOSS_R005"] = round(loss[0.05], 3)
+    if "A20_xi2_full" in e:
+        l20 = float(dB(e["A20_xi2_full"].min()) - dB(e["A20_xi2_elim"].min()))
+        num["ELIM_LOSS_R02_N20"] = round(l20, 2)
+        num["ELIM_N_DIFF"] = round(abs(l20 - loss[0.2]) + 0.005, 1)
+    # (g sqrt N / Delta)^2 extrapolation from the smallest ratio computed
+    base = loss[0.05] / 0.05**2
+    num["ELIM_LOSS_LG"] = _fmt_loss(base * 0.0167**2)
+    num["ELIM_LOSS_SC30"] = _fmt_loss(base * (1 / 30) ** 2)
+    num["ELIM_LOSS_SC125"] = _fmt_loss(base * 0.08**2)
+    num["ELIM_TABLE"] = " \\\\\n".join(
+        f"{r[0]:g} & {-dB(r[1]):.2f} & {-dB(r[2]):.2f} & {dB(r[1]) - dB(r[2]):.2f} & {100 * r[6]:.1f}\\%" for r in rows) + " \\\\"
+    B = e["B_rows"]
+    num["RWA_DEV_SC"] = round(100 * float(B[0, 5]), 1)
+    num["RWA_DEV_LG"] = round(100 * float(B[1, 5]), 1)
+
+v = load("reversal")
+if v is not None:
+    A = v["A_rows"]
+    num["REV_GAIN_FREE"] = round(first_dB(A[0, 1]), 2)
+    num["REV_GAIN_EMUL"] = round(first_dB(A[0, 2]), 2)
+    num["REV_GAIN_JUMP"] = round(first_dB(A[0, 3]), 2)
+    num["REV_EMUL_ERR"] = round(abs(first_dB(A[0, 2]) - first_dB(A[0, 3])) + 0.005, 2)
+    num["REV_JUMP_LOSS"] = round(first_dB(A[0, 1]) - first_dB(A[0, 3]), 2)
+    ramps = [f"{first_dB(r[3]):.2f}" for r in A[1:]]
+    num["REV_GAIN_RAMPS"] = ", ".join(ramps[:-1]) + " and " + ramps[-1]
+    for kap in [3000, 10000, 30000, 100000]:
+        if f"B_sc_k{kap}_gain" in v and f"B_sc_k{kap}_ideal_gain" in v:
+            g = np.nanmax(v[f"B_sc_k{kap}_gain"], axis=0)
+            gi = np.nanmax(v[f"B_sc_k{kap}_ideal_gain"], axis=0)
+            tag = {3000: "K3", 10000: "K10", 30000: "K30", 100000: "K100"}[kap]
+            num[f"REV_SC_{tag}"] = round(first_dB(g[0]), 1)
+            num[f"REV_SC_{tag}_IDEAL"] = round(first_dB(gi[0]), 1)
+            num[f"REV_LOSS_{tag}"] = round(first_dB(gi[0]) - first_dB(g[0]), 1)
+            num[f"REV_SC_LOSS_{tag}"] = num[f"REV_LOSS_{tag}"]
+            eps = v[f"B_sc_k{kap}_eps"]
+            num[f"REV_EPS_SC_{tag}"] = float(np.max(eps[dB(g) >= 3])) if np.any(dB(g) >= 3) else "unobservable"
+    if "B_lg_gain" in v and "B_lg_ideal_gain" in v:
+        g = np.nanmax(v["B_lg_gain"], axis=0)
+        gi = np.nanmax(v["B_lg_ideal_gain"], axis=0)
+        num["REV_LG_LOSS"] = _fmt_loss(first_dB(gi[0]) - first_dB(g[0]))
+
+rb = load("robustness")
+if rb is not None and "a_rows" in rb:
+    ra = rb["a_rows"]
+    fid = dict(zip(np.round(rb["a_frac"], 3), rb["a_fid_1e_us"]))
+    best = {}
+    ls_rows = []
+    for f in np.unique(ra[:, 0]):
+        re_ = ra[(ra[:, 0] == f) & (ra[:, 1] == 1)]
+        rf = ra[(ra[:, 0] == f) & (ra[:, 1] == 0)]
+        if len(re_) and len(rf):
+            best[float(f)] = min(-first_dB(re_[0, 2]), -first_dB(rf[0, 2])) if False else max(-first_dB(re_[0, 2]), -first_dB(rf[0, 2]))
+            ls_rows.append(f"{f:g} & {-first_dB(re_[0, 2]):.1f} & {re_[0, 3] * 1e6:.0f} & {-first_dB(rf[0, 2]):.1f} & {rf[0, 3] * 1e6:.0f} & {fid[round(float(f), 3)]:.0f}")
+    num["LS_TABLE"] = " \\\\\n".join(ls_rows) + " \\\\"
+    if 0.0 in best:
+        num["LS_GAUSS"] = round(best[0.0], 1)
+    if 1.0 in best:
+        num["LS_LOR"] = round(best[1.0], 1)
+    rbb = rb["b_rows"]
+    t2_rows = []
+    for T2 in np.unique(rbb[:, 0]):
+        re_ = rbb[(rbb[:, 0] == T2) & (rbb[:, 1] == 1)]
+        rf = rbb[(rbb[:, 0] == T2) & (rbb[:, 1] == 0)]
+        if len(re_) and len(rf):
+            t2_rows.append(f"{T2 * 1e3:g} & {-first_dB(re_[0, 2]):.1f} & {-first_dB(rf[0, 2]):.1f}")
+            bestv = max(-first_dB(re_[0, 2]), -first_dB(rf[0, 2]))
+            tag = {1e-4: "01MS", 1e-3: "1MS", 1e-2: "10MS", 0.15: "150MS"}.get(float(T2))
+            if tag:
+                num[f"T2_LG_{tag}"] = round(bestv, 1)
+    num["T2_LG_TABLE"] = " \\\\\n".join(t2_rows) + " \\\\"
+    rc = rb["c_rows"]
+    kinds = ["ideal", "noecho", "duration", "duration_noecho", "angle", "spread"]
+
+    def get(dev, kind, value=None):
+        sub = rc[(rc[:, 0] == dev) & (rc[:, 1] == kinds.index(kind))]
+        if value is not None:
+            sub = sub[np.isclose(sub[:, 2], value)]
+        return -first_dB(sub[0, 3]) if len(sub) else None
+
+    lg_ideal, sc_ideal = get(0, "ideal"), get(1, "ideal")
+    if lg_ideal is not None and sc_ideal is not None:
+        num["SC_ECHO"] = round(sc_ideal, 1)
+        num["SC_NOECHO"] = round(get(1, "noecho"), 1)
+        for us, tag in [(3e-6, "3US"), (1e-5, "10US")]:
+            val = get(0, "duration", us)
+            if val is not None:
+                num[f"PULSE_LG_{tag}"] = round(lg_ideal - val, 1)
+        for us, tag in [(1e-6, "1US"), (3e-7, "03US")]:
+            val = get(1, "duration", us)
+            if val is not None:
+                num[f"PULSE_SC_{tag}"] = round(sc_ideal - val, 1)
+                num[f"PULSE_SC_{tag}_ABS"] = round(val, 1)
+            valf = get(1, "duration_noecho", us)
+            if valf is not None:
+                num[f"PULSE_SC_FREE{tag[:-2]}_ABS"] = round(valf, 1)
+        for dev, tag, ideal in [(0, "LG", lg_ideal), (1, "SC", sc_ideal)]:
+            vals = [get(dev, "angle", x) for x in [0.01, 0.03, 0.1]]
+            if all(x is not None for x in vals):
+                num[f"ANGLE_{tag}"] = ", ".join(f"{ideal - x:.1f}" for x in vals[:-1]) + f" and {ideal - vals[-1]:.1f}"
+            vals = [get(dev, "spread", x) for x in [0.02, 0.05]]
+            if all(x is not None for x in vals):
+                num[f"SPREAD_{tag}"] = f"{ideal - vals[0]:.1f} and {ideal - vals[1]:.1f}"
+        rows_t = [("echo twist, ideal pulses", get(0, "ideal"), get(1, "ideal")),
+                  ("free twisting (no $\\pi$ pulse)", get(0, "noecho"), get(1, "noecho"))]
+        for (ul, us) in [(1e-6, 1e-7), (3e-6, 3e-7), (1e-5, 1e-6)]:
+            rows_t.append((f"echo, $\\tau_{{\\rm p}}$ = {ul * 1e6:g} $\\mu$s (loop-gap), {us * 1e6:g} $\\mu$s (SC)", get(0, "duration", ul), get(1, "duration", us)))
+            rows_t.append((f"free, $\\tau_{{\\rm p}}$ = {ul * 1e6:g} $\\mu$s (loop-gap), {us * 1e6:g} $\\mu$s (SC)", get(0, "duration_noecho", ul), get(1, "duration_noecho", us)))
+        for x in [0.01, 0.03, 0.1]:
+            rows_t.append((f"echo, $\\pi$ pulse angle error {100 * x:g}\\%", get(0, "angle", x), get(1, "angle", x)))
+        for x in [0.02, 0.05]:
+            rows_t.append((f"echo, drive-field spread {100 * x:g}\\% (unweighted spin)", get(0, "spread", x), get(1, "spread", x)))
+        num["PULSE_TABLE"] = " \\\\\n".join(f"{a} & {b:.1f} & {c:.1f}" for a, b, c in rows_t if b is not None and c is not None) + " \\\\"
+
+pc_path = os.path.join(DATA, "pulse_check.json")
+if os.path.exists(pc_path):
+    pc = json.load(open(pc_path))
+    num["PC_EXACT"] = ", ".join(f"{100 * x:.1f}\\%" for x in pc["exact_rel_increase"][:-1]) + f" and {100 * pc['exact_rel_increase'][-1]:.1f}\\%"
+    num["PC_CUM60"] = ", ".join(f"{100 * x:.1f}\\%" for x in pc["cumulant_N60_rel_increase"][:-1]) + f" and {100 * pc['cumulant_N60_rel_increase'][-1]:.1f}\\%"
+    num["SPLIT_CONV"] = round(100 * abs(pc["splitting_rel_change_20_to_80"]), 2)
+
 save_json("numbers", num)
 print(json.dumps(num, indent=1, default=str))
 
@@ -204,4 +336,7 @@ def repl(mo):
 
 filled = re.sub(r"\[\[([A-Z0-9_]+)\]\]", repl, tex)
 open(os.path.join(ROOT, "paper", "main_filled.tex"), "w").write(filled)
+tex = open(os.path.join(ROOT, "paper", "supplement.tex")).read()
+filled = re.sub(r"\[\[([A-Z0-9_]+)\]\]", repl, tex)
+open(os.path.join(ROOT, "paper", "supplement_filled.tex"), "w").write(filled)
 print("missing placeholders:", sorted(missing))

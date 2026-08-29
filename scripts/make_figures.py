@@ -347,55 +347,101 @@ def fig_inhomog_readout():
 
 
 # ---------------------------------------------------------------------------
-def fig_concept():
-    """Schematic of the device, the protocol and the pipeline."""
-    fig = plt.figure(figsize=(7.0, 2.0))
-    gs = gridspec.GridSpec(1, 3, width_ratios=[1.1, 1.0, 1.2])
-    ax = fig.add_subplot(gs[0])
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.axis("off")
-    ax.add_patch(plt.Rectangle((1, 2), 5, 5, fc="#dbe9f6", ec=C[0], lw=1))
-    ax.text(3.5, 7.4, r"$^{171}$Yb$^{3+}$:CaWO$_4$", ha="center", fontsize=7)
-    rng = np.random.default_rng(1)
-    for x, y in rng.uniform([1.4, 2.4], [5.6, 6.6], size=(28, 2)):
-        ax.annotate("", xy=(x, y + 0.45), xytext=(x, y - 0.45), arrowprops=dict(arrowstyle="->", lw=0.6, color=C[1]))
-    ax.add_patch(plt.Rectangle((6.6, 1.5), 2.8, 6.0, fc="none", ec="0.3", lw=1.2, ls="-"))
-    ax.text(8.0, 8.1, r"cavity $\kappa$, $\Delta$", ha="center", fontsize=7)
-    ax.text(8.0, 4.3, r"$g$", ha="center", fontsize=8)
-    ax.text(0.2, 0.6, r"$\gamma_{\rm inh}$, $T_2$, $n_{\rm th}$, $g_j$", fontsize=7)
-    ax.text(0.2, 9.3, "(a)", fontweight="bold", fontsize=9)
-    ax = fig.add_subplot(gs[1])
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.axis("off")
-    ax.text(0.2, 9.3, "(b)", fontweight="bold", fontsize=9)
-    y0 = 6.5
-    ax.plot([0.5, 9.5], [y0, y0], color="0.3", lw=0.8)
-    for x, w, lab in [(1.0, 0.5, r"$\pi/2$"), (4.6, 0.7, r"$\pi$"), (8.4, 0.5, r"$\pi/2$")]:
-        ax.add_patch(plt.Rectangle((x, y0), w, 1.6, fc=C[0], ec="none"))
-        ax.text(x + w / 2, y0 + 2.0, lab, ha="center", fontsize=7)
-    ax.annotate("", xy=(4.5, y0 - 0.5), xytext=(1.6, y0 - 0.5), arrowprops=dict(arrowstyle="<->", lw=0.6))
-    ax.text(3.0, y0 - 1.4, r"$t/2$", ha="center", fontsize=7)
-    ax.annotate("", xy=(8.3, y0 - 0.5), xytext=(5.4, y0 - 0.5), arrowprops=dict(arrowstyle="<->", lw=0.6))
-    ax.text(6.9, y0 - 1.4, r"$t/2$", ha="center", fontsize=7)
-    ax.text(5, 3.2, r"$H_{\rm eff}=\chi\,\hat J_+\hat J_- + \sum_j \frac{\delta_j}{2}\hat\sigma^z_j$", ha="center", fontsize=7)
-    ax.text(5, 1.8, r"$\hat L_\downarrow=\sqrt{\Gamma_{\rm SR}(n_{\rm th}+1)}\,\hat J_-,\ \hat L_\uparrow=\sqrt{\Gamma_{\rm SR}n_{\rm th}}\,\hat J_+$", ha="center", fontsize=6.5)
-    ax.text(5, 0.5, "echo twist: OAT survives, static disorder refocused", ha="center", fontsize=6.5)
-    ax = fig.add_subplot(gs[2])
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.axis("off")
-    ax.text(0.2, 9.3, "(c)", fontweight="bold", fontsize=9)
-    boxes = ["inputs:\nline shape\n$g,\\kappa,\\Delta,T$", "adiabatic\nelimination", "class-resolved\ncumulant\nequations", "$\\xi_R^2$, contrast\nreadout gain\ndesign map"]
-    for k, b in enumerate(boxes):
-        x = 0.2 + k * 2.5
-        ax.add_patch(matplotlib.patches.FancyBboxPatch((x, 3.2), 2.0, 3.6, boxstyle="round,pad=0.05", fc="#f3f3f3", ec="0.4", lw=0.7))
-        ax.text(x + 1.0, 5.0, b, ha="center", va="center", fontsize=4.3)
-        if k < 3:
-            ax.annotate("", xy=(x + 2.5, 5.0), xytext=(x + 2.05, 5.0), arrowprops=dict(arrowstyle="->", lw=0.7))
-    ax.text(5, 1.6, "validated against exact master equations\nand the analytic $(\\Gamma_{\\rm SR}/\\chi)^{2/3}$ law", ha="center", fontsize=6)
-    savefig(fig, "fig_concept")
+def fig_beyond():
+    """Corrections beyond the eliminated model: elimination error, reversal cost,
+    line-shape uncertainty and pulse duration."""
+    de, dr, db = load("elimination"), load("reversal"), load("robustness")
+    fig, axs = plt.subplots(1, 4, figsize=(7.0, 2.6))
+    # (a) elimination error at the optimum versus g sqrt(N) / Delta
+    ax = axs[0]
+    if de is not None:
+        rows = de["A_rows"]
+        r = rows[:, 0]
+        loss = dB(rows[:, 1]) - dB(rows[:, 2])
+        ax.loglog(r, loss, "o", ms=4, color=C[0], label=f"exact, N = {int(de['A_N'])}")
+        if "A20_xi2_full" in de:
+            xf, xe = de["A20_xi2_full"], de["A20_xi2_elim"]
+            ax.loglog([0.2], [dB(xf.min()) - dB(xe.min())], "s", ms=4, mfc="none", color=C[1], label="exact, N = 20")
+        rr = np.geomspace(0.03, 0.5, 20)
+        ax.loglog(rr, loss[-1] * (rr / r[-1]) ** 2, "--", color="0.5", lw=0.8, label=r"$\propto (g\sqrt{N}/\Delta)^2$")
+        for x, lab in [(0.017, "loop-gap"), (0.08, "SC, 12.5 MHz")]:
+            ax.axvline(x, color="0.75", lw=0.6)
+            ax.text(x * 1.1, 0.0036, lab, rotation=90, fontsize=5.5, va="bottom", ha="left", color="0.35")
+        ax.set_xlabel(r"$g\sqrt{N}/\Delta$")
+        ax.set_ylabel("squeezing lost by the\nelimination (dB)")
+        ax.set_xlim(0.012, 0.6)
+        ax.set_ylim(0.003, 1.0)
+        legend_below(ax, ncol=1, dy=-0.46, fontsize=6)
+        panel_label(ax, "(a)", x=-0.42)
+    # (b) twist-untwist gain with the resonator ring-down at the reversal
+    ax = axs[1]
+    if dr is not None:
+        for k, kap in enumerate([3000, 10000, 30000, 100000]):
+            key = f"B_sc_k{kap}_gain"
+            if key not in dr:
+                continue
+            eps = dr[f"B_sc_k{kap}_eps"]
+            g = np.nanmax(dr[key], axis=0)
+            ax.semilogx(eps, dB(g), color=C[k], label=r"$\kappa/2\pi$ = %g kHz" % (kap / 1e3))
+            ideal = f"B_sc_k{kap}_ideal_gain"
+            if ideal in dr:
+                ax.semilogx(eps, dB(np.nanmax(dr[ideal], axis=0)), color=C[k], ls=":", lw=0.9)
+        ax.axhline(0, color="0.5", lw=0.5)
+        ax.set_xlabel(r"detection noise $\sigma_{\rm det}/N$")
+        ax.set_ylabel("metrological gain (dB)")
+        ax.set_ylim(-2, 22)
+        ax.set_title("with ring-down (solid), ideal (dotted)", fontsize=6.5)
+        legend_below(ax, ncol=2, dy=-0.36, fontsize=6)
+        panel_label(ax, "(b)", x=-0.34)
+    # (c) loop-gap optimum versus Lorentzian fraction of the line
+    ax = axs[2]
+    if db is not None and "a_rows" in db:
+        ra = db["a_rows"]
+        for echo, ls, lab in [(1, "-", "echo twist"), (0, ":", "free twisting")]:
+            rr = ra[ra[:, 1] == echo]
+            rr = rr[np.argsort(rr[:, 0])]
+            ax.plot(rr[:, 0], -dB(rr[:, 2]), "o" + ls, ms=3, color=C[0] if echo else C[1], label=lab)
+        ax.set_xlabel("Lorentzian fraction of the line")
+        ax.set_ylabel("optimum squeezing (dB)")
+        ax.set_xlim(-0.03, 1.03)
+        ax2 = ax.twiny()
+        ax2.set_xlim(ax.get_xlim())
+        fr = db["a_frac"]
+        fid = db["a_fid_1e_us"]
+        sel = [0, 3, 5, 6]
+        ax2.set_xticks(fr[sel])
+        ax2.set_xticklabels([f"{fid[k]:.0f}" for k in sel], fontsize=6)
+        ax2.set_xlabel(r"free-induction 1/e time, 5 kHz line ($\mu$s)", fontsize=6.5)
+        legend_below(ax, ncol=2, dy=-0.36, fontsize=6)
+        panel_label(ax, "(c)", x=-0.34, y=1.22)
+    # (d) finite pulse duration
+    ax = axs[3]
+    if db is not None and "c_rows" in db:
+        rc = db["c_rows"]
+        kinds = ["ideal", "noecho", "duration", "duration_noecho", "angle", "spread"]
+        p_lg, N_lg = loop_gap_dispersive(6e14, T=0.08, T2=T2_SPIN)
+        p_sc = from_hz(1e6 / np.sqrt(1e10), 1e4, 30e6, T=0.02, T2=T2_SPIN)
+        for dev, name, chiN, col in [(0, "loop-gap", p_lg.chi * N_lg, C[0]), (1, "SC operating point", p_sc.chi * 1e10, C[1])]:
+            sub = rc[rc[:, 0] == dev]
+            ideal = sub[sub[:, 1] == kinds.index("ideal")]
+            dur = sub[sub[:, 1] == kinds.index("duration")]
+            dur = dur[np.argsort(dur[:, 2])]
+            x = np.concatenate([[0.0], dur[:, 2] * chiN])
+            y = np.concatenate([-dB(ideal[:, 3]), -dB(dur[:, 3])])
+            ax.plot(x, y, "o-", ms=3, color=col, label=name + ", echo")
+            free = sub[sub[:, 1] == kinds.index("duration_noecho")]
+            free = free[np.argsort(free[:, 2])]
+            noecho = sub[sub[:, 1] == kinds.index("noecho")]
+            if len(free) and len(noecho):
+                xf = np.concatenate([[0.0], free[:, 2] * chiN])
+                yf = np.concatenate([-dB(noecho[:, 3]), -dB(free[:, 3])])
+                ax.plot(xf, yf, "s:", ms=3, mfc="none", color=col, label=name + ", free")
+        ax.set_xlabel(r"pulse duration $\chi N\,\tau_{\rm p}$")
+        ax.set_ylabel("optimum squeezing (dB)")
+        legend_below(ax, ncol=1, dy=-0.36, fontsize=6)
+        panel_label(ax, "(d)", x=-0.34)
+    fig.subplots_adjust(left=0.085, right=0.99, top=0.84, bottom=0.42, wspace=0.62)
+    savefig(fig, "fig_beyond")
 
 
 if __name__ == "__main__":
@@ -405,3 +451,4 @@ if __name__ == "__main__":
     fig_scaling()
     fig_designmap()
     fig_inhomog_readout()
+    fig_beyond()
