@@ -158,6 +158,25 @@ def rotate(st: State, axis, angle: float) -> State:
     return out
 
 
+def rotate_classes(st: State, axis, angles, spec_angles=None) -> State:
+    """Rotation of each class m by its own angle angles[m] about `axis` (a pulse
+    whose rotation angle varies between classes, e.g. with the coupling weight).
+    Spectator spins rotate by spec_angles (default: the mean of angles)."""
+    angles = np.asarray(angles, float)
+    Rs = np.stack([rotation_matrix(axis, a) for a in angles])  # (M,3,3)
+    v, C = to_cartesian(st)
+    vn = np.einsum("mab,mb->ma", Rs, v)
+    Cn = np.einsum("mac,nbd,mncd->mnab", Rs, Rs, C)
+    out = from_cartesian(vn, Cn)
+    K = st.vs.shape[0]
+    if K:
+        sa = np.full(K, float(angles.mean())) if spec_angles is None else np.asarray(spec_angles, float)
+        out.vs = np.stack([st.vs[k] @ rotation_matrix(axis, sa[k]).T for k in range(K)])
+    else:
+        out.vs = st.vs
+    return out
+
+
 def collective_moments(st: State, n, weights=None, spec_n=None, spec_weights=None):
     """Mean <J> and symmetrised covariance of J_alpha = 1/2 sum_a c_a sigma^alpha_a,
     including spectator spins (uncorrelated, each in a pure state with Bloch vector vs)."""

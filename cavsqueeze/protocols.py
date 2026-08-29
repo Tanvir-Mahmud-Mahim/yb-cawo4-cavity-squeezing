@@ -14,6 +14,7 @@ from .cumulant import (
     State,
     product_state,
     rotate,
+    rotate_classes,
     evolve,
     evolve_meanfield,
     wineland_xi2,
@@ -42,6 +43,36 @@ def twist(st: State, rt: Rates, t: float, echo: bool = True, **kw) -> State:
         st = evolve(st, rt, t / 2, **kw)
         return st
     return evolve(st, rt, t, **kw)
+
+
+def pulse(st: State, rt: Rates, axis, angle: float, duration: float = 0.0, angles=None, n_steps: int = 20, **kw) -> State:
+    """A rotation pulse.  With duration = 0 it is an instantaneous rotation
+    (per-class angles if `angles` is given).  With a finite duration the
+    cavity-mediated evolution continues during the pulse: the pulse is split
+    into n_steps equal rotation increments interleaved with free evolution
+    (Strang splitting, error O(duration^2 / n_steps^2))."""
+    if duration <= 0:
+        return rotate(st, axis, angle) if angles is None else rotate_classes(st, axis, angles)
+    dt = duration / n_steps
+    inc = angle / n_steps if angles is None else np.asarray(angles, float) / n_steps
+    st = evolve(st, rt, dt / 2, **kw)
+    for k in range(n_steps):
+        st = rotate(st, axis, inc) if angles is None else rotate_classes(st, axis, inc)
+        if k < n_steps - 1:
+            st = evolve(st, rt, dt, **kw)
+    return evolve(st, rt, dt / 2, **kw)
+
+
+def twist_imperfect(st: State, rt: Rates, t: float, echo: bool = True, pi_duration: float = 0.0,
+                    pi_angles=None, **kw) -> State:
+    """Echo twist with an imperfect pi pulse: finite duration pi_duration (the
+    total sequence still lasts t + pi_duration) and per-class rotation angles
+    pi_angles (default pi for every class)."""
+    if not echo:
+        return evolve(st, rt, t, **kw)
+    st = evolve(st, rt, t / 2, **kw)
+    st = pulse(st, rt, X, np.pi, duration=pi_duration, angles=pi_angles, **kw)
+    return evolve(st, rt, t / 2, **kw)
 
 
 def squeezing_after(params: CavityParams, ens: Ensemble, t: float, echo: bool = True, weights=None, **kw):
