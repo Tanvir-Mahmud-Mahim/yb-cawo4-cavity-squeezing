@@ -75,7 +75,11 @@ class Scene:
             col = tuple(colour)
         self.polys.append(poly)
         self.fc.append((*col, alpha))
-        self.ec.append(edge if edge != "none" else (0, 0, 0, 0))
+        if edge == "face":
+            self.ec.append((*col, alpha))
+            lw = max(lw, 0.6)
+        else:
+            self.ec.append(edge if edge != "none" else (0, 0, 0, 0))
         self.lw.append(lw)
 
     def box(self, x0, x1, y0, y1, z0, z1, colour, edge="none", lw=0.0, alpha=1.0, faces=None):
@@ -164,14 +168,16 @@ def wavy(fig, p0, p1, colour, n=7, amp=0.006, lw=1.0, arrow=True):
 
 
 # ---------------------------------------------------------------------------
-def keyhole_rect_with_circle(x0, x1, z0, z1, y, cx, cz, r, n=36):
-    """Front-face band (plane y = const) with a circular hole, as one polygon
-    (the hole is reached through a zero-width slit from the top edge)."""
-    th = np.linspace(np.pi / 2, np.pi / 2 + 2 * np.pi, n + 1)
-    pts = [[x0, y, z1], [cx, y, z1]]
-    pts += [[cx + r * np.cos(t), y, cz + r * np.sin(t)] for t in th]
-    pts += [[cx, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0]]
-    return pts
+def band_with_circle(x0, x1, z0, z1, y, cx, cz, r, n=24):
+    """Front-face band (plane y = const) with a circular hole, as four polygons
+    (top, bottom, left C-piece, right C-piece) so that no slit is needed."""
+    tl = np.linspace(1.5 * np.pi, 0.5 * np.pi, n + 1)        # left half circle, through 180 deg
+    tr = np.linspace(-0.5 * np.pi, 0.5 * np.pi, n + 1)       # right half circle, through 0 deg
+    top = [[x0, y, cz + r], [x1, y, cz + r], [x1, y, z1], [x0, y, z1]]
+    bot = [[x0, y, z0], [x1, y, z0], [x1, y, cz - r], [x0, y, cz - r]]
+    left = [[x0, y, cz - r], [cx, y, cz - r]] + [[cx + r * np.cos(t), y, cz + r * np.sin(t)] for t in tl] + [[x0, y, cz + r]]
+    right = [[cx, y, cz - r], [x1, y, cz - r], [x1, y, cz + r], [cx, y, cz + r]] + [[cx + r * np.cos(t), y, cz + r * np.sin(t)] for t in tr[::-1]]
+    return [top, bot, left, right]
 
 
 def loop_gap_scene():
@@ -193,7 +199,7 @@ def loop_gap_scene():
     out.append((S, 1))
     # 2) far parts of the block: back, bottom, left end, inner walls
     S = Scene()
-    S.box(X0, X1, Y0, Y1, Z0, Z1, CU, faces=["back", "bottom", "left"], edge=E, lw=0.35)
+    S.box(X0, X1, Y0, Y1, Z0, Z1, CU, faces=["back", "bottom", "left"])
     for xc in (-xo, xo):
         cylinder_wall(S, "y", (xc, zc), ro, Y0, Y1, 0, 2 * np.pi, CU_DARK, n=40, inner=True)
     for poly, nrm in [
@@ -203,7 +209,7 @@ def loop_gap_scene():
         ([[wx, Y0, zc - wz], [wx, Y1, zc - wz], [wx, Y1, zc + wz], [wx, Y0, zc + wz]], [-1, 0, 0]),
         ([[-wx, Y1, zc - wz], [wx, Y1, zc - wz], [wx, Y1, zc + wz], [-wx, Y1, zc + wz]], [0, -1, 0]),   # back wall of the pocket
     ]:
-        S.add(poly, CU_DARK, normal=nrm, edge=E, lw=0.3)
+        S.add(poly, CU_DARK, normal=nrm)
     for xa, xb in [(-xo + ro, -wx), (wx, xo - ro)]:
         S.add([[xa, Y0, zc - gh], [xb, Y0, zc - gh], [xb, Y1, zc - gh], [xa, Y1, zc - gh]], CU_DARK * 0.7, normal=[0, 0, 1])
         S.add([[xa, Y0, zc + gh], [xb, Y0, zc + gh], [xb, Y1, zc + gh], [xa, Y1, zc + gh]], CU_DARK * 0.7, normal=[0, 0, -1])
@@ -221,19 +227,32 @@ def loop_gap_scene():
     # 5) front face with the openings, top and right faces
     S = Scene()
     yf = Y0
-    S.add(keyhole_rect_with_circle(X0, -wx, Z0, Z1, yf, -xo, zc, ro), CU, normal=[0, -1, 0], edge=E, lw=0.35)
-    S.add(keyhole_rect_with_circle(wx, X1, Z0, Z1, yf, xo, zc, ro), CU, normal=[0, -1, 0], edge=E, lw=0.35)
-    S.add([[-wx, yf, Z0], [wx, yf, Z0], [wx, yf, zc - wz], [-wx, yf, zc - wz]], CU, normal=[0, -1, 0], edge=E, lw=0.35)
-    S.add([[-wx, yf, zc + wz], [wx, yf, zc + wz], [wx, yf, Z1], [-wx, yf, Z1]], CU, normal=[0, -1, 0], edge=E, lw=0.35)
+    for piece in band_with_circle(X0, -wx, Z0, Z1, yf, -xo, zc, ro) + band_with_circle(wx, X1, Z0, Z1, yf, xo, zc, ro):
+        S.add(piece, CU, normal=[0, -1, 0], edge="face")
+    S.add([[-wx, yf, Z0], [wx, yf, Z0], [wx, yf, zc - wz], [-wx, yf, zc - wz]], CU, normal=[0, -1, 0], edge="face")
+    S.add([[-wx, yf, zc + wz], [wx, yf, zc + wz], [wx, yf, Z1], [-wx, yf, Z1]], CU, normal=[0, -1, 0], edge="face")
     for xa, xb in [(-xo + ro, -wx), (wx, xo - ro)]:
         S.add([[xa, yf - 0.02, zc - gh], [xb, yf - 0.02, zc - gh], [xb, yf - 0.02, zc + gh], [xa, yf - 0.02, zc + gh]], CU_DARK * 0.5, flat=True)
-    S.box(X0, X1, Y0, Y1, Z0, Z1, CU, faces=["top", "right"], edge=E, lw=0.35)
+    S.box(X0, X1, Y0, Y1, Z0, Z1, CU, faces=["top", "right"])
     out.append((S, 4))
     # 6) beam in front of the block
     S = Scene()
     cylinder_wall(S, "y", (0, zc), 0.4, -19, Y0 - 0.05, 0, 2 * np.pi, beam, n=14, inner=False, alpha=0.9)
     out.append((S, 5))
-    return out, dict(zc=zc, xo=xo, ro=ro, wx=wx, wz=wz, X0=X0, X1=X1, Y0=Y0, Y1=Y1, Z1=Z1, cy=cy)
+    # 7) visible edge lines (block outline, hole rims, pocket rims)
+    th = np.linspace(0, 2 * np.pi, 80)
+    edges = [
+        [[X0, Y0, Z0], [X1, Y0, Z0], [X1, Y0, Z1], [X0, Y0, Z1], [X0, Y0, Z0]],          # front outline
+        [[X0, Y0, Z1], [X0, Y1, Z1], [X1, Y1, Z1], [X1, Y0, Z1]],                        # top outline
+        [[X1, Y1, Z1], [X1, Y1, Z0], [X1, Y0, Z0]],                                      # right face
+        [[X0, Y0, Z0], [X0, Y1, Z0], [X0, Y1, Z1]],                                      # left face (visible part)
+        [[-wx, Y0, zc - wz], [wx, Y0, zc - wz], [wx, Y0, zc + wz], [-wx, Y0, zc + wz], [-wx, Y0, zc - wz]],   # pocket front rim
+        [[-wx, Y1, zc - wz], [wx, Y1, zc - wz]],                                                          # pocket back floor edge
+        [[-wx, Y0, zc - wz], [-wx, Y1, zc - wz]], [[wx, Y0, zc - wz], [wx, Y1, zc - wz]],                   # floor edges
+    ]
+    for xc in (-xo, xo):
+        edges.append([[xc + ro * np.cos(t), Y0, zc + ro * np.sin(t)] for t in th])
+    return out, dict(zc=zc, xo=xo, ro=ro, wx=wx, wz=wz, X0=X0, X1=X1, Y0=Y0, Y1=Y1, Z1=Z1, cy=cy, edges=edges, edge_colour=E)
 
 
 def crystal_zoom_scene():
@@ -321,6 +340,10 @@ def make():
     for S, zo in scenes:
         S.draw(ax, zorder=zo)
     setup3d(ax, (-27, 27), (-19, 20), (-3, 23), (54, 39, 26), 1.55, 18, -112)
+    for e in G["edges"]:
+        e = np.asarray(e, float)
+        ln, = ax.plot(e[:, 0], e[:, 1], e[:, 2], color=G["edge_colour"], lw=0.45, solid_capstyle="round")
+        ln.set_zorder(6)
     fig.canvas.draw()
     zc, xo, ro, wx, wz, cy = G["zc"], G["xo"], G["ro"], G["wx"], G["wz"], G["cy"]
     Y0, Y1, X0, X1, Z1 = G["Y0"], G["Y1"], G["X0"], G["X1"], G["Z1"]
@@ -349,14 +372,17 @@ def make():
     for xc, sgn in [(-xo, -1), (xo, 1)]:
         p = fig.transFigure.inverted().transform(p2d(ax, xc, Y0 - 0.5, zc))
         wavy(fig, (p[0] + sgn * 0.075, p[1] - 0.06), (p[0], p[1] - 0.006), BLUE, n=4, amp=0.004, lw=1.0)
-    # dashed link from the crystal to the magnified view in (b)
-    pc = fig.transFigure.inverted().transform(p2d(ax, 2.2, Y0 - 0.3, zc + 2.3))
-    fig.add_artist(matplotlib.lines.Line2D([pc[0], 0.60], [pc[1], 0.93], transform=fig.transFigure, color="0.4", lw=0.6, ls="--", zorder=28))
+    # dashed frame around the crystal, referring to the magnified view (b)
+    pa = fig.transFigure.inverted().transform(p2d(ax, -2.2, Y0 - 0.3, zc - 2.3))
+    pb = fig.transFigure.inverted().transform(p2d(ax, 2.2, Y0 - 0.3, zc + 2.3))
+    m = 0.012
+    fig.add_artist(Rectangle((pa[0] - m, pa[1] - m), pb[0] - pa[0] + 2 * m, pb[1] - pa[1] + 2 * m, transform=fig.transFigure, fc="none", ec="0.25", lw=0.6, ls=(0, (3, 2)), zorder=28))
+    fig.text(pb[0] + m, pa[1] - m - 0.004, "see (b)", fontsize=5.4, color="w", ha="right", va="top", zorder=33)
 
     # ================= (b) magnified crystal with the four processes =================
-    bx = fig.add_axes([0.56, 0.50, 0.24, 0.48], projection="3d")
+    bx = fig.add_axes([0.545, 0.555, 0.24, 0.38], projection="3d")
     crystal_zoom_scene().draw(bx, zorder=2)
-    setup3d(bx, (-3.2, 3.2), (-3.2, 3.2), (-3.2, 3.2), (1, 1, 1), 1.5, 18, -112)
+    setup3d(bx, (-3.2, 3.2), (-3.2, 3.2), (-3.2, 3.2), (1, 1, 1), 1.05, 18, -112)
     fig.canvas.draw()
     rng = np.random.default_rng(7)
     spins = [tuple(v) for v in rng.uniform([-1.7, -2.0, -1.8], [1.7, 2.0, 1.8], size=(12, 3))]
@@ -364,20 +390,30 @@ def make():
     fig.text(0.565, 0.985, "(b)", fontsize=9, fontweight="bold", va="top")
     fig.text(0.595, 0.985, "what the model follows inside the crystal", fontsize=6.6, va="top")
     c = fig.transFigure.inverted().transform(p2d(bx, 0, 0, 0))
-    # twisting: two spins exchange through the resonator
-    fig.add_artist(FancyArrowPatch((c[0] - 0.045, c[1] - 0.012), (c[0] + 0.045, c[1] + 0.012), transform=fig.transFigure,
+    cr = fig.transFigure.inverted().transform(p2d(bx, 2.2, -2.5, 0))     # right edge of the cube, mid height
+    ct = fig.transFigure.inverted().transform(p2d(bx, 0, 0, 2.3))        # top
+    cb = fig.transFigure.inverted().transform(p2d(bx, 0, 0, -2.3))       # bottom
+    lx0 = cr[0] + 0.04                                                    # label column to the right of the cube
+    # twisting: two highlighted spins joined by a double arrow
+    for p in [(c[0] - 0.035, c[1] - 0.008), (c[0] + 0.035, c[1] + 0.008)]:
+        fig.add_artist(FancyArrowPatch((p[0], p[1] - 0.011), (p[0], p[1] + 0.011), transform=fig.transFigure,
+                                       arrowstyle="-|>", mutation_scale=6, lw=1.0, color=ORANGE, zorder=27))
+    fig.add_artist(FancyArrowPatch((c[0] - 0.029, c[1] - 0.007), (c[0] + 0.029, c[1] + 0.007), transform=fig.transFigure,
                                    arrowstyle="<|-|>", mutation_scale=8, lw=1.3, color=ORANGE, zorder=26))
-    # emission out, thermal photons in, dephasing
-    wavy(fig, (c[0] + 0.03, c[1] + 0.045), (c[0] + 0.10, c[1] + 0.12), BLUE, n=5, amp=0.005, lw=1.1)
-    wavy(fig, (c[0] - 0.105, c[1] + 0.12), (c[0] - 0.035, c[1] + 0.045), PINK, n=5, amp=0.005, lw=1.1)
-    fig.add_artist(FancyArrowPatch((c[0] + 0.0, c[1] - 0.04), (c[0] + 0.0, c[1] - 0.10), transform=fig.transFigure,
+    fig.add_artist(matplotlib.lines.Line2D([c[0] + 0.045, lx0 - 0.005], [c[1] + 0.008, c[1] + 0.008], transform=fig.transFigure, color=ORANGE, lw=0.5, zorder=26))
+    fig.text(lx0, c[1] + 0.008, "spins twist each other through\nthe resonator (strength $\\chi$)", fontsize=5.6, color=ORANGE, ha="left", va="center", linespacing=1.15)
+    # collective emission: wave leaving the top right corner
+    wavy(fig, (c[0] + 0.02, c[1] + 0.04), (cr[0] + 0.02, ct[1] + 0.005), BLUE, n=5, amp=0.005, lw=1.1)
+    fig.text(lx0, ct[1] + 0.012, "collective emission into the\nresonator (rate $\\Gamma_{\\rm SR}$)", fontsize=5.6, color=BLUE, ha="left", va="center", linespacing=1.15)
+    # thermal photons: wave entering the top left corner
+    wavy(fig, (c[0] - 0.085, ct[1] + 0.03), (c[0] - 0.03, c[1] + 0.045), PINK, n=5, amp=0.005, lw=1.1)
+    fig.text(c[0] - 0.09, ct[1] + 0.045, "thermal photons from the\nresonator (rate $\\Gamma_{\\rm SR}n_{\\rm th}$)", fontsize=5.6, color=PINK, ha="left", va="bottom", linespacing=1.15)
+    # dephasing: one spin at the bottom right losing its phase
+    fig.add_artist(FancyArrowPatch((c[0] + 0.02, c[1] - 0.035), (c[0] + 0.02, c[1] - 0.085), transform=fig.transFigure,
                                    arrowstyle="-|>", mutation_scale=7, lw=1.1, color=GREEN, zorder=26))
-    # plain-word labels, each in the colour of its arrow, outside the cube
-    fig.text(0.805, 0.94, "thermal photons from the\nresonator, rate $\\Gamma_{\\rm SR}n_{\\rm th}$", fontsize=5.6, color=PINK, ha="left", va="center", linespacing=1.15)
-    fig.text(0.805, 0.86, "collective emission into the\nresonator, rate $\\Gamma_{\\rm SR}$", fontsize=5.6, color=BLUE, ha="left", va="center", linespacing=1.15)
-    fig.text(0.805, 0.755, "spins twist each other through\nthe resonator, $\\chi\\hat J_+\\hat J_-$", fontsize=5.6, color=ORANGE, ha="left", va="center", linespacing=1.15)
-    fig.text(0.805, 0.655, "each spin loses phase on its\nown, rate $1/T_2$", fontsize=5.6, color=GREEN, ha="left", va="center", linespacing=1.15)
-    fig.text(0.805, 0.565, "spins: the 3.084 GHz clock\ntransition of $^{171}$Yb$^{3+}$", fontsize=5.6, color=CRYSTAL_EDGE, ha="left", va="center", linespacing=1.15)
+    fig.add_artist(matplotlib.lines.Line2D([c[0] + 0.028, lx0 - 0.005], [c[1] - 0.07, c[1] - 0.07], transform=fig.transFigure, color=GREEN, lw=0.5, zorder=26))
+    fig.text(lx0, c[1] - 0.07, "each spin loses its phase\non its own (rate $1/T_2$)", fontsize=5.6, color=GREEN, ha="left", va="center", linespacing=1.15)
+    fig.text(c[0], cb[1] - 0.04, "spins: the 3.084 GHz clock transition of $^{171}$Yb$^{3+}$", fontsize=5.6, color=CRYSTAL_EDGE, ha="center", va="top")
 
     # ================= (c) proposed planar superconducting resonator =================
     cx3 = fig.add_axes([0.55, 0.02, 0.46, 0.50], projection="3d")
