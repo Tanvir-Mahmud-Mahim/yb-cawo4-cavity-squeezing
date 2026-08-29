@@ -150,6 +150,7 @@
  ],
  "LG_GAIN": 0.4,
  "LG_AT22_ABS": 6.8,
+ "LG_LOR_NOECHO_ABS": 2.0,
  "LG_GAIN2": 0.0,
  "LG_NRATIO": 6.0,
  "LG_N_TABLE": [
