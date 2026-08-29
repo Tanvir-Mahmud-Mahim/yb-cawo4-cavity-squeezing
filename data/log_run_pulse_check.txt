@@ -1,0 +1,5 @@
+exact N=60: relative increase of xi^2: [0.0048 0.0094 0.018 ]
+[exact N = 60] 203.4 s
+cumulant_N60 relative increase of xi^2: [0.0049 0.0096 0.0184]
+cumulant_N1e10 relative increase of xi^2: [0.0055 0.0107 0.0205]
+splitting convergence: {10: 0.023206210145022596, 20: 0.023190875250781368, 40: 0.02318707304262631, 80: 0.023186124438999405}

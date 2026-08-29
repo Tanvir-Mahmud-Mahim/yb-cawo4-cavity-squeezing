@@ -1,0 +1,12 @@
+ratio 0.4: full -3.092 dB at chiNt=1.500; eliminated -3.718 dB at 1.625; max photons 1.29; max rel dev xi2 0.826
+ratio 0.2: full -3.298 dB at chiNt=1.625; eliminated -3.718 dB at 1.625; max photons 0.365; max rel dev xi2 0.144
+ratio 0.1: full -3.589 dB at chiNt=1.613; eliminated -3.718 dB at 1.625; max photons 0.0874; max rel dev xi2 0.0322
+ratio 0.05: full -3.685 dB at chiNt=1.625; eliminated -3.718 dB at 1.625; max photons 0.0162; max rel dev xi2 0.00812
+[elimination] 115.8 s
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/elimination.npz
+sc: RWA -1.8197 dB at 1.137; lab frame -1.8210 dB at 1.137; max rel dev 0.00329; expected order Delta/(omega_c+omega_s) = 2.02e-03
+lg: RWA -1.8197 dB at 1.137; lab frame -1.8220 dB at 1.137; max rel dev 0.00566; expected order Delta/(omega_c+omega_s) = 3.56e-03
+[rwa] 299.9 s
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/elimination.npz
+[elimination N = 20] 290.4 s
+N = 20, ratio 0.2: full -4.303 dB; eliminated -4.824 dB; max rel dev 0.177

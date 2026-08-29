@@ -1,0 +1,106 @@
+FID 1/e times (us) for 5 kHz: {np.float64(0.0): np.float64(106.0), np.float64(0.1): np.float64(102.7), np.float64(0.2): np.float64(99.1), np.float64(0.3): np.float64(95.1), np.float64(0.5): np.float64(86.4), np.float64(0.7): np.float64(77.2), np.float64(1.0): np.float64(0.0)}
+('a', np.float64(0.0), True, 0.1511873475633438, 0.00031772296470865616)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.0), False, 0.10875768428050571, 0.0001483854207156615)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.1), True, 0.16953557402733385, 0.00031772296470865616)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.1), False, 0.13082199263310118, 0.0001483854207156615)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.2), True, 0.2053094252804964, 0.0003419951893353393)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.2), False, 0.16740473727296226, 0.0001483854207156615)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.3), True, 0.2626066784267104, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.3), False, 0.20658198529086616, 0.00019140981374225657)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.5), True, 0.310081787942058, 5.848035476425729e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.5), False, 0.2644170926471067, 0.00018982350911593706)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.7), True, 0.35207672044936184, 5.3288410389877363e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(0.7), False, 0.40252166954761204, 0.00016989761722895904)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(1.0), True, 0.405870590775969, 5.3288410389877363e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('a', np.float64(1.0), False, 0.5760517808501096, 0.00023443420676885163)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.0001), True, 0.8456630940849721, 1.9625441487229315e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.0001), False, 0.953117450307162, 1e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.0003), True, 0.45809943327333646, 5.3288410389877363e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.0003), False, 0.6658667022470351, 2.95775887230336e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.001), True, 0.3143394448891403, 5.848035476425729e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.001), False, 0.30803063959714266, 0.00019140981374225657)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.003), True, 0.2788266482209883, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.003), False, 0.2328545082472347, 0.00019140981374225657)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.01), True, 0.2671387625936989, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.01), False, 0.2135354161202936, 0.00019140981374225657)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.15), True, 0.2626066784267104, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('b', np.float64(0.15), False, 0.20658198529086616, 0.00019140981374225657)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'ideal', 0.0, 0.2626066784267104, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'noecho', 0.0, 0.20658198529086616, 0.00019140981374225657)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'duration', 1e-06, 0.2700599189194194, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'duration', 3e-06, 0.283144042435688, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'duration', 1e-05, 0.35062110617166165, 5.848035476425729e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'duration_noecho', 1e-06, 0.20518167261443887, 0.00019140981374225657)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'duration_noecho', 3e-06, 0.20375753567438648, 0.00018982350911593706)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'duration_noecho', 1e-05, 0.20054134808517798, 0.00018982350911593706)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'angle', 0.01, 0.26996792229050487, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'angle', 0.03, 0.28635912529908575, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'angle', 0.1, 0.3626233635296405, 5.848035476425729e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'spread', 0.02, 0.26375236620887654, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'lg', 'spread', 0.05, 0.2697849157553299, 6.370293384971518e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'ideal', 0.0, 0.013396824246869145, 0.0001246365440887374)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'noecho', 0.0, 0.015908678961497703, 0.0001246365440887374)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'duration', 1e-07, 0.013778635425951983, 0.00011963162235223798)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'duration', 3e-07, 0.014702596640028062, 0.00011963162235223798)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'duration', 1e-06, 0.025740363193318714, 6.171603425656895e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'duration_noecho', 1e-07, 0.01579528357217726, 0.0001246365440887374)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'duration_noecho', 3e-07, 0.015613399332834062, 0.0001246365440887374)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'duration_noecho', 1e-06, 0.015030256634470971, 0.0001246365440887374)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'angle', 0.01, 0.014811388650680681, 0.00011963162235223798)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'angle', 0.03, 0.02301438438708769, 6.938365096407316e-05)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'angle', 0.1, 0.017559342080648334, 0.00036073507964792665)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'spread', 0.02, 0.01444708871587095, 0.0001246365440887374)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+('c', 'sc', 'spread', 0.05, 0.0198683109882618, 0.0001246365440887374)
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/robustness.npz
+[robustness] 4256.7 s
