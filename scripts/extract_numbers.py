@@ -41,6 +41,8 @@ if d is not None and "a_xi_homogeneous_echo" in d:
     num["LG_T"] = num.get("LG_VOIGT_NOECHO_T") if num.get("LG_VOIGT_NOECHO", 0) < num.get("LG_VOIGT_ECHO", 0) else num.get("LG_VOIGT_ECHO_T")
     num["LG_HOMO_T"] = num.get("LG_HOMO_ECHO_T")
     num["LG_GAUSS_LOSS"] = round(num["LG_GAUSS"] - num["LG_HOMO"], 1)
+    num["LG_GAUSS_LOSS_ABS"] = round(abs(num["LG_GAUSS"] - num["LG_HOMO"]), 1)
+    num["LG_LOR_LOSS_ABS"] = round(abs(num["LG_LOR"] - num["LG_HOMO"]), 1)
     num["LG_LOR_LOSS"] = round(num["LG_LOR"] - num["LG_HOMO"], 1)
     num["LG_VOIGT_LOSS"] = round(num["LG_VOIGT"] - num["LG_HOMO"], 1)
     chiN0 = 6134.98  # Hz, chi N0/2pi at N0 = 6e14
@@ -122,6 +124,7 @@ if m is not None:
     best = m["best"]
     k = np.argmin(best[:, 4])
     num["SC_MAX"] = round(first_dB(best[k, 4]), 1)
+    num["SC_MAX_ABS"] = round(-first_dB(best[k, 4]), 1)
     num["SC_MAX_T"] = round(float(best[k, 5] * 1e6), 0)
     num["SC_MAX_KAPPA"] = float(best[k, 0])
     num["SC_MAX_GN"] = float(best[k, 1])
@@ -130,12 +133,12 @@ if m is not None:
         num["SC_BEST"] = round(first_dB(r[0, 4]), 1)
         num["SC_BEST_ABS"] = round(-first_dB(r[0, 4]), 1)
         num["SC_T"] = round(float(r[0, 5] * 1e6), 0)
-        num["SC_DELTA"] = round(float(r[0, 3] / 1e6), 0)
+        num["SC_DELTA"] = round(float(r[0, 3] / 1e6), 1)
         num["SC_NU"] = float(r[0, 2])
     num["SC_TMIN"] = round(float(np.min(best[:, 5]) * 1e6), 0)
     num["SC_TMAX"] = round(float(np.max(best[:, 5]) * 1e3), 1)
     num["SC_DMIN"] = round(float(np.min(best[:, 3]) / 1e6), 1)
-    num["SC_DMAX"] = round(float(np.max(best[:, 3]) / 1e6), 0)
+    num["SC_DMAX"] = round(float(np.max(best[:, 3]) / 1e6), 1)
     vals, cnt = np.unique(best[:, 2], return_counts=True)
     num["NU_OPT"] = int(vals[np.argmax(cnt)])
     num["NU_HIST"] = {int(v): int(c) for v, c in zip(vals, cnt)}
@@ -143,11 +146,10 @@ if m is not None:
 # ---------------- inhomogeneity ----------------
 i = load("inhomog")
 if i is not None:
-    for D in [10, 100]:
+    for D in [1, 2, 4, 10, 30, 100]:
         if f"xi_w_{D}" in i:
-            num[f"INH_LOSS{D}"] = round(float(dB(np.nanmin(i[f"xi_u_{D}"])) - dB(np.nanmin(i[f"xi_w_{D}"]))), 1)
-    if "xi_w_10" in i and "xi_w_1" in i:
-        num["INH_LOSS_W"] = round(abs(float(dB(np.nanmin(i["xi_w_10"])) - dB(np.nanmin(i["xi_w_1"])))), 1)
+            num[f"INH_U_{D}"] = round(-first_dB(np.nanmin(i[f"xi_u_{D}"])), 1)
+            num[f"INH_W_{D}"] = round(-first_dB(np.nanmin(i[f"xi_w_{D}"])), 1)
     num["INH_TABLE"] = {int(D): [round(first_dB(np.nanmin(i[f"xi_w_{int(D)}"])), 1), round(first_dB(np.nanmin(i[f"xi_u_{int(D)}"])), 1)] for D in i["D"] if f"xi_w_{int(D)}" in i}
 
 # ---------------- readout ----------------

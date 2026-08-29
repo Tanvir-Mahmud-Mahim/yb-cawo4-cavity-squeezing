@@ -1,0 +1,61 @@
+best [np.float64(3000.0), np.float64(100000.0), np.float64(4.0), np.float64(500000.0), 0.044187128012667345, 9.084430873087837e-05, 11.361207457031313, np.float64(19999.820001619988), np.float64(119.99892000971991)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(3000.0), np.float64(200000.0), np.float64(8.0), np.float64(1000000.0), 0.026031067337520176, 4.849939087175214e-05, 12.160097345574435, np.float64(39999.9100002025), np.float64(119.99973000060751)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(3000.0), np.float64(500000.0), np.float64(16.0), np.float64(3125000.0), 0.012812511062309814, 4.216619290025166e-05, 21.16973543617133, np.float64(79999.98156800425), np.float64(76.79998230528409)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(3000.0), np.float64(1000000.0), np.float64(16.0), np.float64(12500000.0), 0.007058026807213763, 7.699878174350428e-05, 38.65760882856469, np.float64(79999.99884800002), np.float64(19.199999723520005)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(3000.0), np.float64(2000000.0), np.float64(16.0), np.float64(50000000.0), 0.004773010160237973, 7.719984732223817e-05, 38.758555293594576, np.float64(79999.99992800002), np.float64(4.799999995680001)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(3000.0), np.float64(5000000.0), np.float64(16.0), np.float64(312500000.0), 0.003718858311288055, 0.00017953330788703973, 90.13556228739967, np.float64(79999.99999815681), np.float64(0.7679999999823055)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(10000.0), np.float64(100000.0), np.float64(4.0), np.float64(500000.0), 0.08802804717403145, 7.719984732223817e-05, 9.653915622736463, np.float64(19998.00019998), np.float64(399.9600039996001)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(10000.0), np.float64(200000.0), np.float64(4.0), np.float64(2000000.0), 0.04072425458779618, 9.084430873087837e-05, 11.361238850128775, np.float64(19999.875000781245), np.float64(99.99937500390625)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(10000.0), np.float64(500000.0), np.float64(8.0), np.float64(6250000.0), 0.020028740327740942, 5.673315520927786e-05, 14.224545732046852, np.float64(39999.97440001639), np.float64(63.999959040026226)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(10000.0), np.float64(1000000.0), np.float64(16.0), np.float64(12500000.0), 0.011692271223866476, 4.216619290025166e-05, 21.169736928301592, np.float64(79999.98720000206), np.float64(63.99998976000165)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(10000.0), np.float64(2000000.0), np.float64(16.0), np.float64(50000000.0), 0.006575030132982358, 7.719984732223817e-05, 38.7585549404702, np.float64(79999.9992), np.float64(15.999999840000003)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(10000.0), np.float64(5000000.0), np.float64(16.0), np.float64(312500000.0), 0.004390194664697589, 0.00017953330788703973, 90.13556226637661, np.float64(79999.99997952003), np.float64(2.5599999993446407)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(30000.0), np.float64(100000.0), np.float64(4.0), np.float64(500000.0), 0.1702028573083123, 3.324214121313736e-05, 4.153623395485627, np.float64(19982.01618543311), np.float64(1198.9209711259869)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(30000.0), np.float64(200000.0), np.float64(4.0), np.float64(2000000.0), 0.07292644782666946, 8.402207802655828e-05, 10.507504039962063, np.float64(19998.87506327769), np.float64(299.9831259491654)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(30000.0), np.float64(500000.0), np.float64(4.0), np.float64(12500000.0), 0.0310608743985037, 0.0001113110008438387, 13.92092687990817, np.float64(19999.971200041473), np.float64(47.99993088009955)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(30000.0), np.float64(1000000.0), np.float64(8.0), np.float64(25000000.0), 0.018177088416133982, 5.673315520927786e-05, 14.224549724449698, np.float64(39999.98560000519), np.float64(47.99998272000624)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(30000.0), np.float64(2000000.0), np.float64(16.0), np.float64(50000000.0), 0.010176739029234166, 5.1665989857502376e-05, 25.939156818482118, np.float64(79999.99280000066), np.float64(47.99999568000039)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(30000.0), np.float64(5000000.0), np.float64(16.0), np.float64(312500000.0), 0.00523651431914302, 7.719984732223817e-05, 38.758555239112525, np.float64(79999.99981568001), np.float64(7.679999982305282)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(100000.0), np.float64(100000.0), np.float64(4.0), np.float64(500000.0), 0.3087872522343251, 2e-05, 2.476386686203913, np.float64(19801.9801980198), np.float64(3960.3960396039597)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(100000.0), np.float64(200000.0), np.float64(4.0), np.float64(2000000.0), 0.15573905327815, 3.324214121313736e-05, 4.154770414751075, np.float64(19987.507807620237), np.float64(999.3753903810118)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(100000.0), np.float64(500000.0), np.float64(4.0), np.float64(12500000.0), 0.050849147106386085, 8.402207802655828e-05, 10.507928990301608, np.float64(19999.68000511992), np.float64(159.99744004095933)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(100000.0), np.float64(1000000.0), np.float64(4.0), np.float64(50000000.0), 0.029322078119948216, 0.0001113110008438387, 13.92093303451202, np.float64(19999.98000002), np.float64(39.99996000004)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(100000.0), np.float64(2000000.0), np.float64(8.0), np.float64(100000000.0), 0.017250731305041227, 5.673315520927786e-05, 14.224551292894285, np.float64(39999.9900000025), np.float64(39.9999900000025)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(100000.0), np.float64(5000000.0), np.float64(16.0), np.float64(312500000.0), 0.00777967855004171, 5.1665989857502376e-05, 25.93915849096017, np.float64(79999.99795200006), np.float64(25.59999934464002)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(300000.0), np.float64(100000.0), np.float64(4.0), np.float64(500000.0), 0.5394911309396434, 1.3275229734313044e-05, 1.5225042071878652, np.float64(18348.623853211007), np.float64(11009.174311926605)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(300000.0), np.float64(200000.0), np.float64(4.0), np.float64(2000000.0), 0.26671711976640666, 2.3771256010116457e-05, 2.95620828970639, np.float64(19888.129272840277), np.float64(2983.2193909260413)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(300000.0), np.float64(500000.0), np.float64(4.0), np.float64(12500000.0), 0.09977259394711979, 7.719984732223817e-05, 9.653488871323004, np.float64(19997.12041466029), np.float64(479.930889951847)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(300000.0), np.float64(1000000.0), np.float64(4.0), np.float64(50000000.0), 0.0441871280126618, 9.084430873087837e-05, 11.361207457031313, np.float64(19999.820001619988), np.float64(119.99892000971994)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(300000.0), np.float64(2000000.0), np.float64(8.0), np.float64(100000000.0), 0.026031067337518615, 4.849939087175214e-05, 12.160097345574435, np.float64(39999.91000020251), np.float64(119.99973000060753)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+best [np.float64(300000.0), np.float64(5000000.0), np.float64(16.0), np.float64(312500000.0), 0.012812511062316475, 4.216619290025166e-05, 21.16973543617133, np.float64(79999.98156800425), np.float64(76.79998230528409)]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/designmap.npz
+[design map] 8102.5 s

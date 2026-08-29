@@ -17,8 +17,8 @@ def job_a(args):
     Delta = ratio * KAPPA / 2
     gN = np.sqrt(chiN_hz * Delta)  # chi N = (g sqrt N)^2 / Delta in the dispersive limit
     p = from_hz(gN / np.sqrt(N), KAPPA, Delta, T=0.0, T2=T2_SPIN)
-    ens = standard_ensemble(N, p.chi * N, shape, GRID_STD)
-    best = optimal_squeezing(p, ens, 2e-6, 5e-3, echo=echo, rtol=1e-6)
+    ens = standard_ensemble(N, p.chi * N, shape, GRID_SCAN)
+    best = optimal_squeezing(p, ens, 2e-6, 2e-3, echo=echo, rtol=1e-6, n_coarse=10, max_fine=24)
     return ratio, chiN_hz, shape, best["xi2"], best["t"], best["Q"], best["contrast"], gN, echo
 
 
@@ -29,8 +29,8 @@ def job_b(args):
     Delta = ratio * KAPPA / 2
     gN = np.sqrt(chiN_hz * Delta)
     p = from_hz(gN / np.sqrt(N), KAPPA, Delta, T=T, T2=T2_SPIN)
-    ens = standard_ensemble(N, p.chi * N, "voigt", GRID_STD)
-    best = optimal_squeezing(p, ens, 2e-6, 5e-3, echo=echo, rtol=1e-6)
+    ens = standard_ensemble(N, p.chi * N, "voigt", GRID_SCAN)
+    best = optimal_squeezing(p, ens, 2e-6, 2e-3, echo=echo, rtol=1e-6, n_coarse=10, max_fine=24)
     return ratio, T, p.n_th, best["xi2"], best["t"]
 
 
@@ -41,15 +41,16 @@ def job_c(args):
     Delta = ratio * KAPPA / 2
     gN = np.sqrt(chiN_hz * Delta)
     p = from_hz(gN / np.sqrt(N), KAPPA, Delta, T=0.0, T2=T2)
-    ens = standard_ensemble(N, p.chi * N, "voigt", GRID_STD)
-    best = optimal_squeezing(p, ens, 2e-6, 5e-3, echo=echo, rtol=1e-6)
+    ens = standard_ensemble(N, p.chi * N, "voigt", GRID_SCAN)
+    best = optimal_squeezing(p, ens, 2e-6, 2e-3, echo=echo, rtol=1e-6, n_coarse=10, max_fine=24)
     return ratio, T2, best["xi2"], best["t"]
 
 
 if __name__ == "__main__":
     out = {}
-    chiN_ratios = np.array([0.5, 1, 2, 4, 8, 16, 32])
-    jobs = [(r, c * GAMMA_INH_HZ, "voigt", e) for r in [100, 1000, 10000] for c in chiN_ratios for e in [True, False]]
+    chiN_ratios = np.array([0.5, 1, 2, 4, 8, 16])
+    jobs = [(r, c * GAMMA_INH_HZ, "voigt", True) for r in [100, 1000, 10000] for c in chiN_ratios]
+    jobs += [(1000, c * GAMMA_INH_HZ, "voigt", False) for c in chiN_ratios]
     jobs += [(1000, c * GAMMA_INH_HZ, s, True) for s in ["gaussian", "lorentzian"] for c in chiN_ratios]
     rows = []
     with ProcessPoolExecutor(2) as ex, Timer("scaling a"):

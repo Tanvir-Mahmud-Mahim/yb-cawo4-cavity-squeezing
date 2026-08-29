@@ -12,7 +12,7 @@ from concurrent.futures import ProcessPoolExecutor
 N0 = 6e14
 T_BATH = 0.08
 p0, _ = loop_gap_dispersive(N0, T=T_BATH, T2=T2_SPIN)
-t_list = np.unique(np.concatenate([np.geomspace(1e-5, 2e-3, 16), np.linspace(2e-5, 2e-3, 100)]))
+t_list = np.unique(np.concatenate([np.geomspace(1e-5, 1.5e-3, 12), np.linspace(2e-5, 1.5e-3, 50)]))
 
 
 def trace_job(args):
@@ -32,8 +32,8 @@ def trace_job(args):
 def opt_job(args):
     N, Delta_hz, shape, echo = args
     p = from_hz(15e-3, 660e3, Delta_hz, T=T_BATH, T2=T2_SPIN)
-    ens = homogeneous(N) if shape == "homogeneous" else standard_ensemble(N, p.chi * N, shape, GRID_STD)
-    best = optimal_squeezing(p, ens, 1e-5, 3e-3, echo=echo, rtol=1e-6)
+    ens = homogeneous(N) if shape == "homogeneous" else standard_ensemble(N, p.chi * N, shape, GRID_SCAN)
+    best = optimal_squeezing(p, ens, 1e-5, 2e-3, echo=echo, rtol=1e-6, n_coarse=10, max_fine=24)
     return N, Delta_hz, shape, best["xi2"], best["t"], best["contrast"], p.chi * N / TWO_PI, echo
 
 

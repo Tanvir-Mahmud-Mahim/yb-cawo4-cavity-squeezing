@@ -11,7 +11,7 @@ from concurrent.futures import ProcessPoolExecutor
 N = 1e10
 p = from_hz(1e6 / np.sqrt(N), 1e4, 30e6, T=0.02, T2=T2_SPIN)
 Ds = np.array([1, 2, 4, 10, 30, 100], float)
-t_list = np.geomspace(1e-5, 1e-3, 12)
+t_list = np.geomspace(1e-5, 5e-4, 9)
 K = 5
 
 
@@ -27,14 +27,16 @@ def build(D):
 
 
 def job(D):
+    from cavsqueeze.cumulant import Rates, wineland_xi2, coherence
+    from cavsqueeze.protocols import twist, css_x
     ens = build(D)
+    rt = Rates.from_params(p, ens)
     xi_w, xi_u, con = [], [], []
     for t in t_list:
-        r_w = squeezing_after(p, ens, t, echo=True, weights=ens.weight, rtol=1e-6)
-        r_u = squeezing_after(p, ens, t, echo=True, weights=None, rtol=1e-6)
-        xi_w.append(r_w["xi2"])
-        xi_u.append(r_u["xi2"])
-        con.append(r_u["contrast"])
+        st = twist(css_x(rt.M), rt, t, echo=True, rtol=1e-6)
+        xi_w.append(wineland_xi2(st, rt.n, ens.weight, spec_n=rt.spec_n)[0])
+        xi_u.append(wineland_xi2(st, rt.n, None, spec_n=rt.spec_n)[0])
+        con.append(coherence(st, rt.n, spec_n=rt.spec_n))
     S2 = float(np.sum(ens.n * ens.weight**2) + np.sum(ens.spec_n)) / N
     return D, np.array(xi_w), np.array(xi_u), np.array(con), S2
 

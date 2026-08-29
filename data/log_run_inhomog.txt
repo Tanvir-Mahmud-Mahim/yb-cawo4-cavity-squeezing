@@ -1,0 +1,13 @@
+1.0 weighted best -18.461803159349557 unweighted best -18.461803159349557 sum w^2/N 1.0
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/inhomog.npz
+2.0 weighted best -11.42052485128157 unweighted best -17.93805882132075 sum w^2/N 1.0589715240897781
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/inhomog.npz
+4.0 weighted best -7.243702113950982 unweighted best -17.311116523619013 sum w^2/N 1.2256468688632502
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/inhomog.npz
+10.0 weighted best -5.848836346920974 unweighted best -15.274277018661595 sum w^2/N 1.5659388744451328
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/inhomog.npz
+30.0 weighted best -4.953359586509956 unweighted best -11.434429352859464 sum w^2/N 2.0612268969406906
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/inhomog.npz
+100.0 weighted best -5.367934217357593 unweighted best -7.578721717430611 sum w^2/N 2.6093251261456976
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/inhomog.npz
+[inhomogeneity] 1021.5 s

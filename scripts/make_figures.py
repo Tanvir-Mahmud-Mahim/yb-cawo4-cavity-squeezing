@@ -63,7 +63,7 @@ def fig_validation():
     ax.loglog(r, d["c_xi_opt"], "o", ms=3.5, color=C[0], label="cumulant, optimum")
     A = float(d["c_prefactor_xi"])
     ax.loglog(r, A * (1 / r) ** (2 / 3), "-", color=C[0], lw=0.9, label=r"$%.2f\,(\kappa/2\Delta)^{2/3}$" % A)
-    ax.loglog(r, d["c_lewis_swan"], "--", color=C[1], lw=0.9, label=r"$1.89\,(\kappa/2\Delta)^{2/3}$ (Ref.)")
+    ax.loglog(r, d["c_lewis_swan"], "--", color=C[1], lw=0.9, label=r"$1.89\,(\Gamma_{\rm SR}/\chi)^{2/3}=3.0\,(\kappa/2\Delta)^{2/3}$ (perturbative)")
     ax.set_xlabel(r"$2\Delta/\kappa$")
     ax.set_ylabel(r"$\xi^2_{\rm opt}$")
     ax.legend(frameon=False, fontsize=6)
@@ -87,7 +87,7 @@ def fig_benchmark():
     ax.set_ylabel("contrast")
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 1.02)
-    ax.legend(frameon=False, fontsize=5.5)
+    ax.legend(frameon=False, fontsize=5, loc="upper right", bbox_to_anchor=(1.0, 0.98))
     ax.set_title("mean field, Voigt line", fontsize=7)
     panel_label(ax, "(a)")
     ax = axs[1]
@@ -108,7 +108,8 @@ def fig_benchmark():
     ax.set_xlabel("Ramsey time (ms)")
     ax.set_ylabel(r"variance / $(N_0/4)$ (dB)")
     ax.set_title("anti-squeezed (solid), squeezed (dashed)", fontsize=7)
-    ax.legend(frameon=False, fontsize=5.5)
+    ax.legend(frameon=False, fontsize=5, loc="center left", bbox_to_anchor=(0.0, 0.42))
+    ax.set_ylim(-12, 45)
     panel_label(ax, "(c)")
     fig.tight_layout()
     savefig(fig, "fig_benchmark")
@@ -129,22 +130,23 @@ def fig_loopgap():
     ax.set_xlabel("interaction time (ms)")
     ax.set_ylabel(r"$\xi_R^2$ (dB)")
     ax.set_ylim(-12, 8)
-    ax.legend(frameon=False, fontsize=6, title="echo (solid), no echo (dotted)", title_fontsize=6)
+    ax.legend(frameon=False, fontsize=5.5, title="echo (solid), no echo (dotted)", title_fontsize=5.5, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, columnspacing=0.8, handlelength=1.5)
+    ax.set_ylim(-12, 10)
     panel_label(ax, "(a)")
     if "b_rows" in d:
         ax = axs[1]
         rows = d["b_rows"]
-        for k, N in enumerate([6e14, 1.35e15]):
-            for s, ls, lab in [(0, "--", "homog."), (1, "-", "Voigt")]:
+        for k, (N, Nlab) in enumerate([(6e14, r"6\times10^{14}"), (1.35e15, r"1.35\times10^{15}")]):
+            for s, ls, lab in [(0, "--", "homogeneous"), (1, "-", "Voigt")]:
                 m = (rows[:, 0] == N) & (rows[:, 2] == s)
                 r = best_rows(rows[m], 1)
                 o = np.argsort(r[:, 1])
-                ax.semilogx(r[o, 1] / 1e6, dB(r[o, 3]), ls=ls, color=C[k], marker="o", ms=2.5,
-                            label=r"$N_0=%.2g$, %s" % (N, lab))
+                ax.semilogx(r[o, 1] / 1e6, dB(r[o, 3]), ls=ls, color=C[k], marker="o" if s else None, ms=2.5,
+                            label=r"$N_0=%s$, %s" % (Nlab, lab))
         ax.axvline(22, color="0.6", lw=0.6, ls=":")
         ax.set_xlabel(r"$\Delta/2\pi$ (MHz)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-        ax.legend(frameon=False, fontsize=5.5)
+        ax.legend(frameon=False, fontsize=5, loc="lower left")
         panel_label(ax, "(b)")
     if "c_rows" in d:
         ax = axs[2]
@@ -153,7 +155,7 @@ def fig_loopgap():
             m = rows[:, 2] == s
             r = best_rows(rows[m], 0)
             o = np.argsort(r[:, 0])
-            ax.semilogx(r[o, 0], dB(r[o, 3]), ls=ls, color=C[0], marker="o", ms=2.5, label=lab)
+            ax.semilogx(r[o, 0], dB(r[o, 3]), ls=ls, color=C[0], marker="o" if s else None, ms=2.5, label=lab)
         ax2 = ax.twiny()
         r = best_rows(rows[rows[:, 2] == 1], 0)
         o = np.argsort(r[:, 0])
@@ -189,7 +191,7 @@ def fig_scaling():
         ax.semilogx(r[o, 1] / GAMMA_INH_HZ, dB(r[o, 3]), marker="s" if s == 1 else "^", ms=2.5, ls="--", color=C[1], label=lab + r", $2\Delta/\kappa=10^3$", mfc="none")
     ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
     ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-    ax.legend(frameon=False, fontsize=5.5)
+    ax.legend(frameon=False, fontsize=5, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, columnspacing=0.8, handlelength=1.5)
     panel_label(ax, "(a)")
     if "b_rows" in d:
         ax = axs[1]
@@ -201,7 +203,7 @@ def fig_scaling():
             ax.plot(r[o, 1] * 1e3, dB(r[o, 3]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % ratio)
         ax.set_xlabel("cavity bath temperature (mK)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-        ax.legend(frameon=False, fontsize=6)
+        ax.legend(frameon=False, fontsize=6, loc="center left")
         ax2 = ax.twinx()
         Ts = np.linspace(1e-3, 0.5, 200)
         from cavsqueeze import thermal_occupation
@@ -251,10 +253,14 @@ def fig_designmap():
         ax.set_ylabel(r"$\kappa/2\pi$ (kHz)")
         cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
         cb.set_label(lab, fontsize=7)
+        cm = matplotlib.colormaps[cmap]
+        vmin_, vmax_ = np.nanmin(M), np.nanmax(M)
         for i in range(len(kappas)):
             for j in range(len(gNs)):
                 if np.isfinite(M[i, j]):
-                    ax.text(j, i, f"{M[i,j]:.1f}", ha="center", va="center", fontsize=5, color="w" if (cmap != "magma" or M[i, j] < np.nanmean(M)) else "k")
+                    rgba = cm((M[i, j] - vmin_) / (vmax_ - vmin_ + 1e-12))
+                    lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
+                    ax.text(j, i, f"{M[i,j]:.1f}", ha="center", va="center", fontsize=4.2, color="k" if lum > 0.5 else "w")
     panel_label(axs[0], "(a)", x=-0.3)
     panel_label(axs[1], "(b)", x=-0.3)
     panel_label(axs[2], "(c)", x=-0.3)
@@ -277,7 +283,8 @@ def fig_inhomog_readout():
             ax.semilogx(di["t"] * 1e6, dB(di[f"xi_u_{int(D)}"]), color=C[k], ls=":")
         ax.set_xlabel(r"interaction time ($\mu$s)")
         ax.set_ylabel(r"$\xi^2$ (dB)")
-        ax.legend(frameon=False, fontsize=5.5, title="weighted (solid), unweighted (dotted)", title_fontsize=5.5)
+        ax.legend(frameon=False, fontsize=5, ncol=3, loc="lower center", bbox_to_anchor=(0.5, 1.0), title="weighted (solid), unweighted (dotted)", title_fontsize=5, columnspacing=0.8, handlelength=1.2)
+        ax.set_ylim(-20, 2)
         panel_label(ax, "(a)")
     if dr is not None:
         ax = axs[1]
@@ -293,7 +300,7 @@ def fig_inhomog_readout():
         ax.set_xlabel(r"detection noise $\sigma_{\rm det}/N$")
         ax.set_ylabel("metrological gain (dB)")
         ax.set_ylim(-2, 30)
-        ax.legend(frameon=False, fontsize=5.5, title="twist-untwist (solid), plain (dotted)", title_fontsize=5.5)
+        ax.legend(frameon=False, fontsize=5, title="twist-untwist (solid), plain (dotted)", title_fontsize=5, loc="upper right")
         panel_label(ax, "(b)")
         ax = axs[2]
         # required resolution for 3 dB gain versus N
@@ -314,7 +321,7 @@ def fig_inhomog_readout():
         ax.loglog(Ns, 0.5 / np.sqrt(Ns), "--", color="0.5", lw=0.8, label=r"$1/(2\sqrt{N})$ (projection noise)")
         ax.set_xlabel(r"$N$")
         ax.set_ylabel(r"$\sigma_{\rm det}/N$ for 3 dB gain")
-        ax.legend(frameon=False, fontsize=5.5)
+        ax.legend(frameon=False, fontsize=5, loc="lower left")
         panel_label(ax, "(c)")
     fig.tight_layout()
     savefig(fig, "fig_inhomog_readout")
@@ -365,7 +372,7 @@ def fig_concept():
     for k, b in enumerate(boxes):
         x = 0.2 + k * 2.5
         ax.add_patch(matplotlib.patches.FancyBboxPatch((x, 3.2), 2.0, 3.6, boxstyle="round,pad=0.05", fc="#f3f3f3", ec="0.4", lw=0.7))
-        ax.text(x + 1.0, 5.0, b, ha="center", va="center", fontsize=5)
+        ax.text(x + 1.0, 5.0, b, ha="center", va="center", fontsize=4.3)
         if k < 3:
             ax.annotate("", xy=(x + 2.5, 5.0), xytext=(x + 2.05, 5.0), arrowprops=dict(arrowstyle="->", lw=0.7))
     ax.text(5, 1.6, "validated against exact master equations\nand the analytic $(\\Gamma_{\\rm SR}/\\chi)^{2/3}$ law", ha="center", fontsize=6)

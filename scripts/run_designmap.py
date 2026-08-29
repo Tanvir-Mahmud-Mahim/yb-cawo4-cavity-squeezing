@@ -24,7 +24,7 @@ def job(args):
         Delta = max(gN**2 / (nu * GAMMA_INH_HZ), 5 * gN)
         p = from_hz(gN / np.sqrt(N), kappa, Delta, T=T_BATH, T2=T2_SPIN)
         ens = standard_ensemble(N, p.chi * N, "voigt", GRID_LIGHT)
-        b = optimal_squeezing(p, ens, 2e-6, 5e-3, echo=True, rtol=1e-6)
+        b = optimal_squeezing(p, ens, 2e-6, 2e-3, echo=True, rtol=1e-6, n_coarse=10, max_fine=24)
         rows.append([kappa, gN, nu, Delta, b["xi2"], b["t"], b["Q"], p.chi * N / TWO_PI, p.Gamma_SR * N / TWO_PI])
         if best is None or b["xi2"] < best[4]:
             best = rows[-1]

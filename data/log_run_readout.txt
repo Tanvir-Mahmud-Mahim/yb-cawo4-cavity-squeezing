@@ -1,0 +1,9 @@
+loopgap max TU gain 3.879820664392902 max plain gain 5.7722157263242435
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/readout.npz
+sc_9 max TU gain 19.199467117125803 max plain gain 18.484215124259546
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/readout.npz
+sc_10 max TU gain 19.19946946211087 max plain gain 18.48420577338618
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/readout.npz
+sc_11 max TU gain 19.19946942236181 max plain gain 18.48409123366886
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/readout.npz
+[readout] 1579.8 s

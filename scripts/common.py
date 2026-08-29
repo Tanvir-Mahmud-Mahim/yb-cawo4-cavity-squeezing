@@ -5,6 +5,11 @@ import json
 import os
 import sys
 import time
+
+# single-threaded BLAS: the class matrices are small and worker processes must not
+# oversubscribe the cores (thread contention slows the ODE integration by > 10x)
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_v, "1")
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,6 +31,7 @@ T2_SPIN = 0.15  # s, Tiranov et al.
 # discretisation presets: (M_core, M_tail)
 GRID_STD = (48, 16)
 GRID_LIGHT = (24, 12)
+GRID_SCAN = (32, 12)
 SPECTATOR_FACTOR = 5.0  # spins with |delta| > factor x max(chi N, 2 FWHM) are treated as free spectators
 
 

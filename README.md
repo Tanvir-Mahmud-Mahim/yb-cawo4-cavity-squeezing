@@ -20,7 +20,9 @@ The package `cavsqueeze` implements
 * exact references: QuTiP master equation for distinguishable spins and the
   permutation-invariant Dicke solver PIQS (`exact.py`);
 * pulse sequences: echo twist, Ramsey, twist-untwist readout, plain squeezed readout
-  (`protocols.py`).
+  (`protocols.py`);
+* far-detuned spectator spins propagated analytically, which removes the stiffness of
+  heavy-tailed lines (`ensemble.tail_resolved_classes`, `cumulant.evolve`).
 
 ## Installation
 
@@ -44,8 +46,10 @@ python run_readout.py      # Fig. 7(b,c) data
 python make_figures.py     # all figures -> figures/
 python extract_numbers.py  # every number quoted in the paper -> data/numbers.json
 ```
-`run_all.sh` chains the data scripts (about 4 hours on two cores). All datasets are
-also archived on Zenodo (see the paper's data availability statement).
+`run_all.sh` chains the data scripts (about 6 hours on two cores; set
+`OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
+the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
+https://doi.org/10.5281/zenodo.22148970
 
 ## Minimal example
 
