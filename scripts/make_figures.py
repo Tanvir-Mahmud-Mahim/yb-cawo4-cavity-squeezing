@@ -153,7 +153,7 @@ def fig_loopgap():
     ax.set_ylim(-12, 10)
     panel_label(ax, "(a)")
     if "b_rows" in d:
-        ax = axs[1]
+        ax = axs[0]
         rows = d["b_rows"]
         for k, (N, Nlab) in enumerate([(6e14, r"6\times10^{14}"), (1.35e15, r"1.35\times10^{15}")]):
             for s, ls, lab in [(0, "--", "uniform"), (1, "-", "Voigt")]:
@@ -168,7 +168,7 @@ def fig_loopgap():
         legend_below(ax, ncol=2, fontsize=6)
         panel_label(ax, "(b)", y=0.25)
     if "c_rows" in d:
-        ax = axs[2]
+        ax = axs[1]
         rows = d["c_rows"]
         for s, ls, lab in [(0, "--", "uniform"), (1, "-", "Voigt")]:
             m = rows[:, 2] == s
@@ -194,26 +194,9 @@ def fig_scaling():
     if d is None:
         return
     rows = d["a_rows"]
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
-    ax = axs[0]
-    for k, ratio in enumerate([100, 1000, 10000]):
-        m = (rows[:, 0] == ratio) & (rows[:, 2] == 0)
-        r = best_rows(rows[m], 1)
-        o = np.argsort(r[:, 1])
-        ax.semilogx(r[o, 1] / GAMMA_INH_HZ, dB(r[o, 3]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % (67 if ratio == 66.7 else ratio))
-        A = 1.43
-        ax.axhline(dB(A * (1 / ratio) ** (2 / 3)), color=C[k], ls=":", lw=0.7)
-    for k, (s, lab) in enumerate([(1, "Gaussian"), (2, "Lorentzian")]):
-        m = (rows[:, 0] == 1000) & (rows[:, 2] == s)
-        r = rows[m]
-        o = np.argsort(r[:, 1])
-        ax.semilogx(r[o, 1] / GAMMA_INH_HZ, dB(r[o, 3]), marker="s" if s == 1 else "^", ms=2.5, ls="--", color=C[1], label=lab + r", $2\Delta/\kappa=10^3$", mfc="none")
-    ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
-    ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
-    legend_below(ax, ncol=2, dy=-0.60, fontsize=6)
-    panel_label(ax, "(a)", x=0.90)
+    fig, axs = plt.subplots(1, 2, figsize=(4.8, 1.56))
     if "b_rows" in d:
-        ax = axs[1]
+        ax = axs[0]
         rows = d["b_rows"]
         for k, ratio in enumerate([66.7, 6000]):
             m = np.isclose(rows[:, 0], ratio)
@@ -230,9 +213,9 @@ def fig_scaling():
         ax2.set_zorder(ax.get_zorder() - 1)
         ax.patch.set_visible(False)
         ax2.set_ylabel(r"$n_{\rm th}$ (dashed)", color="0.4", fontsize=7, labelpad=2)
-        panel_label(ax, "(b)", y=0.55)
+        panel_label(ax, "(a)", y=0.55)
     if "c_rows" in d:
-        ax = axs[2]
+        ax = axs[1]
         rows = d["c_rows"]
         for k, ratio in enumerate([66.7, 6000]):
             m = np.isclose(rows[:, 0], ratio)
@@ -242,8 +225,8 @@ def fig_scaling():
         ax.set_xlabel(r"single-spin $T_2$ (ms)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=2, dy=-0.60, fontsize=6)
-        panel_label(ax, "(c)", y=0.62)
-    layout(fig, wspace=0.7, right=0.975, bottom=0.487)
+        panel_label(ax, "(b)", y=0.62)
+    layout(fig, wspace=0.55, right=0.975, bottom=0.487)
     savefig(fig, "fig_scaling")
 
 
@@ -264,7 +247,89 @@ def fig_designmap():
         Tt[i, j] = row[5]
         Dl[i, j] = row[3]
     fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
-    for ax, M, lab, cmap in [(axs[0], Z, r"$\xi^2_{\rm opt}$ (dB)", "viridis_r"), (axs[1], np.log10(Tt * 1e6), r"$\log_{10}$ optimal time ($\mu$s)", "magma"), (axs[2], np.log10(Dl / 1e6), r"$\log_{10}\,\Delta_{\rm opt}/2\pi$ (MHz)", "cividis")]:
+
+    # (a) the two limits against the interaction-to-linewidth ratio
+    sc = load("scaling")
+    ax = axs[0]
+    if sc is not None:
+        rows = sc["a_rows"]
+        for k, ratio in enumerate([100, 1000, 10000]):
+            m = (rows[:, 0] == ratio) & (rows[:, 2] == 0)
+            r = best_rows(rows[m], 1)
+            o = np.argsort(r[:, 1])
+            x = r[o, 1] / GAMMA_INH_HZ
+            ax.semilogx(x, dB(r[o, 3]), "o-", ms=2.5, color=C[k], lw=1.0,
+                        label=r"$2\Delta/\kappa=10^{%d}$" % round(np.log10(ratio)))
+            ax.axhline(dB(1.43 * (1 / ratio) ** (2 / 3)), color=C[k], ls=":", lw=0.7)
+        xx = np.geomspace(0.5, 20, 60)
+        ax.semilogx(xx, dB(0.30 / (np.pi * xx)), "--", color="0.35", lw=0.9, label="wing floor")
+        ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
+        ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
+        legend_below(ax, ncol=2, dy=-0.545, fontsize=6)
+        panel_label(ax, "(a)", x=0.035, y=0.28)
+
+    # (b) the same at one loss ratio for the three line shapes, each with its own floor
+    ax = axs[1]
+    if sc is not None:
+        rows = sc["a_rows"]
+        for k, (shape, lab, eta) in enumerate([(1, "Gaussian", 0.0), (0, "Voigt", 0.30), (2, "Lorentzian", 1.0)]):
+            m = (rows[:, 0] == 1000) & (rows[:, 2] == shape)
+            r = best_rows(rows[m], 1)
+            o = np.argsort(r[:, 1])
+            x = r[o, 1] / GAMMA_INH_HZ
+            ax.semilogx(x, dB(r[o, 3]), "o-", ms=2.5, color=C[k], lw=1.0, label=lab)
+            if eta > 0:
+                xx = np.geomspace(1.0, 20, 40)
+                ax.semilogx(xx, dB(eta / (np.pi * xx)), ":", color=C[k], lw=0.9)
+        ax.axhline(dB(1.43 * (1 / 1000) ** (2 / 3)), color="0.35", ls="--", lw=0.9)
+        ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
+        ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
+        legend_below(ax, ncol=3, dy=-0.545, fontsize=6)
+        panel_label(ax, "(b)", x=0.035, y=0.28)
+
+    # (c) the design map that follows from the two limits
+    ax = axs[2]
+    im = ax.imshow(Z, origin="lower", aspect="auto", cmap="viridis_r")
+    ax.set_xticks(range(len(gNs)))
+    ax.set_xticklabels([f"{g/1e6:g}" for g in gNs])
+    ax.set_yticks(range(len(kappas)))
+    ax.set_yticklabels([f"{k/1e3:g}" for k in kappas])
+    ax.set_xlabel(r"$g\sqrt{N}/2\pi$ (MHz)")
+    ax.set_ylabel(r"$\kappa/2\pi$ (kHz)")
+    cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cb.set_label(r"$\xi^2_{\rm opt}$ (dB)", fontsize=7)
+    cm = matplotlib.colormaps["viridis_r"]
+    vmin_, vmax_ = np.nanmin(Z), np.nanmax(Z)
+    for i in range(len(kappas)):
+        for j in range(len(gNs)):
+            if np.isfinite(Z[i, j]):
+                rgba = cm((Z[i, j] - vmin_) / (vmax_ - vmin_ + 1e-12))
+                lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
+                ax.text(j, i, f"{Z[i,j]:.1f}", ha="center", va="center", fontsize=4.2, color="k" if lum > 0.5 else "w")
+    ax.text(0.0, 1.06, "(c)", transform=ax.transAxes, fontweight="bold", fontsize=8.5, va="bottom", ha="left")
+    layout(fig, wspace=0.70, right=0.945)
+    savefig(fig, "fig_designmap")
+
+
+# ---------------------------------------------------------------------------
+def fig_designmap_extra():
+    """Supplement: the optimum time and detuning across the same design map."""
+    m = load("designmap")
+    if m is None:
+        return
+    best = m["best"]
+    kappas = np.unique(best[:, 0])
+    gNs = np.unique(best[:, 1])
+    Tt = np.full((len(kappas), len(gNs)), np.nan)
+    Dl = np.full_like(Tt, np.nan)
+    for row in best:
+        i = np.argmin(np.abs(kappas - row[0]))
+        j = np.argmin(np.abs(gNs - row[1]))
+        Tt[i, j] = row[5]
+        Dl[i, j] = row[3]
+    fig, axs = plt.subplots(1, 2, figsize=(4.8, 1.56))
+    for ax, M, lab, cmap in [(axs[0], np.log10(Tt * 1e6), r"$\log_{10}$ optimal time ($\mu$s)", "magma"),
+                             (axs[1], np.log10(Dl / 1e6), r"$\log_{10}\,\Delta_{\rm opt}/2\pi$ (MHz)", "cividis")]:
         im = ax.imshow(M, origin="lower", aspect="auto", cmap=cmap)
         ax.set_xticks(range(len(gNs)))
         ax.set_xticklabels([f"{g/1e6:g}" for g in gNs])
@@ -282,10 +347,10 @@ def fig_designmap():
                     rgba = cm((M[i, j] - vmin_) / (vmax_ - vmin_ + 1e-12))
                     lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
                     ax.text(j, i, f"{M[i,j]:.1f}", ha="center", va="center", fontsize=4.2, color="k" if lum > 0.5 else "w")
-    for ax, lab in zip(axs, ["(a)", "(b)", "(c)"]):
+    for ax, lab in zip(axs, ["(a)", "(b)"]):
         ax.text(0.0, 1.06, lab, transform=ax.transAxes, fontweight="bold", fontsize=8.5, va="bottom", ha="left")
     fig.tight_layout()
-    savefig(fig, "fig_designmap")
+    savefig(fig, "fig_designmap_extra")
 
 
 # ---------------------------------------------------------------------------
@@ -630,6 +695,7 @@ if __name__ == "__main__":
     fig_loopgap()
     fig_scaling()
     fig_designmap()
+    fig_designmap_extra()
     fig_inhomog_readout()
     fig_beyond()
     fig_measure()

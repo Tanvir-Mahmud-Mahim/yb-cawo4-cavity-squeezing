@@ -83,6 +83,17 @@ if d is not None and "a_xi_homogeneous_echo" in d:
         num["LG_NRATIO"] = round(float(rv[within[0], 6] / GAMMA_INH_HZ), 0) if len(within) else None
         num["LG_N_TABLE"] = [[float(a), round(first_dB(x), 1), round(first_dB(y), 1)] for a, x, y in zip(rv[:, 0], rv[:, 3], rh[:, 3])]
 
+# ---------------- the collective-emission law and its perturbative counterpart ----------------
+_v = load("validation")
+if _v is not None:
+    _A = float(_v["c_prefactor_xi"])
+    num["PREFACTOR"] = round(_A, 2)
+    # Lewis-Swan et al.: 3/2^{2/3} (Gamma/chi)^{2/3} = 3.00 (kappa/2Delta)^{2/3}
+    _pert = 3.0 * 2.0 ** (-2.0 / 3.0) * 2.0 ** (2.0 / 3.0)
+    num["PREFACTOR_PERT"] = round(_pert, 2)
+    num["PERT_GAIN"] = round(float(10 * np.log10(_pert / _A)), 1)
+    num["LAW1_FIT_ERR"] = round(float(100 * np.max(np.abs(_v["c_xi_opt"] / (_A * (1 / _v["c_ratio"]) ** (2 / 3)) - 1))), 0)
+
 # ---------------- scaling ----------------
 s = load("scaling")
 if s is not None:
@@ -103,6 +114,27 @@ if s is not None:
         sat.append(r[ok[0], 1] / GAMMA_INH_HZ if len(ok) else np.nan)
         num[f"SCAL_{ratio}"] = [[float(a / GAMMA_INH_HZ), round(first_dB(x), 1)] for a, x in zip(r[:, 1], r[:, 3])]
     num["SAT_RATIO"] = int(np.nanmax(sat)) if np.isfinite(np.nanmax(sat)) else None
+    # the two-limit law: xi^2 = max[ resonator limit , unlocked wing fraction ]
+    ETA_SHAPE = {0: 0.30, 1: 0.0, 2: 1.0}          # Voigt (30% Lorentzian), Gaussian, Lorentzian
+    devs, gauss_devs = [], []
+    for row in rows:
+        if row[8] != 1:                             # echo twist only
+            continue
+        ratio, chiN, shape, xi2 = row[0], row[1], int(row[2]), row[3]
+        if chiN < 4 * GAMMA_INH_HZ:                 # away from the locking threshold
+            continue
+        res = 1.43 * (1 / ratio) ** (2 / 3)
+        floor = ETA_SHAPE[shape] * GAMMA_INH_HZ / (np.pi * chiN)
+        d_dB = dB(xi2) - dB(max(res, floor))
+        devs.append(abs(float(d_dB)))
+        if shape == 1:
+            gauss_devs.append(abs(float(d_dB)))
+    if devs:
+        num["LAW2_MEAN_DEV"] = round(float(np.mean(devs)), 2)
+        num["LAW2_MAX_DEV"] = round(float(np.max(devs)), 1)
+        num["LAW2_NPTS"] = len(devs)
+    if gauss_devs:
+        num["LAW2_GAUSS_DEV"] = round(float(np.max(gauss_devs)), 2)
     if "b_rows" in s:
         rb = s["b_rows"]
         for ratio, tag in [(66.7, "LG"), (6000, "SC")]:
