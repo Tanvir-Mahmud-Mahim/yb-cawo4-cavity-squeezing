@@ -42,6 +42,8 @@ class Rates(_RatesRaw):
 
     spec_delta: np.ndarray = None
     spec_n: np.ndarray = None
+    meas: float = 0.0  # continuous QND measurement of J_z: conditional variance 1/(meas t) for pure measurement
+    meas_eta: float = 1.0  # detection efficiency: the back-action dephasing rate is meas/(8 meas_eta)
 
     @classmethod
     def from_params(cls, params: CavityParams, ens: Ensemble) -> "Rates":
@@ -344,7 +346,33 @@ def _rhs(t, y, rt: Rates, feedback: bool = True):
         + 4.0 * GG * (Gd * Pmn_raw + Gu * Pnm_raw)
     )
 
+    if getattr(rt, "meas", 0.0):
+        dPc, dQc, dRc, dZc = _add_measurement(rt.meas, getattr(rt, "meas_eta", 1.0), n, st, dPc, dQc, dRc, dZc)
     return State(ds, dz, dPc, dQc, dRc, dZc).pack()
+
+
+def _add_measurement(Gm, eta, n, st, dPc, dQc, dRc, dZc):
+    """Conditioning on a continuous quantum non-demolition measurement of
+    J_z = (1/2) sum_i sigma z_i at rate Gm (Gaussian, Kalman form): the pair
+    covariance of every two spins changes as
+        d Cov(sigma^a_i, sigma^b_j) = -Gm Cov(sigma^a_i, J_z) Cov(sigma^b_j, J_z) dt,
+    with Cov(sigma^a_i, J_z) = (1/2)[delta_az - v^a_i v^z_i + sum_{j != i} C^{az}_{ij}].
+    For an ensemble without dynamics this gives dV/dt = -Gm V^2 for V = Var(J_z).
+    The back-action of the probe (photon-number fluctuations) rotates all spins
+    about z by a common random angle with d Var(angle)/dt = 2 Gamma_phi,
+    Gamma_phi = Gm/(8 eta), which adds 2 Gamma_phi (e_z x v_i)^a (e_z x v_j)^b to the
+    pair covariance; with eta = 1 the product Var(J_y) Var(J_z) stays minimal.
+    Spectator spins are not conditioned (use a discretisation without spectators)."""
+    v, C = to_cartesian(st)
+    dphi = np.stack([-v[:, 1], v[:, 0], np.zeros(st.M)], axis=1)     # d v / d(angle) for a rotation about z
+    ez = np.array([0.0, 0.0, 1.0])
+    same = ez[None, :] - v * v[:, [2]]                                  # (M,3): delta_az - v^a v^z
+    Cz = C[:, :, :, 2]                                                  # (M,M,3): Cov(sigma^a_m, sigma^z_n)
+    pair = np.einsum("n,mna->ma", n, Cz) - np.einsum("mma->ma", Cz)
+    cvec = 0.5 * (same + pair)                                          # (M,3) complex
+    dC = -Gm * np.einsum("ma,nb->mnab", cvec, cvec) + (Gm / (4.0 * eta)) * np.einsum("ma,nb->mnab", dphi, dphi)
+    extra = from_cartesian(np.zeros((st.M, 3)), dC)
+    return dPc + extra.Pc, dQc + extra.Qc, dRc + extra.Rc, dZc + extra.Zc
 
 
 def _rhs_meanfield(t, y, rt: Rates):
