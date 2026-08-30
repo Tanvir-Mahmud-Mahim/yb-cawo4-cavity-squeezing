@@ -485,5 +485,16 @@
  "SC_30_VOIGT": 18.8,
  "SC_30_GAUSS": 23.6,
  "SC_30_LOR": 13.8,
- "MS_REQ_TABLE": "$\\chi_s/2\\pi$ (Hz) & $3.3\\times10^{-6}$ & $1.0\\times10^{-11}$ \\\\\n$\\Gamma_{\\rm SR}N/2\\pi$ (Hz) & 11.1 & 184 \\\\\n$n_{\\rm crit}=\\Delta^2/4g^2$ & $2.2\\times10^{12}$ & $5.4\\times10^{17}$ \\\\\n$4g\\sqrt{\\eta_{\\rm d}\\bar n}/\\kappa$ at $\\bar n=10^8$, $\\eta_{\\rm d}=0.5$ & 28.3 & $6.4\\times10^{-4}$ \\\\\n$4g\\sqrt{\\eta_{\\rm d}\\bar n}/\\kappa$ at $\\bar n=10^9$, $\\eta_{\\rm d}=0.5$ & 89.4 & $2.0\\times10^{-3}$ \\\\\ntime to steady state $3/\\sqrt{\\Gamma_mD}$, $\\bar n=10^9$ (ms) & 0.48 & $1.3\\times10^{3}$ \\\\\n$P_{\\rm in}$, $\\bar n=10^9$ (pW) & 32.4 & $2.1\\times10^{3}$ \\\\\nStark shift per photon $2\\chi_s/2\\pi$ (Hz) & $6.7\\times10^{-6}$ & $2.0\\times10^{-11}$ \\\\\n$2\\chi_s\\sqrt N/\\kappa$ & $6.7\\times10^{-5}$ & $7.6\\times10^{-10}$ \\\\\nphase per spin $8\\chi_s/\\kappa$ (rad) & $2.7\\times10^{-9}$ & $1.2\\times10^{-16}$ \\\\"
+ "MS_REQ_TABLE": "$\\chi_s/2\\pi$ (Hz) & $3.3\\times10^{-6}$ & $1.0\\times10^{-11}$ \\\\\n$\\Gamma_{\\rm SR}N/2\\pi$ (Hz) & 11.1 & 184 \\\\\n$n_{\\rm crit}=\\Delta^2/4g^2$ & $2.2\\times10^{12}$ & $5.4\\times10^{17}$ \\\\\n$4g\\sqrt{\\eta_{\\rm d}\\bar n}/\\kappa$ at $\\bar n=10^8$, $\\eta_{\\rm d}=0.5$ & 28.3 & $6.4\\times10^{-4}$ \\\\\n$4g\\sqrt{\\eta_{\\rm d}\\bar n}/\\kappa$ at $\\bar n=10^9$, $\\eta_{\\rm d}=0.5$ & 89.4 & $2.0\\times10^{-3}$ \\\\\ntime to steady state $3/\\sqrt{\\Gamma_mD}$, $\\bar n=10^9$ (ms) & 0.48 & $1.3\\times10^{3}$ \\\\\n$P_{\\rm in}$, $\\bar n=10^9$ (pW) & 32.4 & $2.1\\times10^{3}$ \\\\\nStark shift per photon $2\\chi_s/2\\pi$ (Hz) & $6.7\\times10^{-6}$ & $2.0\\times10^{-11}$ \\\\\n$2\\chi_s\\sqrt N/\\kappa$ & $6.7\\times10^{-5}$ & $7.6\\times10^{-10}$ \\\\\nphase per spin $8\\chi_s/\\kappa$ (rad) & $2.7\\times10^{-9}$ & $1.2\\times10^{-16}$ \\\\",
+ "MS_COND_TWIST": 17.9,
+ "MS_COND_TWIST_G": 23.6,
+ "MS_COND_TWIST_L": 13.1,
+ "MS_COND_MEAS8": 14.3,
+ "MS_COND_BEST8": 16.5,
+ "MS_COND_ETA1_BEST8": 17.2,
+ "MS_COND_MEAS9": 19.4,
+ "MS_COND_BEST9": 19.4,
+ "MS_COND_ETA1_BEST9": 20.9,
+ "MS_COND_ERR": 0.11,
+ "MS_COND_TABLE": "Voigt & $10^{8}$ & 0.5 & 17.9 & 14.3 & 16.5 \\\\\nVoigt & $10^{9}$ & 0.5 & 17.9 & 19.4 & 19.4 \\\\\nGaussian & $10^{8}$ & 0.5 & 23.6 & 14.4 & 18.4 \\\\\nGaussian & $10^{9}$ & 0.5 & 23.6 & 19.5 & 19.5 \\\\\nLorentzian & $10^{8}$ & 0.5 & 13.1 & 14.2 & 14.8 \\\\\nLorentzian & $10^{9}$ & 0.5 & 13.1 & 19.3 & 19.2 \\\\\nVoigt & $10^{8}$ & 0.8 & 17.9 & 15.4 & 16.9 \\\\\nVoigt & $10^{9}$ & 0.8 & 17.9 & 20.4 & 20.4 \\\\\nVoigt & $10^{8}$ & 1.0 & 17.9 & 15.9 & 17.2 \\\\\nVoigt & $10^{9}$ & 1.0 & 17.9 & 20.9 & 20.9 \\\\"
 }

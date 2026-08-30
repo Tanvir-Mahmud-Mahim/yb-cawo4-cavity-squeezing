@@ -1,0 +1,15 @@
+gaussian eta=0.5 n_bar=0e+00: gain_z best -0.02 dB, best quadrature 23.58 dB
+voigt eta=0.5 n_bar=0e+00: gain_z best -0.14 dB, best quadrature 17.87 dB
+lorentzian eta=0.5 n_bar=0e+00: gain_z best -0.45 dB, best quadrature 13.11 dB
+gaussian eta=0.5 n_bar=1e+08: gain_z best 14.44 dB, best quadrature 18.37 dB
+gaussian eta=0.5 n_bar=1e+09: gain_z best 19.48 dB, best quadrature 19.53 dB
+voigt eta=0.5 n_bar=1e+08: gain_z best 14.35 dB, best quadrature 16.49 dB
+lorentzian eta=0.5 n_bar=1e+08: gain_z best 14.23 dB, best quadrature 14.83 dB
+voigt eta=0.5 n_bar=1e+09: gain_z best 19.38 dB, best quadrature 19.44 dB
+lorentzian eta=0.5 n_bar=1e+09: gain_z best 19.26 dB, best quadrature 19.25 dB
+voigt eta=0.8 n_bar=1e+08: gain_z best 15.39 dB, best quadrature 16.92 dB
+voigt eta=1.0 n_bar=1e+08: gain_z best 15.88 dB, best quadrature 17.17 dB
+voigt eta=0.8 n_bar=1e+09: gain_z best 20.40 dB, best quadrature 20.43 dB
+voigt eta=1.0 n_bar=1e+09: gain_z best 20.89 dB, best quadrature 20.91 dB
+[conditional] 1092.2 s
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/conditional.npz
