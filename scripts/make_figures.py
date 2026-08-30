@@ -28,13 +28,13 @@ def best_rows(r, col):
     return np.array(out)
 
 
-def panel_label(ax, s, x=0.035, y=0.965):
-    """Panel letter inside the axes: never collides with y-labels, titles or neighbours."""
-    ax.text(x, y, s, transform=ax.transAxes, fontweight="bold", fontsize=8.5, va="top", ha="left",
+def panel_label(ax, s, x=0.035, y=0.965, va="top"):
+    """Panel letter inside the axes, placed in a corner that the data leave empty."""
+    ax.text(x, y, s, transform=ax.transAxes, fontweight="bold", fontsize=8.5, va=va, ha="left",
             bbox=dict(facecolor="white", edgecolor="none", pad=1.0, alpha=0.85), zorder=6)
 
 
-def layout(fig, bottom=0.343, top=0.912, wspace=0.42, right=0.99):
+def layout(fig, bottom=0.352, top=0.910, wspace=0.42, right=0.99):
     """Fixed margins (tight_layout does not account for legends placed outside the axes)."""
     fig.subplots_adjust(left=0.062, right=right, top=top, bottom=bottom, wspace=wspace)
 
@@ -58,13 +58,13 @@ def fig_validation():
     d = load("validation")
     if d is None:
         return
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
     ax = axs[0]
     ax.plot(d["a_Q"], dB(d["a_xi_exact"]), "o", ms=3, color=C[6], mfc="none", label="exact (N = 8)")
     ax.plot(d["a_Q"], dB(d["a_xi_cum"]), "-", color=C[0], label="cumulant")
     ax.set_xlabel(r"$Q=\chi N t$")
     ax.set_ylabel(r"$\xi_R^2$ (dB)")
-    ax.legend(frameon=False)
+    legend_below(ax, ncol=2, fontsize=6)
     ax.set_title("8 disordered spins, all noise channels", fontsize=7)
     panel_label(ax, "(a)")
     ax = axs[1]
@@ -73,7 +73,7 @@ def fig_validation():
         ax.plot(d["b_Q"], dB(d[f"b_xi_cum_N{Nb}"]), "-", color=C[k], label=f"N = {Nb}")
     ax.set_xlabel(r"$Q=\chi N t$")
     ax.set_ylabel(r"$\xi_R^2$ (dB)")
-    ax.legend(frameon=False)
+    legend_below(ax, ncol=3, fontsize=6)
     ax.set_title("exact (circles) vs cumulant (lines)", fontsize=7)
     panel_label(ax, "(b)")
     ax = axs[2]
@@ -84,7 +84,7 @@ def fig_validation():
     ax.loglog(r, d["c_lewis_swan"], "--", color=C[1], lw=0.9, label=r"$3.0\,(\kappa/2\Delta)^{2/3}$ (perturbative)")
     ax.set_xlabel(r"$2\Delta/\kappa$")
     ax.set_ylabel(r"$\xi^2_{\rm opt}$")
-    ax.legend(frameon=False, fontsize=6, loc="lower left")
+    legend_below(ax, ncol=1, fontsize=6)
     panel_label(ax, "(c)", x=0.90)
     layout(fig)
     savefig(fig, "fig_validation")
@@ -96,7 +96,7 @@ def fig_benchmark():
     if d is None:
         return
     t = d["t"] * 1e3
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
     ax = axs[0]
     for k, c in enumerate(d["chiN"]):
         ax.plot(t, d[f"mf_voigt_{int(c)}"], color=C[k], label=r"$\chi N_0/2\pi=%.1f$ kHz" % (c / 1e3))
@@ -107,7 +107,7 @@ def fig_benchmark():
     ax.set_ylim(0, 1.02)
     legend_below(ax, ncol=2, fontsize=6)
     ax.set_title("mean field, Voigt line", fontsize=7)
-    panel_label(ax, "(a)")
+    panel_label(ax, "(a)", x=0.90)
     ax = axs[1]
     c = 7000
     for k, (shape, lab) in enumerate([("gaussian", "Gaussian"), ("voigt", "Voigt"), ("lorentzian", "Lorentzian")]):
@@ -118,7 +118,7 @@ def fig_benchmark():
     ax.set_ylim(0, 1.02)
     ax.set_title(r"$\chi N_0/2\pi = 7$ kHz", fontsize=7)
     legend_below(ax, ncol=2, fontsize=6)
-    panel_label(ax, "(b)")
+    panel_label(ax, "(b)", y=0.30)
     ax = axs[2]
     for k, c in enumerate([2000, 4000, 7000]):
         ax.plot(d["cum_t"] * 1e3, dB(d[f"cum_varmax_{c}"]), color=C[k], label=r"$\chi N_0/2\pi=%d$ kHz" % (c / 1e3))
@@ -139,9 +139,9 @@ def fig_loopgap():
     if d is None or "a_xi_homogeneous_echo" not in d:
         return
     t = d["t_list"] * 1e3
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
     ax = axs[0]
-    for k, (shape, lab) in enumerate([("homogeneous", "homogeneous"), ("gaussian", "Gaussian"), ("voigt", "Voigt"), ("lorentzian", "Lorentzian")]):
+    for k, (shape, lab) in enumerate([("homogeneous", "uniform"), ("gaussian", "Gaussian"), ("voigt", "Voigt"), ("lorentzian", "Lorentzian")]):
         ax.semilogx(t, dB(d[f"a_xi_{shape}_echo"]), color=C[k], label=lab)
         ax.semilogx(t, dB(d[f"a_xi_{shape}_noecho"]), color=C[k], ls=":", lw=0.9)
     ax.axhline(0, color="0.5", lw=0.5)
@@ -156,7 +156,7 @@ def fig_loopgap():
         ax = axs[1]
         rows = d["b_rows"]
         for k, (N, Nlab) in enumerate([(6e14, r"6\times10^{14}"), (1.35e15, r"1.35\times10^{15}")]):
-            for s, ls, lab in [(0, "--", "homogeneous"), (1, "-", "Voigt")]:
+            for s, ls, lab in [(0, "--", "uniform"), (1, "-", "Voigt")]:
                 m = (rows[:, 0] == N) & (rows[:, 2] == s)
                 r = best_rows(rows[m], 1)
                 o = np.argsort(r[:, 1])
@@ -166,11 +166,11 @@ def fig_loopgap():
         ax.set_xlabel(r"$\Delta/2\pi$ (MHz)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=2, fontsize=6)
-        panel_label(ax, "(b)")
+        panel_label(ax, "(b)", y=0.25)
     if "c_rows" in d:
         ax = axs[2]
         rows = d["c_rows"]
-        for s, ls, lab in [(0, "--", "homogeneous"), (1, "-", "Voigt")]:
+        for s, ls, lab in [(0, "--", "uniform"), (1, "-", "Voigt")]:
             m = rows[:, 2] == s
             r = best_rows(rows[m], 0)
             o = np.argsort(r[:, 0])
@@ -183,7 +183,7 @@ def fig_loopgap():
         ax.set_xlabel(r"$N_0$")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=2, fontsize=6)
-        panel_label(ax, "(c)")
+        panel_label(ax, "(c)", x=0.86)
     layout(fig)
     savefig(fig, "fig_loopgap")
 
@@ -194,13 +194,13 @@ def fig_scaling():
     if d is None:
         return
     rows = d["a_rows"]
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
     ax = axs[0]
     for k, ratio in enumerate([100, 1000, 10000]):
         m = (rows[:, 0] == ratio) & (rows[:, 2] == 0)
         r = best_rows(rows[m], 1)
         o = np.argsort(r[:, 1])
-        ax.semilogx(r[o, 1] / GAMMA_INH_HZ, dB(r[o, 3]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % ratio)
+        ax.semilogx(r[o, 1] / GAMMA_INH_HZ, dB(r[o, 3]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % (67 if ratio == 66.7 else ratio))
         A = 1.43
         ax.axhline(dB(A * (1 / ratio) ** (2 / 3)), color=C[k], ls=":", lw=0.7)
     for k, (s, lab) in enumerate([(1, "Gaussian"), (2, "Lorentzian")]):
@@ -211,7 +211,7 @@ def fig_scaling():
     ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
     ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
     legend_below(ax, ncol=2, dy=-0.60, fontsize=6)
-    panel_label(ax, "(a)")
+    panel_label(ax, "(a)", x=0.90)
     if "b_rows" in d:
         ax = axs[1]
         rows = d["b_rows"]
@@ -219,16 +219,18 @@ def fig_scaling():
             m = np.isclose(rows[:, 0], ratio)
             r = rows[m]
             o = np.argsort(r[:, 1])
-            ax.plot(r[o, 1] * 1e3, dB(r[o, 3]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % ratio)
+            ax.plot(r[o, 1] * 1e3, dB(r[o, 3]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % (67 if ratio == 66.7 else ratio))
         ax.set_xlabel("cavity bath temperature (mK)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=2, dy=-0.60, fontsize=6)
         ax2 = ax.twinx()
         Ts = np.linspace(1e-3, 0.5, 200)
         from cavsqueeze import thermal_occupation
-        ax2.plot(Ts * 1e3, [thermal_occupation(TWO_PI * OMEGA_S_HZ, T) for T in Ts], color="0.5", lw=0.7, ls="--")
+        ax2.plot(Ts * 1e3, [thermal_occupation(TWO_PI * OMEGA_S_HZ, T) for T in Ts], color="0.5", lw=0.7, ls="--", zorder=1)
+        ax2.set_zorder(ax.get_zorder() - 1)
+        ax.patch.set_visible(False)
         ax2.set_ylabel(r"$n_{\rm th}$ (dashed)", color="0.4", fontsize=7, labelpad=2)
-        panel_label(ax, "(b)")
+        panel_label(ax, "(b)", y=0.55)
     if "c_rows" in d:
         ax = axs[2]
         rows = d["c_rows"]
@@ -236,12 +238,12 @@ def fig_scaling():
             m = np.isclose(rows[:, 0], ratio)
             r = rows[m]
             o = np.argsort(r[:, 1])
-            ax.semilogx(r[o, 1] * 1e3, dB(r[o, 2]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % ratio)
+            ax.semilogx(r[o, 1] * 1e3, dB(r[o, 2]), "o-", ms=2.5, color=C[k], label=r"$2\Delta/\kappa=%g$" % (67 if ratio == 66.7 else ratio))
         ax.set_xlabel(r"single-spin $T_2$ (ms)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=2, dy=-0.60, fontsize=6)
-        panel_label(ax, "(c)")
-    layout(fig, wspace=0.7, right=0.975, bottom=0.475)
+        panel_label(ax, "(c)", y=0.62)
+    layout(fig, wspace=0.7, right=0.975, bottom=0.487)
     savefig(fig, "fig_scaling")
 
 
@@ -261,7 +263,7 @@ def fig_designmap():
         Z[i, j] = dB(row[4])
         Tt[i, j] = row[5]
         Dl[i, j] = row[3]
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
     for ax, M, lab, cmap in [(axs[0], Z, r"$\xi^2_{\rm opt}$ (dB)", "viridis_r"), (axs[1], np.log10(Tt * 1e6), r"$\log_{10}$ optimal time ($\mu$s)", "magma"), (axs[2], np.log10(Dl / 1e6), r"$\log_{10}\,\Delta_{\rm opt}/2\pi$ (MHz)", "cividis")]:
         im = ax.imshow(M, origin="lower", aspect="auto", cmap=cmap)
         ax.set_xticks(range(len(gNs)))
@@ -290,7 +292,7 @@ def fig_designmap():
 def fig_inhomog_readout():
     di = load("inhomog")
     dr = load("readout")
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
     if di is not None:
         ax = axs[0]
         for k, D in enumerate(di["D"]):
@@ -342,7 +344,7 @@ def fig_inhomog_readout():
         ax.set_xlabel(r"$N$")
         ax.set_ylabel(r"$\sigma_{\rm det}/N$ (3 dB)")
         legend_below(ax, ncol=1, fontsize=6)
-        panel_label(ax, "(c)")
+        panel_label(ax, "(c)", y=0.20)
     layout(fig)
     savefig(fig, "fig_inhomog_readout")
 
@@ -352,7 +354,7 @@ def fig_beyond():
     """Corrections beyond the eliminated model: elimination error, reversal cost,
     line-shape uncertainty and pulse duration."""
     de, dr, db = load("elimination"), load("reversal"), load("robustness")
-    fig, axs = plt.subplots(1, 4, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 4, figsize=(7.1, 1.56))
     # (a) elimination error at the optimum versus g sqrt(N) / Delta
     ax = axs[0]
     if de is not None:
@@ -365,9 +367,10 @@ def fig_beyond():
             ax.loglog([0.2], [dB(xf.min()) - dB(xe.min())], "s", ms=4, mfc="none", color=C[1], label="exact, N = 20")
         rr = np.geomspace(0.03, 0.5, 20)
         ax.loglog(rr, loss[-1] * (rr / r[-1]) ** 2, "--", color="0.5", lw=0.8, label=r"$\propto (g\sqrt{N}/\Delta)^2$")
-        for x, lab in [(0.017, "loop-gap"), (0.08, "SC, 12.5 MHz")]:
+        for x, lab, ha in [(0.017, "loop-gap", "left"), (0.085, "SC optimum", "left")]:
             ax.axvline(x, color="0.75", lw=0.6)
-            ax.text(x * 1.1, 0.0036, lab, rotation=90, fontsize=5.5, va="bottom", ha="left", color="0.35")
+            ax.text(x, 1.02, lab, transform=ax.get_xaxis_transform(), fontsize=5.5,
+                    va="bottom", ha=ha, color="0.35")
         ax.set_xlabel(r"$g\sqrt{N}/\Delta$")
         ax.set_ylabel("elimination loss (dB)")
         ax.set_xlim(0.012, 0.6)
@@ -393,7 +396,7 @@ def fig_beyond():
         ax.set_ylim(-2, 22)
         ax.set_title("with ring-down (solid), ideal (dotted)", fontsize=6.5)
         legend_below(ax, ncol=2, dy=-0.66, fontsize=6)
-        panel_label(ax, "(b)")
+        panel_label(ax, "(b)", y=0.28)
     # (c) loop-gap optimum versus Lorentzian fraction of the line
     ax = axs[2]
     if db is not None and "a_rows" in db:
@@ -414,7 +417,7 @@ def fig_beyond():
         ax2.set_xticklabels([f"{fid[k]:.0f}" for k in sel], fontsize=6)
         ax2.set_xlabel(r"free-induction 1/e time, 5 kHz line ($\mu$s)", fontsize=6.5)
         legend_below(ax, ncol=2, dy=-0.66, fontsize=6)
-        panel_label(ax, "(c)")
+        panel_label(ax, "(c)", x=0.90)
     # (d) finite pulse duration
     ax = axs[3]
     if db is not None and "c_rows" in db:
@@ -441,7 +444,7 @@ def fig_beyond():
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=1, dy=-0.66, fontsize=6)
         panel_label(ax, "(d)", x=0.90)
-    fig.subplots_adjust(left=0.075, right=0.99, top=0.867, bottom=0.475, wspace=0.62)
+    fig.subplots_adjust(left=0.075, right=0.99, top=0.863, bottom=0.487, wspace=0.62)
     savefig(fig, "fig_beyond")
 
 
@@ -450,7 +453,7 @@ def fig_measure():
     dm = load("measurement")
     if dm is None:
         return
-    fig, axs = plt.subplots(1, 4, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 4, figsize=(7.1, 1.56))
     Ns, Deltas, nbars = dm["Ns"], dm["Deltas"], dm["N_bars"]
     kap = 2 * np.pi * 1e4
     eta = 0.5
@@ -477,7 +480,7 @@ def fig_measure():
     ax.set_ylabel(r"$S$, $1/\xi_R^2$ (dB)")
     ax.set_xlim(0.01, 100)
     ax.set_ylim(-1, 32)
-    legend_below(ax, ncol=2, dy=-0.46, fontsize=6)
+    legend_below(ax, ncol=2, dy=-0.545, fontsize=6)
     panel_label(ax, "(a)")
     # (b) steady state of every locked point against the formula
     ax = axs[1]
@@ -525,15 +528,20 @@ def fig_measure():
             for D in Deltas:
                 W = dm[key(N, D, f"Wdirect_{tag}")]
                 ys.append(np.nanmax(W) if np.any(np.isfinite(W)) else np.nan)
-            ax.semilogx(Deltas / 1e6, dB(ys), marker=mk, ms=3.5, mfc=fill if fill else C[i], color=C[i], lw=0.9,
+            # the gain depends on the photons per spin, so pairs of curves coincide;
+            # the open markers are drawn larger and on top so that both remain visible
+            ax.semilogx(Deltas / 1e6, dB(ys), marker=mk, ms=5.0 if fill == "none" else 3.0,
+                        mfc=fill if fill else C[i], color=C[i], lw=1.4 if fill == "none" else 0.8,
+                        zorder=5 if fill == "none" else 4,
                         label=r"$N=10^{%d}$, $\bar n=10^{%d}$" % (int(np.log10(N)), int(np.log10(nb))))
     ax.axvline(200, color="0.6", lw=0.7)
-    ax.text(200, 31.5, r"$\Delta_{\rm th}$", fontsize=6, color="0.35", ha="center", va="top")
+    ax.text(178, 29.6, r"$\Delta_{\rm th}$", fontsize=6, color="0.35", ha="right", va="top",
+            bbox=dict(facecolor="white", edgecolor="none", pad=0.8, alpha=0.85), zorder=6)
     ax.set_xlabel(r"$\Delta/2\pi$ (MHz)")
     ax.set_ylabel("gain (dB)")
     ax.set_ylim(-1, 32)
-    legend_below(ax, ncol=2, dy=-0.46, fontsize=5.5)
-    panel_label(ax, "(c)")
+    legend_below(ax, ncol=2, dy=-0.545, fontsize=5.5)
+    panel_label(ax, "(c)", y=0.22)
     # (d) echo protocol: contrast and gain for N = 1e9
     ax = axs[3]
     N = 1e9
@@ -550,9 +558,9 @@ def fig_measure():
     ax2.set_ylabel(r"gain (dB)", fontsize=7)
     ax.set_ylim(0, 1.05)
     ax2.set_ylim(-1, 32)
-    legend_below(ax, ncol=2, dy=-0.46, fontsize=5.5)
-    panel_label(ax, "(d)")
-    fig.subplots_adjust(left=0.075, right=0.95, top=0.886, bottom=0.437, wspace=0.72)
+    legend_below(ax, ncol=2, dy=-0.545, fontsize=5.5)
+    panel_label(ax, "(d)", y=0.04, va="bottom")
+    fig.subplots_adjust(left=0.075, right=0.95, top=0.883, bottom=0.448, wspace=0.72)
     savefig(fig, "fig_measure")
 
 
@@ -564,7 +572,7 @@ def fig_echo():
     p0, _ = loop_gap_dispersive(1.0)
     chiN = p0.chi * de["N0s"] / TWO_PI
     taus = de["taus"]
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.60))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
     # (a) echo and no-pulse contrast at 2 tau versus chi N0, full model and without emission
     ax = axs[0]
     for k, (tau, tag) in enumerate([(1e-4, "01"), (3e-4, "03")]):
@@ -579,8 +587,8 @@ def fig_echo():
     ax.set_xlabel(r"interaction $\chi N_0/2\pi$ (kHz)")
     ax.set_ylabel(r"contrast at $2\tau$")
     ax.set_ylim(0, 1.08)
-    legend_below(ax, ncol=2, dy=-0.46, fontsize=5.5)
-    panel_label(ax, "(a)")
+    legend_below(ax, ncol=2, dy=-0.545, fontsize=5.5)
+    panel_label(ax, "(a)", y=0.70)
     # (b) fine tau scan at the operating point
     ax = axs[1]
     if "tau_fine" in de:
@@ -595,8 +603,8 @@ def fig_echo():
     ax.set_ylabel(r"contrast at $2\tau$")
     ax.set_ylim(0, 1.08)
     ax.set_xlim(0, 0.6)
-    legend_below(ax, ncol=2, dy=-0.46, fontsize=5.5)
-    panel_label(ax, "(b)")
+    legend_below(ax, ncol=2, dy=-0.545, fontsize=5.5)
+    panel_label(ax, "(b)", x=0.86, y=0.24)
     # (c) line shapes and the cumulant check
     ax = axs[2]
     k03 = int(np.argmin(np.abs(taus - 3e-4)))
@@ -610,9 +618,9 @@ def fig_echo():
     ax.set_xlabel(r"interaction $\chi N_0/2\pi$ (kHz)")
     ax.set_ylabel(r"contrast at $2\tau$")
     ax.set_ylim(0, 1.08)
-    legend_below(ax, ncol=2, dy=-0.46, fontsize=5.5)
-    panel_label(ax, "(c)")
-    fig.subplots_adjust(left=0.075, right=0.99, top=0.886, bottom=0.418, wspace=0.5)
+    legend_below(ax, ncol=2, dy=-0.545, fontsize=5.5)
+    panel_label(ax, "(c)", y=0.55)
+    fig.subplots_adjust(left=0.075, right=0.99, top=0.883, bottom=0.429, wspace=0.5)
     savefig(fig, "fig_echo")
 
 

@@ -334,10 +334,12 @@ def setup3d(ax, xlim, ylim, zlim, aspect, zoom, elev, azim):
 
 # ---------------------------------------------------------------------------
 def make():
-    fig = plt.figure(figsize=(7.0, 3.8))
+    FH = 2.92                      # figure height in inches (wide and short, so it prints at full text width)
+    SY = 3.8 / FH                  # keeps every hand-tuned vertical offset the same size in inches
+    fig = plt.figure(figsize=(7.0, FH))
 
     # ================= (a) loop-gap resonator experiment =================
-    ax = fig.add_axes([-0.02, 0.30, 0.56, 0.70], projection="3d")
+    ax = fig.add_axes([-0.02, 0.351, 0.56, 0.649], projection="3d")
     scenes, G = loop_gap_scene()
     for S, zo in scenes:
         S.draw(ax, zorder=zo)
@@ -366,7 +368,7 @@ def make():
     text3d(fig, ax, (-wx - 1.5, Y0, zc - 1.0), "gap", colour="w", fontsize=5.0, va="top", ha="center", rotation=ang_x, rotation_mode="anchor")
     text3d(fig, ax, (wx + 1.5, Y0, zc - 1.0), "gap", colour="w", fontsize=5.0, va="top", ha="center", rotation=ang_x, rotation_mode="anchor")
     # numbered markers placed on the parts (no long leaders)
-    marker3d(fig, ax, (4.6, Y0 + 2.0, zc + 4.6), 1)
+    marker3d(fig, ax, (6.0, Y0 + 2.0, zc + 4.9), 1)
     marker3d(fig, ax, (X0 + 3.5, Y0, Z1 - 3.0), 2)
     marker3d(fig, ax, (0, -16.5, zc), 3, colour=RED)
     marker3d(fig, ax, (-xo, Y0 - 0.2, zc - ro - 3.2), 4, colour=BLUE)
@@ -375,7 +377,7 @@ def make():
     # microwave signals entering the outer loops, as in the source figure
     for xc, sgn in [(-xo, -1), (xo, 1)]:
         p = fig.transFigure.inverted().transform(p2d(ax, xc, Y0 - 0.5, zc))
-        wavy(fig, (p[0] + sgn * 0.075, p[1] - 0.06), (p[0], p[1] - 0.006), BLUE, n=4, amp=0.004, lw=1.0)
+        wavy(fig, (p[0] + sgn * 0.075, p[1] - 0.06 * SY), (p[0], p[1] - 0.006 * SY), BLUE, n=4, amp=0.004 * SY, lw=1.0)
     # dashed frame around the crystal, referring to the magnified view (b)
     # single dashed rectangle in the plane of the pocket opening (in front of the crystal),
     # drawn in perspective, referring to (b)
@@ -389,7 +391,7 @@ def make():
     fig.text(pf[0], pf[1], "see (b)", fontsize=5.4, color="0.92", ha="right", va="top", zorder=33, rotation=ang_x, rotation_mode="anchor")
 
     # ================= (b) magnified crystal with the four processes =================
-    bx = fig.add_axes([0.545, 0.555, 0.24, 0.38], projection="3d")
+    bx = fig.add_axes([0.545, 0.5475, 0.24, 0.3875], projection="3d")
     crystal_zoom_scene().draw(bx, zorder=2)
     setup3d(bx, (-3.2, 3.2), (-3.2, 3.2), (-3.2, 3.2), (1, 1, 1), 1.05, 18, -112)
     fig.canvas.draw()
@@ -404,28 +406,28 @@ def make():
     cb = fig.transFigure.inverted().transform(p2d(bx, 0, 0, -2.3))       # bottom
     lx0 = cr[0] + 0.04                                                    # label column to the right of the cube
     # twisting: two highlighted spins joined by a double arrow
-    for p in [(c[0] - 0.035, c[1] - 0.008), (c[0] + 0.035, c[1] + 0.008)]:
-        fig.add_artist(FancyArrowPatch((p[0], p[1] - 0.011), (p[0], p[1] + 0.011), transform=fig.transFigure,
+    for p in [(c[0] - 0.035, c[1] - 0.008 * SY), (c[0] + 0.035, c[1] + 0.008 * SY)]:
+        fig.add_artist(FancyArrowPatch((p[0], p[1] - 0.011 * SY), (p[0], p[1] + 0.011 * SY), transform=fig.transFigure,
                                        arrowstyle="-|>", mutation_scale=6, lw=1.0, color=ORANGE, zorder=27))
-    fig.add_artist(FancyArrowPatch((c[0] - 0.029, c[1] - 0.007), (c[0] + 0.029, c[1] + 0.007), transform=fig.transFigure,
+    fig.add_artist(FancyArrowPatch((c[0] - 0.029, c[1] - 0.007 * SY), (c[0] + 0.029, c[1] + 0.007 * SY), transform=fig.transFigure,
                                    arrowstyle="<|-|>", mutation_scale=8, lw=1.3, color=ORANGE, zorder=26))
-    fig.add_artist(matplotlib.lines.Line2D([c[0] + 0.045, lx0 - 0.005], [c[1] + 0.008, c[1] + 0.008], transform=fig.transFigure, color=ORANGE, lw=0.5, zorder=26))
-    fig.text(lx0, c[1] + 0.008, "spins twist each other through\nthe resonator (strength $\\chi$)", fontsize=5.6, color=ORANGE, ha="left", va="center", linespacing=1.15)
+    fig.add_artist(matplotlib.lines.Line2D([c[0] + 0.045, lx0 - 0.005], [c[1] + 0.008 * SY, c[1] + 0.008 * SY], transform=fig.transFigure, color=ORANGE, lw=0.5, zorder=26))
+    fig.text(lx0, c[1] + 0.008 * SY, "spins twist each other through\nthe resonator (strength $\\chi$)", fontsize=5.6, color=ORANGE, ha="left", va="center", linespacing=1.15)
     # collective emission: wave leaving the top right corner
-    wavy(fig, (c[0] + 0.02, c[1] + 0.04), (cr[0] + 0.02, ct[1] + 0.005), BLUE, n=5, amp=0.005, lw=1.1)
-    fig.text(lx0, ct[1] + 0.012, "collective emission into the\nresonator (rate $\\Gamma_{\\rm SR}$)", fontsize=5.6, color=BLUE, ha="left", va="center", linespacing=1.15)
+    wavy(fig, (c[0] + 0.02, c[1] + 0.04 * SY), (cr[0] + 0.02, ct[1] + 0.005 * SY), BLUE, n=5, amp=0.005 * SY, lw=1.1)
+    fig.text(lx0, ct[1] + 0.012 * SY, "collective emission into the\nresonator (rate $\\Gamma_{\\rm SR}$)", fontsize=5.6, color=BLUE, ha="left", va="center", linespacing=1.15)
     # thermal photons: wave entering the top left corner
-    wavy(fig, (c[0] - 0.085, ct[1] + 0.03), (c[0] - 0.03, c[1] + 0.045), PINK, n=5, amp=0.005, lw=1.1)
-    fig.text(c[0] - 0.09, ct[1] + 0.045, "thermal photons from the\nresonator (rate $\\Gamma_{\\rm SR}n_{\\rm th}$)", fontsize=5.6, color=PINK, ha="left", va="bottom", linespacing=1.15)
+    wavy(fig, (c[0] - 0.085, ct[1] + 0.03 * SY), (c[0] - 0.03, c[1] + 0.045 * SY), PINK, n=5, amp=0.005 * SY, lw=1.1)
+    fig.text(c[0] - 0.09, ct[1] + 0.045 * SY, "thermal photons from the\nresonator (rate $\\Gamma_{\\rm SR}n_{\\rm th}$)", fontsize=5.6, color=PINK, ha="left", va="bottom", linespacing=1.15)
     # dephasing: one spin at the bottom right losing its phase
-    fig.add_artist(FancyArrowPatch((c[0] + 0.02, c[1] - 0.035), (c[0] + 0.02, c[1] - 0.085), transform=fig.transFigure,
+    fig.add_artist(FancyArrowPatch((c[0] + 0.02, c[1] - 0.035 * SY), (c[0] + 0.02, c[1] - 0.085 * SY), transform=fig.transFigure,
                                    arrowstyle="-|>", mutation_scale=7, lw=1.1, color=GREEN, zorder=26))
-    fig.add_artist(matplotlib.lines.Line2D([c[0] + 0.028, lx0 - 0.005], [c[1] - 0.07, c[1] - 0.07], transform=fig.transFigure, color=GREEN, lw=0.5, zorder=26))
-    fig.text(lx0, c[1] - 0.07, "each spin loses its phase\non its own (rate $1/T_2$)", fontsize=5.6, color=GREEN, ha="left", va="center", linespacing=1.15)
-    fig.text(c[0], cb[1] - 0.04, "spins: the 3.084 GHz clock transition of $^{171}$Yb$^{3+}$", fontsize=5.6, color=CRYSTAL_EDGE, ha="center", va="top")
+    fig.add_artist(matplotlib.lines.Line2D([c[0] + 0.028, lx0 - 0.005], [c[1] - 0.07 * SY, c[1] - 0.07 * SY], transform=fig.transFigure, color=GREEN, lw=0.5, zorder=26))
+    fig.text(lx0, c[1] - 0.07 * SY, "each spin loses its phase\non its own (rate $1/T_2$)", fontsize=5.6, color=GREEN, ha="left", va="center", linespacing=1.15)
+    fig.text(c[0], cb[1] - 0.04 * SY, "spins: the 3.084 GHz clock transition of $^{171}$Yb$^{3+}$", fontsize=5.6, color=CRYSTAL_EDGE, ha="center", va="top")
 
     # ================= (c) proposed planar superconducting resonator =================
-    cx3 = fig.add_axes([0.55, 0.02, 0.46, 0.50], projection="3d")
+    cx3 = fig.add_axes([0.55, 0.02, 0.46, 0.4655], projection="3d")
     for S, zo in sc_scene():
         S.draw(cx3, zorder=zo)
     setup3d(cx3, (-3.4, 3.4), (-3.4, 3.4), (-1.2, 2.8), (6.8, 6.8, 4.0), 1.45, 26, -52)
@@ -433,8 +435,8 @@ def make():
     rng = np.random.default_rng(3)
     spins = [tuple(v) for v in rng.uniform([-1.4, -1.6, 0.1], [1.4, 1.6, 0.42], size=(16, 3))]
     draw_spins_2d(fig, cx3, spins, colour=ORANGE, size=0.007, lw=0.5, ms=4)
-    fig.text(0.565, 0.50, "(c)", fontsize=9, fontweight="bold", va="top")
-    fig.text(0.595, 0.50, "proposed planar superconducting resonator on the same crystal (not built)", fontsize=6.6, va="top")
+    fig.text(0.565, 0.515, "(c)", fontsize=9, fontweight="bold", va="top")
+    fig.text(0.595, 0.515, "proposed planar superconducting resonator on the same crystal (not built)", fontsize=6.6, va="top")
     marker3d(fig, cx3, (-2.95, -2.9, 0.3), 6, offset=(-0.028, -0.015))          # chip
     marker3d(fig, cx3, (1.7, -1.9, 0.25), 7, offset=(0.035, -0.03))              # read-out volume
     marker3d(fig, cx3, (1.2, 1.9, 0.52), 8, offset=(0.045, 0.03))                # meander inductor
@@ -443,7 +445,7 @@ def make():
     marker3d(fig, cx3, (0.45, 0, 2.2), 10, offset=(0.04, 0.0), colour=RED)       # optical read-out beam
 
     # ================= key =================
-    kx, ky = 0.012, 0.275
+    kx, ky = 0.012, 0.325
     fig.text(kx, ky, "Key", fontsize=6.4, fontweight="bold", va="center")
     items = [
         (1, "k", "$^{171}$Yb$^{3+}$:CaWO$_4$ crystal, 4.4 $\\times$ 4.6 $\\times$ 5 mm, 4.96 ppm $^{171}$Yb, glued in the central loop"),
@@ -457,11 +459,11 @@ def make():
         (9, "k", "niobium capacitor pads"),
         (10, RED, "optical read-out beam through the read-out volume"),
     ]
-    y = ky - 0.028
+    y = ky - 0.028 * SY
     for num, col, txt in items:
         marker(fig, (kx + 0.012, y), num, colour=col, r=0.0095, fs=5.2)
         fig.text(kx + 0.028, y, txt, fontsize=5.3, va="center")
-        y -= 0.0265
+        y -= 0.0265 * SY
 
     for ext in ("pdf", "png"):
         fig.savefig(os.path.join(FIG, f"fig_device.{ext}"), bbox_inches="tight", pad_inches=0.02)

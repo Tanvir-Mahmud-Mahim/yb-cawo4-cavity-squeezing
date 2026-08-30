@@ -492,7 +492,7 @@ if de is not None:
     num["ECHO_MIN_01"] = round(float(ev[:, k01].min()), 2)
     num["ECHO_20K_03"] = round(float(ev[-1, k03]), 2)
     num["ECHO_20K_01"] = round(float(ev[-1, k01]), 2)
-    num["ECHO_LOW_3"] = round(float(ev[chiN <= 600][:, k3].min()), 2)
+    num["ECHO_LOW_3"] = float(np.floor(100 * float(ev[chiN <= 600][:, k3].min())) / 100)
     tf = de["tau_fine"]
     def at(key, col, tau):
         return float(de[key][int(np.argmin(np.abs(tf - tau))), col])
@@ -506,7 +506,7 @@ if de is not None:
         num[f"ECHO_{tag}_MIN_TAU"] = int(round(tf[np.argmin(r)] * 1e6))
         # sequence of local extrema in the first 0.35 ms
         ext = [i for i in range(1, len(r) - 1) if tf[i] < 3.5e-4 and ((r[i] < r[i-1] and r[i] <= r[i+1]) or (r[i] > r[i-1] and r[i] >= r[i+1]))]
-        num[f"ECHO_{tag}_SEQ"] = ", ".join(f"{r[i]:.2f} at {tf[i]*1e3:.2f} ms" for i in ext)
+        num[f"ECHO_{tag}_SEQ"] = ", ".join(f"{r[i]:.2f} at {tf[i]*1e3:.3f} ms" for i in ext)
     num["ECHO_PERIOD_US"] = int(round(1e6 / (p0.chi * 6e14 / TWO_PI)))
     mf1 = np.interp(de["cum_N0s"], de["N0s"], ev[:, k1])
     num["ECHO_CUM_ERR"] = float(np.ceil(100 * np.max(np.abs(de["cum_echo_1ms"] - mf1))) / 100)
@@ -522,6 +522,14 @@ if de is not None:
         ex = int(np.floor(np.log10(n0)))
         rows.append(f"${n0/10**ex:.1f}\\times10^{{{ex}}}$ & {chiN[i]/1e3:.2f} & " + " & ".join(f"{ev[i,k]:.2f}" for k in (k01, k03, k1)) + f" & {de['noem_01'][i,0]:.2f} & {de['noem_03'][i,0]:.2f} & " + " & ".join(f"{rv[i,k]:.2f}" for k in (k01, k03, k1)))
     num["ECHO_TABLE"] = " \\\\\n".join(rows) + " \\\\"
+
+
+# how closely the cumulant solution follows the mean field in Fig. 2(b)
+_b = np.load(os.path.join(DATA, "benchmark.npz"))
+_mf = np.interp(_b["cum_t"], _b["t"], _b["mf_voigt_7000"])
+_dev = np.abs(_mf - _b["cum_contrast_7000"])
+num["CUM_MF_DEV"] = float(np.ceil(100 * _dev.max()) / 100)
+num["CUM_MF_DEV_3MS"] = float(np.ceil(100 * _dev[_b["cum_t"] <= 3e-3].max()) / 100)
 
 save_json("numbers", num)
 print(json.dumps(num, indent=1, default=str))
