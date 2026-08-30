@@ -39,22 +39,22 @@ pytest tests              # validation testbench (about 10 s)
 
 ```
 cd scripts
-python run_validation.py   # Fig. 2 data (a few minutes)
-python run_benchmark.py    # Fig. 3 data
-python run_loopgap.py      # Fig. 4 data
-python run_scaling.py      # Fig. 5 data
-python run_designmap.py    # Fig. 6 data
-python run_inhomog.py      # Fig. 7(a) data
-python run_readout.py      # Fig. 7(b,c) data
-python run_elimination.py  # Fig. 8(a) data: resonator kept as a quantum mode, no rotating-wave approximation
-python run_reversal.py     # Fig. 8(b) data: ring-down at the detuning reversal of the twist-untwist readout
-python run_robustness.py   # Fig. 8(c,d) data: line shape, T2, finite and imperfect pulses
-python run_measurement.py  # Fig. 9 data: squeezing by measurement through the resonator (about 1 hour)
+python run_validation.py   # Fig. S2 data (a few minutes)
+python run_benchmark.py    # Fig. 1 data
+python run_loopgap.py      # Fig. 2 data
+python run_scaling.py      # Fig. S3 data
+python run_designmap.py    # Fig. 3 data
+python run_inhomog.py      # Fig. 4(a) data
+python run_readout.py      # Fig. 4(b,c) data
+python run_elimination.py  # Fig. S4(a) data: resonator kept as a quantum mode, no rotating-wave approximation
+python run_reversal.py     # Fig. S4(b) data: ring-down at the detuning reversal of the twist-untwist readout
+python run_robustness.py   # Fig. S4(c,d) data: line shape, T2, finite and imperfect pulses
+python run_measurement.py  # Fig. 5 data: squeezing by measurement through the resonator (about 1 hour)
 python run_conditional.py  # supplement Table S9: twisting and measurement together, conditional cumulant solver (about 30 min)
-python run_echo.py         # Fig. 10 data: spin echo against the interaction (about 20 min); then run_echo_extra.py (tau scans, no-emission check)
+python run_echo.py         # Fig. 6 data: spin echo against the interaction (about 20 min); then run_echo_extra.py (tau scans, no-emission check)
 python hyperfine_levels.py # zero-field hyperfine levels and Sz/Sx matrix elements -> data/hyperfine_levels.json
-python make_figures.py        # data figures (Figs. 2 to 10) -> figures/
-python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_device.*
+python make_figures.py        # data figures (main Figs. 1 to 6 and Figs. S2 to S4) -> figures/
+python make_device_figure.py  # 3-D device schematic (Fig. S1) -> figures/fig_device.*
 
 # Figures use the Times New Roman font. If it is not installed, Matplotlib falls back
 # to DejaVu Sans; install the font (for example from a Windows machine, C:\Windows\Fonts)
@@ -64,7 +64,7 @@ python extract_numbers.py  # every number quoted in the paper and supplement -> 
 `run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22172970 (v1.4.0)
+https://doi.org/10.5281/zenodo.22172970 (v1.4.1)
 
 ## Minimal example
 
