@@ -54,3 +54,21 @@ def test_riccati_steady_state_closed_form():
     S_num = (N / 4) / sol.y[0, -1]
     S_formula = 4 * p.g * np.sqrt(eta * nb) / p.kappa
     assert abs(S_num / S_formula - 1) < 1e-3
+
+
+def test_conditional_cumulant_solver_pure_measurement():
+    """With the measurement term switched on and no dynamics, the class-resolved
+    solver must reproduce Var(J_z) = (N/4)/(1 + Gamma_m N t/4) (Riccati, up to
+    (N-1)/N) and keep Var(J_y) Var(J_z) at the minimum-uncertainty value for
+    unit detection efficiency."""
+    from cavsqueeze import cumulant as C
+    from cavsqueeze.protocols import css_x
+    M, N = 3, 1e6
+    rt = C.Rates(delta=np.zeros(M), G=np.ones(M), n=np.full(M, N / M), chi1=0.0, Gd=0.0, Gu=0.0, gamma_phi=0.0)
+    rt.spec_delta, rt.spec_n = np.zeros(0), np.zeros(0)
+    rt.meas, rt.meas_eta = 1e-6, 1.0
+    for t in [0.1, 1.0, 10.0]:
+        s = C.evolve(css_x(M), rt, t, rtol=1e-9)
+        J, Cov, S1, S2 = C.collective_moments(s, rt.n)
+        assert abs(Cov[2, 2] / ((N / 4) / (1 + rt.meas * N / 4 * t)) - 1) < 1e-5
+        assert abs(Cov[1, 1] * Cov[2, 2] / (N / 4) ** 2 - 1) < 1e-6
