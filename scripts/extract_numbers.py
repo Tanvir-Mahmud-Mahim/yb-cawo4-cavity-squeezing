@@ -256,6 +256,8 @@ if rb is not None and "a_rows" in rb:
             if tag:
                 num[f"T2_LG_{tag}"] = round(bestv, 1)
     num["T2_LG_TABLE"] = " \\\\\n".join(t2_rows) + " \\\\"
+    if "T2_LG_150MS" in num and "T2_LG_1MS" in num:
+        num["T2_LG_COST_1MS"] = round(num["T2_LG_150MS"] - num["T2_LG_1MS"], 1)
     rc = rb["c_rows"]
     kinds = ["ideal", "noecho", "duration", "duration_noecho", "angle", "spread"]
 
@@ -434,7 +436,7 @@ if dm is not None:
                     ("$n_{\\rm crit}=\\Delta^2/4g^2$", lambda p, N: p.Delta**2 / (4 * p.g**2)),
                     ("$4g\\sqrt{\\eta_{\\rm d}\\bar n}/\\kappa$ at $\\bar n=10^8$, $\\eta_{\\rm d}=0.5$", lambda p, N: 4 * p.g * np.sqrt(0.5 * 1e8) / p.kappa),
                     ("$4g\\sqrt{\\eta_{\\rm d}\\bar n}/\\kappa$ at $\\bar n=10^9$, $\\eta_{\\rm d}=0.5$", lambda p, N: 4 * p.g * np.sqrt(0.5 * 1e9) / p.kappa),
-                    ("time to steady state $3/\\sqrt{\\Gamma_mD}$, $\\bar n=10^9$ (ms)", lambda p, N: 3e3 / np.sqrt(64 * 0.5 * (p.g**2 / p.Delta)**2 * 1e9 / p.kappa * p.Gamma_SR * N**2 / 4)),
+                    ("time to steady state $3/\\sqrt{\\Gamma_m\\mathcal D}$, $\\bar n=10^9$ (ms)", lambda p, N: 3e3 / np.sqrt(64 * 0.5 * (p.g**2 / p.Delta)**2 * 1e9 / p.kappa * p.Gamma_SR * N**2 / 4)),
                     ("$P_{\\rm in}$, $\\bar n=10^9$ (pW)", lambda p, N: 1e9 * p.kappa * HBAR * (p.omega_s + p.Delta) / 4 * 1e12),
                     ("Stark shift per photon $2\\chi_s/2\\pi$ (Hz)", lambda p, N: 2 * p.g**2 / p.Delta / TWO_PI),
                     ("$2\\chi_s\\sqrt N/\\kappa$", lambda p, N: 2 * p.g**2 / p.Delta * np.sqrt(N) / p.kappa),
@@ -515,7 +517,7 @@ if de is not None:
     for N, tag in [(1e14, "14"), (6e14, "AB"), (2e15, "15")]:
         num[f"ECHO_TWIST_MIN_{tag}"] = round(np.sqrt(N) / (p0.chi * N) / 60, 0)
     rows = []
-    for i in range(0, len(chiN), 2):
+    for i in range(len(chiN)):
         n0 = de["N0s"][i]
         ex = int(np.floor(np.log10(n0)))
         rows.append(f"${n0/10**ex:.1f}\\times10^{{{ex}}}$ & {chiN[i]/1e3:.2f} & " + " & ".join(f"{ev[i,k]:.2f}" for k in (k01, k03, k1)) + f" & {de['noem_01'][i,0]:.2f} & {de['noem_03'][i,0]:.2f} & " + " & ".join(f"{rv[i,k]:.2f}" for k in (k01, k03, k1)))
