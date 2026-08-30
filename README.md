@@ -64,7 +64,7 @@ python extract_numbers.py  # every number quoted in the paper and supplement -> 
 `run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22172970 (v1.4.1)
+https://doi.org/10.5281/zenodo.22178568 (v1.4.1)
 
 ## Minimal example
 
