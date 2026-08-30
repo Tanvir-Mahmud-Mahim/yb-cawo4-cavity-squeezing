@@ -147,13 +147,12 @@ def fig_loopgap():
     ax.axhline(0, color="0.5", lw=0.5)
     ax.set_xlabel("interaction time (ms)")
     ax.set_ylabel(r"$\xi_R^2$ (dB)")
-    ax.set_ylim(-12, 8)
+    ax.set_ylim(-12, 10)
     ax.set_title("echo (solid), no echo (dotted)", fontsize=7)
     legend_below(ax, ncol=2, fontsize=6)
-    ax.set_ylim(-12, 10)
     panel_label(ax, "(a)")
     if "b_rows" in d:
-        ax = axs[0]
+        ax = axs[1]
         rows = d["b_rows"]
         for k, (N, Nlab) in enumerate([(6e14, r"6\times10^{14}"), (1.35e15, r"1.35\times10^{15}")]):
             for s, ls, lab in [(0, "--", "uniform"), (1, "-", "Voigt")]:
@@ -166,9 +165,9 @@ def fig_loopgap():
         ax.set_xlabel(r"$\Delta/2\pi$ (MHz)")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=2, fontsize=6)
-        panel_label(ax, "(b)", y=0.25)
+        panel_label(ax, "(b)", y=0.06, va="bottom")
     if "c_rows" in d:
-        ax = axs[1]
+        ax = axs[2]
         rows = d["c_rows"]
         for s, ls, lab in [(0, "--", "uniform"), (1, "-", "Voigt")]:
             m = rows[:, 2] == s
@@ -183,7 +182,7 @@ def fig_loopgap():
         ax.set_xlabel(r"$N_0$")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=2, fontsize=6)
-        panel_label(ax, "(c)", x=0.86)
+        panel_label(ax, "(c)")
     layout(fig)
     savefig(fig, "fig_loopgap")
 
@@ -193,7 +192,6 @@ def fig_scaling():
     d = load("scaling")
     if d is None:
         return
-    rows = d["a_rows"]
     fig, axs = plt.subplots(1, 2, figsize=(4.8, 1.56))
     if "b_rows" in d:
         ax = axs[0]
@@ -471,7 +469,7 @@ def fig_beyond():
             rr = rr[np.argsort(rr[:, 0])]
             ax.plot(rr[:, 0], -dB(rr[:, 2]), "o" + ls, ms=3, color=C[0] if echo else C[1], label=lab)
         ax.set_xlabel("Lorentzian fraction of the line")
-        ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
+        ax.set_ylabel("squeezing (dB)")
         ax.set_xlim(-0.03, 1.03)
         ax2 = ax.twiny()
         ax2.set_xlim(ax.get_xlim())
@@ -506,7 +504,7 @@ def fig_beyond():
                 yf = np.concatenate([-dB(noecho[:, 3]), -dB(free[:, 3])])
                 ax.plot(xf, yf, "s:", ms=3, mfc="none", color=col, label=name + ", free")
         ax.set_xlabel(r"pulse duration $\chi N\,\tau_{\rm p}$")
-        ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
+        ax.set_ylabel("squeezing (dB)")
         legend_below(ax, ncol=1, dy=-0.66, fontsize=6)
         panel_label(ax, "(d)", x=0.90)
     fig.subplots_adjust(left=0.075, right=0.99, top=0.863, bottom=0.487, wspace=0.62)
