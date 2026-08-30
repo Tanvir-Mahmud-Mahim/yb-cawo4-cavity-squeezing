@@ -1,0 +1,70 @@
+N=1e+09 Delta=10 MHz chiN/2pi=100000 Hz GN/2pi=100 Hz C(1ms)=0.94 C_echo=[0.98 0.97 0.95 0.16 0.01] z_pulse=[0.08 0.3  0.89 0.97 0.97] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:9.4/9.4 n7:14.5/14.4 n8:19.5/19.4 n9:24.5/24.4 n10:nan/nan
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+09 Delta=30 MHz chiN/2pi=33333 Hz GN/2pi=11.1 Hz C(1ms)=0.96 C_echo=[0.95 0.94 0.88 0.71 0.56] z_pulse=[0.01 0.03 0.16 0.59 0.76] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:9.2/9.0 n7:14.4/14.2 n8:19.4/19.3 n9:24.4/24.3 n10:29.5/29.3
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+09 Delta=100 MHz chiN/2pi=10000 Hz GN/2pi=1 Hz C(1ms)=0.90 C_echo=[0.74 0.8  0.72 0.51 0.33] z_pulse=[0.   0.   0.01 0.05 0.09] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:7.4/5.9 n7:13.5/12.4 n8:18.9/18.1 n9:24.1/23.6 n10:29.2/28.7
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+09 Delta=200 MHz chiN/2pi=5000 Hz GN/2pi=0.25 Hz C(1ms)=0.74 C_echo=[0.76 0.28 0.23 0.12 0.01] z_pulse=[0.   0.   0.   0.01 0.02] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:3.0/-2.2 n7:10.9/-0.3 n8:17.6/8.0 n9:23.1/16.3 n10:28.4/25.3
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+09 Delta=300 MHz chiN/2pi=3333 Hz GN/2pi=0.111 Hz C(1ms)=0.60 C_echo=[0.39 0.04 0.01 0.03 0.02] z_pulse=[0. 0. 0. 0. 0.] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.5/-8.0 n7:6.7/-7.1 n8:14.8/-2.4 n9:21.4/6.5 n10:27.1/16.3
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+09 Delta=1000 MHz chiN/2pi=1000 Hz GN/2pi=0.01 Hz C(1ms)=0.00 C_echo=[0.91 0.9  0.85 0.65 0.43] z_pulse=[0. 0. 0. 0. 0.] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.5/-0.8 n7:-0.5/1.7 n8:-0.5/10.4 n9:3.7/20.3 n10:13.6/30.2
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+10 Delta=10 MHz chiN/2pi=100000 Hz GN/2pi=100 Hz C(1ms)=0.94 C_echo=[0.98 0.97 0.95 0.16 0.01] z_pulse=[0.08 0.3  0.89 0.97 0.97] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:4.0/4.4 n7:9.4/9.4 n8:14.5/14.4 n9:19.5/19.4 n10:24.5/24.4
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+10 Delta=30 MHz chiN/2pi=33333 Hz GN/2pi=11.1 Hz C(1ms)=0.96 C_echo=[0.95 0.94 0.88 0.71 0.56] z_pulse=[0.01 0.03 0.16 0.59 0.76] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:3.7/3.8 n7:9.2/9.0 n8:14.4/14.2 n9:19.4/19.3 n10:24.4/24.3
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+10 Delta=100 MHz chiN/2pi=10000 Hz GN/2pi=1 Hz C(1ms)=0.90 C_echo=[0.74 0.8  0.72 0.51 0.33] z_pulse=[0.   0.   0.01 0.05 0.09] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:0.7/-1.1 n7:7.4/5.9 n8:13.5/12.4 n9:18.9/18.1 n10:24.1/23.6
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+10 Delta=200 MHz chiN/2pi=5000 Hz GN/2pi=0.25 Hz C(1ms)=0.74 C_echo=[0.76 0.28 0.23 0.12 0.01] z_pulse=[0.   0.   0.   0.01 0.02] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.5/-2.4 n7:3.0/-2.2 n8:10.9/-0.3 n9:17.6/8.0 n10:23.1/16.3
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+10 Delta=300 MHz chiN/2pi=3333 Hz GN/2pi=0.111 Hz C(1ms)=0.60 C_echo=[0.39 0.04 0.01 0.03 0.02] z_pulse=[0. 0. 0. 0. 0.] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.5/-8.1 n7:-0.5/-8.0 n8:6.7/-7.1 n9:14.8/-2.4 n10:21.4/6.5
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+10 Delta=1000 MHz chiN/2pi=1000 Hz GN/2pi=0.01 Hz C(1ms)=0.00 C_echo=[0.91 0.9  0.85 0.65 0.43] z_pulse=[0. 0. 0. 0. 0.] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.5/-0.8 n7:-0.5/-0.8 n8:-0.5/1.7 n9:-0.5/10.4 n10:3.7/20.3
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+11 Delta=10 MHz chiN/2pi=100000 Hz GN/2pi=100 Hz C(1ms)=0.94 C_echo=[0.98 0.97 0.95 0.16 0.01] z_pulse=[0.08 0.3  0.89 0.97 0.97] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.0/-0.4 n7:4.0/4.4 n8:9.4/9.4 n9:14.5/14.4 n10:19.5/19.4
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+11 Delta=30 MHz chiN/2pi=33333 Hz GN/2pi=11.1 Hz C(1ms)=0.96 C_echo=[0.95 0.94 0.88 0.71 0.56] z_pulse=[0.01 0.03 0.16 0.59 0.76] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.0/-0.4 n7:3.7/3.8 n8:9.2/9.0 n9:14.4/14.2 n10:19.4/19.3
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+11 Delta=100 MHz chiN/2pi=10000 Hz GN/2pi=1 Hz C(1ms)=0.90 C_echo=[0.74 0.8  0.72 0.51 0.33] z_pulse=[0.   0.   0.01 0.05 0.09] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.4/-1.9 n7:0.7/-1.1 n8:7.4/5.9 n9:13.5/12.4 n10:18.9/18.1
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+11 Delta=200 MHz chiN/2pi=5000 Hz GN/2pi=0.25 Hz C(1ms)=0.74 C_echo=[0.76 0.28 0.23 0.12 0.01] z_pulse=[0.   0.   0.   0.01 0.02] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.5/-2.4 n7:-0.5/-2.4 n8:3.0/-2.2 n9:10.9/-0.3 n10:17.6/8.0
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+11 Delta=300 MHz chiN/2pi=3333 Hz GN/2pi=0.111 Hz C(1ms)=0.60 C_echo=[0.39 0.04 0.01 0.03 0.02] z_pulse=[0. 0. 0. 0. 0.] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.5/-8.2 n7:-0.5/-8.1 n8:-0.5/-8.0 n9:6.7/-7.1 n10:14.8/-2.4
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+N=1e+11 Delta=1000 MHz chiN/2pi=1000 Hz GN/2pi=0.01 Hz C(1ms)=0.00 C_echo=[0.91 0.9  0.85 0.65 0.43] z_pulse=[0. 0. 0. 0. 0.] | best 1/xi^2 direct/echo (eta=0.5, dB): n6:-0.5/-0.8 n7:-0.5/-0.8 n8:-0.5/-0.8 n9:-0.5/1.7 n10:-0.5/10.4
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+[measurement map] 2600.1 s
+loop-gap n_bar=1e+08: best S=-0.07 dB
+loop-gap n_bar=1e+10: best S=-0.07 dB
+loop-gap n_bar=1e+12: best S=-0.06 dB
+   t=20 us: Var(Jz)-N/4 = 3.312e+06 (cumulant) vs 3.493e+06 (Gamma_SR |J_perp|^2 t)
+   t=50 us: Var(Jz)-N/4 = 8.297e+06 (cumulant) vs 8.732e+06 (Gamma_SR |J_perp|^2 t)
+   t=100 us: Var(Jz)-N/4 = 1.659e+07 (cumulant) vs 1.746e+07 (Gamma_SR |J_perp|^2 t)
+   t=200 us: Var(Jz)-N/4 = 3.303e+07 (cumulant) vs 3.493e+07 (Gamma_SR |J_perp|^2 t)
+[cumulant check] 8.4 s
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/measurement.npz
+=== tail rerun (python run_measurement.py --tail) ===
+[measurement map] 0.0 s
+loop-gap n_bar=1e+08: best S=-0.07 dB
+loop-gap n_bar=1e+10: best S=-0.07 dB
+loop-gap n_bar=1e+12: best S=-0.06 dB
+twisting voigt: 18.75 dB at 121 us
+twisting gauss: 23.61 dB at 127 us
+twisting lorentz: 13.84 dB at 67 us
+[twisting comparison] 469.3 s
+measurement, gaussian line, n_bar=1e+08: best gain 14.43 dB, C(1 ms)=0.990
+measurement, gaussian line, n_bar=1e+09: best gain 19.49 dB, C(1 ms)=0.990
+measurement, lorentzian line, n_bar=1e+08: best gain 14.14 dB, C(1 ms)=0.920
+measurement, lorentzian line, n_bar=1e+09: best gain 19.20 dB, C(1 ms)=0.920
+[line shapes] 467.5 s
+   dephased, t=0.2 ms: Var(Jz)-N/4 = 8.433e+02 (cumulant) vs Gamma_SR N t/4 = 3.142e-06; contrast 0.024
+   dephased, t=0.5 ms: Var(Jz)-N/4 = 8.656e+02 (cumulant) vs Gamma_SR N t/4 = 7.854e-06; contrast 0.041
+   dephased, t=1.0 ms: Var(Jz)-N/4 = 9.134e+02 (cumulant) vs Gamma_SR N t/4 = 1.571e-05; contrast 0.119
+   dephased, t=2.0 ms: Var(Jz)-N/4 = 1.104e+03 (cumulant) vs Gamma_SR N t/4 = 3.142e-05; contrast 0.018
+[cumulant check, dephased] 26.7 s
+   t=20 us: Var(Jz)-N/4 = 3.312e+06 (cumulant) vs 3.493e+06 (Gamma_SR |J_perp|^2 t)
+   t=50 us: Var(Jz)-N/4 = 8.297e+06 (cumulant) vs 8.732e+06 (Gamma_SR |J_perp|^2 t)
+   t=100 us: Var(Jz)-N/4 = 1.659e+07 (cumulant) vs 1.746e+07 (Gamma_SR |J_perp|^2 t)
+   t=200 us: Var(Jz)-N/4 = 3.303e+07 (cumulant) vs 3.493e+07 (Gamma_SR |J_perp|^2 t)
+[cumulant check] 7.7 s
