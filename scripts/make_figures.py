@@ -471,8 +471,7 @@ def fig_measure():
         ax.axhline(dB(4 * g * np.sqrt(eta * nb) / kap), color=C[k], ls=":", lw=0.7)
     if "twist_voigt" in dm and "twist_lorentz" in dm:
         lo, hi = -dB(dm["twist_voigt"][0]), -dB(dm["twist_lorentz"][0])
-        ax.axhspan(min(lo, hi), max(lo, hi), color="0.85", lw=0)
-        ax.text(0.011, min(lo, hi) - 1.9, "twisting, Lorentzian\nto Voigt (grey band)", fontsize=5.2, color="0.35", va="top")
+        ax.axhspan(min(lo, hi), max(lo, hi), color="0.85", lw=0, label="twisting, Lorentzian to Voigt")
     ax.set_xlabel("measurement time (ms)")
     ax.set_ylabel(r"$S$ (solid), $1/\xi^2$ (dashed) (dB)")
     ax.set_xlim(0.01, 100)
@@ -512,7 +511,7 @@ def fig_measure():
     ax.loglog(xs, ys, "o", ms=2.5, color=C[0], alpha=0.7)
     rr = np.array([xs.min() / 2, xs.max() * 2])
     ax.loglog(rr, rr, "-", color="0.4", lw=0.8)
-    ax.set_xlabel(r"$4g\sqrt{\eta\bar n}/\kappa$")
+    ax.set_xlabel(r"$4g\sqrt{\eta_{\rm d}\bar n}/\kappa$")
     ax.set_ylabel("steady-state $S\\,C$ (numerical)")
     ax.text(0.05, 0.9, f"{len(xs)} points\nmax. deviation {100 * np.nanmax(np.abs(ys / xs - 1)):.1f}%", transform=ax.transAxes, fontsize=6, va="top")
     panel_label(ax, "(b)", x=-0.34)
@@ -528,7 +527,7 @@ def fig_measure():
             ax.semilogx(Deltas / 1e6, dB(ys), marker=mk, ms=3.5, mfc=fill if fill else C[i], color=C[i], lw=0.9,
                         label=r"$N=10^{%d}$, $\bar n=10^{%d}$" % (int(np.log10(N)), int(np.log10(nb))))
     ax.axvline(200, color="0.6", lw=0.7)
-    ax.text(215, 1.0, r"$\Delta_{\rm th}$", fontsize=6, color="0.35")
+    ax.text(200, 31.5, r"$\Delta_{\rm th}$", fontsize=6, color="0.35", ha="center", va="top")
     ax.set_xlabel(r"$\Delta/2\pi$ (MHz)")
     ax.set_ylabel("best metrological gain (dB)")
     ax.set_ylim(-1, 32)

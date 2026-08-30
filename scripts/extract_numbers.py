@@ -442,6 +442,39 @@ if dm is not None:
         rows.append(f"{name} & {fmt_sci(f(p, N))} & {fmt_sci(f(p_lg, N_lg))}")
     num["MS_REQ_TABLE"] = " \\\\\n".join(rows) + " \\\\"
 
+dc = load("conditional")
+if dc is not None and dm is not None:
+    tc = dc["t"]
+    def best(key, col):
+        return float(np.nanmax(dc[key][:, col])) if key in dc else np.nan
+    num["MS_COND_TWIST"] = round(dB(best("voigt_n0_eta0.5", 4)), 1)
+    num["MS_COND_TWIST_G"] = round(dB(best("gaussian_n0_eta0.5", 4)), 1)
+    num["MS_COND_TWIST_L"] = round(dB(best("lorentzian_n0_eta0.5", 4)), 1)
+    for nb in [8, 9]:
+        num[f"MS_COND_MEAS{nb}"] = round(dB(best(f"voigt_n{nb}_eta0.5", 3)), 1)
+        num[f"MS_COND_BEST{nb}"] = round(dB(best(f"voigt_n{nb}_eta0.5", 4)), 1)
+        num[f"MS_COND_ETA1_BEST{nb}"] = round(dB(best(f"voigt_n{nb}_eta1.0", 4)), 1)
+    # conditional variance against the Riccati model (Voigt, eta = 0.5)
+    errs = []
+    for nb in [8, 9]:
+        rows = dc[f"voigt_n{nb}_eta0.5"]
+        W = dm[mkey(1e10, 3e7, f"Wdirect_eta0.5_n{nb}")]
+        te = dm[mkey(1e10, 3e7, "t_eval")]
+        errs.append(np.max(np.abs(dB(rows[:, 3]) - dB(np.interp(rows[:, 0], te, W)))))
+    num["MS_COND_ERR"] = round(float(max(errs)), 2)
+    rows_t = []
+    for shape, lab in [("voigt", "Voigt"), ("gaussian", "Gaussian"), ("lorentzian", "Lorentzian")]:
+        for nb in [8, 9]:
+            k = f"{shape}_n{nb}_eta0.5"
+            if k in dc:
+                rows_t.append(f"{lab} & $10^{{{nb}}}$ & 0.5 & {dB(best(shape + '_n0_eta0.5', 4)):.1f} & {dB(best(k, 3)):.1f} & {dB(best(k, 4)):.1f}")
+    for eta in [0.8, 1.0]:
+        for nb in [8, 9]:
+            k = f"voigt_n{nb}_eta{eta}"
+            if k in dc:
+                rows_t.append(f"Voigt & $10^{{{nb}}}$ & {eta} & {dB(best('voigt_n0_eta0.5', 4)):.1f} & {dB(best(k, 3)):.1f} & {dB(best(k, 4)):.1f}")
+    num["MS_COND_TABLE"] = " \\\\\n".join(rows_t) + " \\\\"
+
 save_json("numbers", num)
 print(json.dumps(num, indent=1, default=str))
 
