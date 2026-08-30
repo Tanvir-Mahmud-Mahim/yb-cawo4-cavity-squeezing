@@ -50,9 +50,10 @@ python run_elimination.py  # Fig. 8(a) data: resonator kept as a quantum mode, n
 python run_reversal.py     # Fig. 8(b) data: ring-down at the detuning reversal of the twist-untwist readout
 python run_robustness.py   # Fig. 8(c,d) data: line shape, T2, finite and imperfect pulses
 python run_measurement.py  # Fig. 9 data: squeezing by measurement through the resonator (about 1 hour)
-python run_conditional.py  # supplement Table S10: twisting and measurement together, conditional cumulant solver (about 30 min)
+python run_conditional.py  # supplement Table S9: twisting and measurement together, conditional cumulant solver (about 30 min)
+python run_echo.py         # Fig. 10 data: spin echo against the interaction (about 20 min); then run_echo_extra.py (tau scans, no-emission check)
 python hyperfine_levels.py # zero-field hyperfine levels and Sz/Sx matrix elements -> data/hyperfine_levels.json
-python make_figures.py        # data figures (Figs. 2 to 9) -> figures/
+python make_figures.py        # data figures (Figs. 2 to 10) -> figures/
 python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_device.*
 
 # Figures use the Times New Roman font. If it is not installed, Matplotlib falls back
@@ -63,7 +64,7 @@ python extract_numbers.py  # every number quoted in the paper and supplement -> 
 `run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22169884 (v1.3.1)
+https://doi.org/10.5281/zenodo.22172970 (v1.4.0)
 
 ## Minimal example
 

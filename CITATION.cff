@@ -11,7 +11,7 @@ authors:
   - family-names: Mohsin
     given-names: Abu S. M.
     affiliation: BRAC University
-version: 1.3.1
+version: 1.4.0
 date-released: 2026-08-28
 license: Apache-2.0
 repository-code: https://github.com/Tanvir-Mahmud-Mahim/yb-cawo4-cavity-squeezing
