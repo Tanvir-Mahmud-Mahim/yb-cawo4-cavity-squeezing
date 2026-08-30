@@ -1,11 +1,12 @@
 # yb-cawo4-cavity-squeezing
 
 Beyond-mean-field simulation of cavity-mediated spin squeezing (one-axis twisting)
-for solid-state clock-transition ensembles, applied to 171Yb3+:CaWO4.
+for solid-state clock-transition ensembles, applied to 171Yb3+:CaWO4, and of
+squeezing by measurement of the spin population through the resonator.
 
 Companion code for: T. M. Mahim, M. M. Rahman, A. S. M. Mohsin, *How much spin
-squeezing a solid-state spin ensemble in a microwave resonator can deliver: limits
-and design rules for 171Yb3+:CaWO4*.
+squeezing a solid-state spin ensemble in a microwave resonator can deliver: the limits
+of twisting and the case for measuring, for 171Yb3+:CaWO4*.
 
 The package `cavsqueeze` implements
 
@@ -46,8 +47,9 @@ python run_readout.py      # Fig. 7(b,c) data
 python run_elimination.py  # Fig. 8(a) data: resonator kept as a quantum mode, no rotating-wave approximation
 python run_reversal.py     # Fig. 8(b) data: ring-down at the detuning reversal of the twist-untwist readout
 python run_robustness.py   # Fig. 8(c,d) data: line shape, T2, finite and imperfect pulses
+python run_measurement.py  # Fig. 9 data: squeezing by measurement through the resonator (about 1 hour)
 python hyperfine_levels.py # zero-field hyperfine levels and Sz/Sx matrix elements -> data/hyperfine_levels.json
-python make_figures.py        # data figures (Figs. 2 to 8) -> figures/
+python make_figures.py        # data figures (Figs. 2 to 9) -> figures/
 python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_device.*
 
 # Figures use the Times New Roman font. If it is not installed, Matplotlib falls back
@@ -55,10 +57,10 @@ python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_dev
 # into ~/.fonts and clear ~/.cache/matplotlib to reproduce the published look.
 python extract_numbers.py  # every number quoted in the paper and supplement -> data/numbers.json
 ```
-`run_all.sh` chains the data scripts (about 6 hours on two cores; set
+`run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22163998 (v1.2.0)
+https://doi.org/10.5281/zenodo.22168893 (v1.3.0)
 
 ## Minimal example
 
