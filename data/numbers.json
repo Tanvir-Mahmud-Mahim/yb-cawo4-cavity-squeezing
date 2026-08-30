@@ -185,6 +185,10 @@
    -9.8
   ]
  ],
+ "PREFACTOR": 1.43,
+ "PREFACTOR_PERT": 3.0,
+ "PERT_GAIN": 3.2,
+ "LAW1_FIT_ERR": 9.0,
  "SCAL_100": [
   [
    0.5,
@@ -264,6 +268,10 @@
   ]
  ],
  "SAT_RATIO": 8,
+ "LAW2_MEAN_DEV": 0.65,
+ "LAW2_MAX_DEV": 1.8,
+ "LAW2_NPTS": 15,
+ "LAW2_GAUSS_DEV": 0.02,
  "TH_LG": 0.9,
  "TH_LG300": 3.8,
  "TH_SC": 0.6,
