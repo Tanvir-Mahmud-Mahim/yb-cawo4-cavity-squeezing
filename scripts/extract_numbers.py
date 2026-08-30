@@ -475,6 +475,52 @@ if dc is not None and dm is not None:
                 rows_t.append(f"Voigt & $10^{{{nb}}}$ & {eta} & {dB(best('voigt_n0_eta0.5', 4)):.1f} & {dB(best(k, 3)):.1f} & {dB(best(k, 4)):.1f}")
     num["MS_COND_TABLE"] = " \\\\\n".join(rows_t) + " \\\\"
 
+de = load("echo")
+if de is not None:
+    p0, _ = loop_gap_dispersive(1.0)
+    chiN = p0.chi * de["N0s"] / TWO_PI
+    taus = de["taus"]
+    k01, k03, k1, k3 = [int(np.argmin(np.abs(taus - x))) for x in (1e-4, 3e-4, 1e-3, 3e-3)]
+    ev, rv = de["mf_voigt_echo"], de["mf_voigt_ramsey"]
+    j = int(np.argmin(ev[:, k03]))
+    num["ECHO_MIN_03"] = round(float(ev[j, k03]), 2)
+    num["ECHO_MIN_03_CHIN"] = round(float(chiN[j] / 1e3), 1)
+    num["ECHO_MIN_03_L"] = round(float(de["mf_lorentzian_echo"][:, k03].min()), 2)
+    num["ECHO_MIN_03_G"] = round(float(de["mf_gaussian_echo"][:, k03].min()), 2)
+    num["ECHO_MIN_01"] = round(float(ev[:, k01].min()), 2)
+    num["ECHO_20K_03"] = round(float(ev[-1, k03]), 2)
+    num["ECHO_20K_01"] = round(float(ev[-1, k01]), 2)
+    num["ECHO_LOW_3"] = round(float(ev[chiN <= 600][:, k3].min()), 2)
+    tf = de["tau_fine"]
+    def at(key, col, tau):
+        return float(de[key][int(np.argmin(np.abs(tf - tau))), col])
+    for N0, tag in [(6e14, "AB"), (7e14, "AB7")]:
+        key = f"fine_N0_{N0:.0e}"
+        num[f"ECHO_{tag}_01"] = round(at(key, 0, 1e-4), 2)
+        num[f"ECHO_{tag}_NOEM_01"] = round(at(key, 1, 1e-4), 2)
+        num[f"ECHO_{tag}_RAMSEY_01"] = round(at(key, 2, 1e-4), 2)
+        r = de[key][:, 0]
+        num[f"ECHO_{tag}_MIN"] = round(float(r.min()), 2)
+        num[f"ECHO_{tag}_MIN_TAU"] = int(round(tf[np.argmin(r)] * 1e6))
+        # sequence of local extrema in the first 0.35 ms
+        ext = [i for i in range(1, len(r) - 1) if tf[i] < 3.5e-4 and ((r[i] < r[i-1] and r[i] <= r[i+1]) or (r[i] > r[i-1] and r[i] >= r[i+1]))]
+        num[f"ECHO_{tag}_SEQ"] = ", ".join(f"{r[i]:.2f} at {tf[i]*1e3:.2f} ms" for i in ext)
+    num["ECHO_PERIOD_US"] = int(round(1e6 / (p0.chi * 6e14 / TWO_PI)))
+    mf1 = np.interp(de["cum_N0s"], de["N0s"], ev[:, k1])
+    num["ECHO_CUM_ERR"] = float(np.ceil(100 * np.max(np.abs(de["cum_echo_1ms"] - mf1))) / 100)
+    dif = max(np.max(np.abs(de["noem_01"][:, 0] - ev[:, k01])), np.max(np.abs(de["noem_03"][:, 0] - ev[:, k03])))
+    num["ECHO_NOEM_ERR"] = float(np.ceil(100 * dif) / 100)
+    num["ECHO_CONV"] = ", ".join(f"{v:.3f}" for v in de["conv_echo"])
+    num["ECHO_CONV_M"] = ", ".join(str(int(m)) for m in de["conv_M"])
+    for N, tag in [(1e14, "14"), (6e14, "AB"), (2e15, "15")]:
+        num[f"ECHO_TWIST_MIN_{tag}"] = round(np.sqrt(N) / (p0.chi * N) / 60, 0)
+    rows = []
+    for i in range(0, len(chiN), 2):
+        n0 = de["N0s"][i]
+        ex = int(np.floor(np.log10(n0)))
+        rows.append(f"${n0/10**ex:.1f}\\times10^{{{ex}}}$ & {chiN[i]/1e3:.2f} & " + " & ".join(f"{ev[i,k]:.2f}" for k in (k01, k03, k1)) + f" & {de['noem_01'][i,0]:.2f} & {de['noem_03'][i,0]:.2f} & " + " & ".join(f"{rv[i,k]:.2f}" for k in (k01, k03, k1)))
+    num["ECHO_TABLE"] = " \\\\\n".join(rows) + " \\\\"
+
 save_json("numbers", num)
 print(json.dumps(num, indent=1, default=str))
 

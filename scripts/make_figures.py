@@ -555,6 +555,66 @@ def fig_measure():
     savefig(fig, "fig_measure")
 
 
+def fig_echo():
+    """Spin echo against the cavity-mediated interaction (data/echo.npz)."""
+    de = load("echo")
+    if de is None:
+        return
+    p0, _ = loop_gap_dispersive(1.0)
+    chiN = p0.chi * de["N0s"] / TWO_PI
+    taus = de["taus"]
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.5))
+    # (a) echo and no-pulse contrast at 2 tau versus chi N0, full model and without emission
+    ax = axs[0]
+    for k, (tau, tag) in enumerate([(1e-4, "01"), (3e-4, "03")]):
+        kt = int(np.argmin(np.abs(taus - tau)))
+        ax.semilogx(chiN / 1e3, de["mf_voigt_echo"][:, kt], "-", color=C[k], label=r"echo, $\tau$ = %g ms" % (tau * 1e3))
+        if f"noem_{tag}" in de:
+            ax.semilogx(chiN / 1e3, de[f"noem_{tag}"][:, 0], "--", color=C[k], lw=0.9, label="same, no emission")
+        ax.semilogx(chiN / 1e3, de["mf_voigt_ramsey"][:, kt], ":", color=C[k], lw=0.9, label="no pulse")
+    ax.axvline(GAMMA_INH_HZ / 1e3, color="0.6", lw=0.7)
+    ax.text(GAMMA_INH_HZ / 1e3 * 0.92, 0.97, r"$\gamma_{\rm inh}$", fontsize=6, color="0.35", va="top", ha="right")
+    ax.axvspan(6.1, 7.2, color="0.88", lw=0, zorder=0)
+    ax.set_xlabel(r"interaction $\chi N_0/2\pi$ (kHz)")
+    ax.set_ylabel(r"contrast at $2\tau$")
+    ax.set_ylim(0, 1.08)
+    legend_below(ax, ncol=2, dy=-0.36, fontsize=5.5)
+    panel_label(ax, "(a)", x=-0.3)
+    # (b) fine tau scan at the operating point
+    ax = axs[1]
+    if "tau_fine" in de:
+        tf = de["tau_fine"] * 1e3
+        for k, (key, lab) in enumerate([("fine_N0_6e+14", r"$N_0=6\times10^{14}$ (6.1 kHz)"), ("fine_N0_7e+14", r"$N_0=7\times10^{14}$ (7.2 kHz)")]):
+            if key in de:
+                r = de[key]
+                ax.plot(tf, r[:, 0], "-", color=C[k], label=lab + ", echo")
+                ax.plot(tf, r[:, 1], "--", color=C[k], lw=0.8, label="no emission")
+                ax.plot(tf, r[:, 2], ":", color=C[k], lw=0.9, label="no pulse")
+    ax.set_xlabel(r"echo half-time $\tau$ (ms)")
+    ax.set_ylabel(r"contrast at $2\tau$")
+    ax.set_ylim(0, 1.08)
+    ax.set_xlim(0, 0.6)
+    legend_below(ax, ncol=2, dy=-0.36, fontsize=5.5)
+    panel_label(ax, "(b)", x=-0.3)
+    # (c) line shapes and the cumulant check
+    ax = axs[2]
+    k03 = int(np.argmin(np.abs(taus - 3e-4)))
+    k1 = int(np.argmin(np.abs(taus - 1e-3)))
+    for j, (tag, lab) in enumerate([("voigt", "Voigt"), ("gaussian", "Gaussian"), ("lorentzian", "Lorentzian")]):
+        ax.semilogx(chiN / 1e3, de[f"mf_{tag}_echo"][:, k03], "-", color=C[j], label=lab + r", $\tau$ = 0.3 ms")
+    ax.semilogx(chiN / 1e3, de["mf_voigt_echo"][:, k1], "-", color=C[3], lw=0.9, label=r"Voigt, $\tau$ = 1 ms, mean field")
+    if "cum_N0s" in de:
+        ax.semilogx(p0.chi * de["cum_N0s"] / TWO_PI / 1e3, de["cum_echo_1ms"], "o", ms=4, mfc="none", color=C[3], label=r"Voigt, $\tau$ = 1 ms, cumulant")
+    ax.axvline(GAMMA_INH_HZ / 1e3, color="0.6", lw=0.7)
+    ax.set_xlabel(r"interaction $\chi N_0/2\pi$ (kHz)")
+    ax.set_ylabel(r"echo contrast at $2\tau$")
+    ax.set_ylim(0, 1.08)
+    legend_below(ax, ncol=2, dy=-0.36, fontsize=5.5)
+    panel_label(ax, "(c)", x=-0.3)
+    fig.subplots_adjust(left=0.085, right=0.99, top=0.9, bottom=0.42, wspace=0.5)
+    savefig(fig, "fig_echo")
+
+
 if __name__ == "__main__":
     fig_validation()
     fig_benchmark()
@@ -564,3 +624,4 @@ if __name__ == "__main__":
     fig_inhomog_readout()
     fig_beyond()
     fig_measure()
+    fig_echo()
