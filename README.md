@@ -17,7 +17,9 @@ The package `cavsqueeze` implements
   tail resolution (`ensemble.py`);
 * a class-resolved second-order cumulant expansion in *connected* variables that is
   exact to machine precision for arbitrarily large N (`cumulant.py`), together with
-  the raw-moment form used as a test reference (`cumulant_raw.py`);
+  the raw-moment form used as a test reference (`cumulant_raw.py`); the solver can
+  condition the ensemble on a continuous measurement of J_z through the resonator
+  (`Rates.meas`, `Rates.meas_eta`);
 * exact references: QuTiP master equation for distinguishable spins and the
   permutation-invariant Dicke solver PIQS (`exact.py`);
 * pulse sequences: echo twist, Ramsey, twist-untwist readout, plain squeezed readout
@@ -48,6 +50,7 @@ python run_elimination.py  # Fig. 8(a) data: resonator kept as a quantum mode, n
 python run_reversal.py     # Fig. 8(b) data: ring-down at the detuning reversal of the twist-untwist readout
 python run_robustness.py   # Fig. 8(c,d) data: line shape, T2, finite and imperfect pulses
 python run_measurement.py  # Fig. 9 data: squeezing by measurement through the resonator (about 1 hour)
+python run_conditional.py  # supplement Table S10: twisting and measurement together, conditional cumulant solver (about 30 min)
 python hyperfine_levels.py # zero-field hyperfine levels and Sz/Sx matrix elements -> data/hyperfine_levels.json
 python make_figures.py        # data figures (Figs. 2 to 9) -> figures/
 python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_device.*
@@ -60,7 +63,7 @@ python extract_numbers.py  # every number quoted in the paper and supplement -> 
 `run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22168893 (v1.3.0)
+https://doi.org/10.5281/zenodo.22169884 (v1.3.1)
 
 ## Minimal example
 
