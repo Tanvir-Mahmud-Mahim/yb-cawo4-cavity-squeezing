@@ -306,6 +306,142 @@ if os.path.exists(pc_path):
     num["PC_CUM60"] = ", ".join(f"{100 * x:.1f}\\%" for x in pc["cumulant_N60_rel_increase"][:-1]) + f" and {100 * pc['cumulant_N60_rel_increase'][-1]:.1f}\\%"
     num["SPLIT_CONV"] = round(100 * abs(pc["splitting_rel_change_20_to_80"]), 2)
 
+def fmt_sci(v):
+    v = float(v)
+    if v == 0:
+        return "0"
+    if 1e-2 <= abs(v) < 1e3:
+        return f"{v:.3g}"
+    e = int(np.floor(np.log10(abs(v))))
+    return r"$%.1f\times10^{%d}$" % (v / 10**e, e)
+
+
+dm = load("measurement")
+if dm is not None:
+    from cavsqueeze.resonator import HBAR
+    kap = TWO_PI * 1e4
+    eta = 0.5
+
+    def mkey(N, D, name):
+        return f"N{int(np.log10(N))}_D{int(D / 1e6)}_{name}"
+
+    def best_direct(N, D, nb, et=0.5):
+        W = dm[mkey(N, D, f"Wdirect_eta{et}_n{int(np.log10(nb))}")]
+        return np.nanmax(W) if np.any(np.isfinite(W)) else np.nan
+
+    def best_echo(N, D, nb, et=0.5):
+        W = dm[mkey(N, D, f"Wecho_eta{et}_n{int(np.log10(nb))}")]
+        return np.nanmax(W) if np.any(np.isfinite(W)) else np.nan
+
+    # steady-state check over all locked points (Delta <= 100 MHz)
+    devs = []
+    for N in dm["Ns"]:
+        g = TWO_PI * 1e6 / np.sqrt(N)
+        for D in dm["Deltas"]:
+            if D > 1.0e8:
+                continue
+            for et in dm["etas"]:
+                for nb in dm["N_bars"]:
+                    k = mkey(N, D, f"S_eta{et}_n{int(np.log10(nb))}")
+                    if k in dm and nb <= 0.1 * dm[mkey(N, D, "n_crit")]:
+                        S, t = dm[k], dm[mkey(N, D, "t_eval")]
+                        Gm, D0 = dm[mkey(N, D, f"Gm_eta{et}_n{int(np.log10(nb))}")], dm[mkey(N, D, "D")][0]
+                        tss = 3 / np.sqrt(Gm * D0)  # steady state reached, before the superradiant decay
+                        if tss > 0.1 / dm[mkey(N, D, "GN")] or tss > t[-1]:
+                            continue
+                        Ct = np.interp(tss, dm[mkey(N, D, "t")], dm[mkey(N, D, "contrast")])
+                        devs.append(np.interp(tss, t, S) * Ct / (4 * g * np.sqrt(et * nb) / kap) - 1)
+    num["MS_SS_ERR"] = round(100 * float(np.max(np.abs(devs))), 1)
+    num["MS_SS_NPTS"] = len(devs)
+    N, D = 1e10, 3e7
+    p = from_hz(1e6 / np.sqrt(N), 1e4, D, T=0.02, T2=T2_SPIN)
+    g = p.g
+    chi_s = g**2 / p.Delta
+    for nb, tag in [(1e8, "8"), (1e9, "9")]:
+        Sss = 4 * g * np.sqrt(eta * nb) / kap
+        Gm = 64 * eta * chi_s**2 * nb / kap
+        Dn = p.Gamma_SR * N**2 / 4
+        num[f"MS_SC_N{tag}"] = round(dB(Sss), 1)
+        num[f"MS_SC_T{tag}"] = round(3e3 / np.sqrt(Gm * Dn), 2)  # 3/sqrt(Gamma_m D): within 0.5% of the steady state
+        num[f"MS_SC_W{tag}"] = round(dB(best_direct(N, D, nb)), 1)
+        num[f"MS_PIN_{tag}"] = "%.1f pW ($%.0f$ dBm)" % (nb * dm[mkey(N, D, "P_in_per_photon")] * 1e12,
+                                                        10 * np.log10(nb * dm[mkey(N, D, "P_in_per_photon")] * 1e3))
+    num["MS_N9_W9"] = round(dB(best_direct(1e9, 3e7, 1e9)), 1)
+    num["MS_N11_W9"] = round(dB(best_direct(1e11, 3e7, 1e9)), 1)
+    num["MS_ECHO_300_FIRST"] = round(float(dm[mkey(1e9, 3e8, "C_echo")][0]), 2)
+    num["MS_ECHO_300"] = round(float(np.max(dm[mkey(1e9, 3e8, "C_echo")][1:])), 2)
+    ce = dm[mkey(1e9, 1e9, "C_echo")]
+    num["MS_ECHO_1000"] = round(float(ce[1]), 2)
+    num["MS_ECHO_1000_50"] = round(float(ce[-1]), 2)
+    num["MS_N9_ECHO_1000"] = round(dB(best_echo(1e9, 1e9, 1e10)), 1)
+    num["MS_N9_ECHO_1000_N9"] = round(dB(best_echo(1e9, 1e9, 1e9)), 1)
+    num["MS_PIN_1000_10"] = "%.0f pW ($%.0f$ dBm)" % (1e10 * dm[mkey(1e9, 1e9, "P_in_per_photon")] * 1e12,
+                                                      10 * np.log10(1e10 * dm[mkey(1e9, 1e9, "P_in_per_photon")] * 1e3))
+    p_lg0, N_lg0 = loop_gap_dispersive(6e14, T=0.08, T2=T2_SPIN)
+    nb1 = (p_lg0.kappa / (4 * p_lg0.g)) ** 2 / eta  # S_ss = 1
+    num["MS_LG_NBAR1"] = float("%.1e" % nb1)
+    num["MS_LG_P1"] = round(nb1 * p_lg0.kappa * HBAR * (p_lg0.omega_s + p_lg0.Delta) / 4 * 1e3, 2)  # mW
+    V20 = N / 4 / 100
+    num["MS_RES_SC"] = float(np.sqrt(V20) / N)
+    num["MS_NCRIT"] = float(dm[mkey(N, D, "n_crit")])
+    num["MS_T1_TERM"] = float(N / (2 * 3 * 3600))
+    num["MS_T1_VAR"] = float(round(N / (2 * 3 * 3600) * 0.1, -3))
+    w = np.geomspace(1, 10, 100001)  # log-uniform coupling spread of one order of magnitude
+    num["MS_NEFF_10"] = round(float(np.mean(w**2) ** 2 / np.mean(w**4)), 2)
+    phi_st = 2 * chi_s * 1e9 * 1e-3
+    num["MS_BAL_30"] = float("%.0e" % (0.14 / phi_st))
+    num["MS_EPS_20DB"] = round(1e3 * np.sqrt(eta) / 100, 1)
+    num["MS_EPS_30DB"] = round(1e3 * np.sqrt(eta) / 1000, 2)
+    num["MS_PHI_RES"] = float("%.1e" % (8 * chi_s / kap * np.sqrt(V20)))
+    num["MS_OAT_LOSS"] = float("%.0e" % (N * chi_s**2 * 1e-6 / 2))
+    num["MS_DRIFT"] = float("%.1e" % (p.Gamma_SR * N**2 / 4))
+    num["MS_DRIFT_TSS"] = float("%.1e" % (p.Gamma_SR * N**2 / 4 * num["MS_SC_T9"] * 1e-3))
+    num["MS_SR_TIME"] = round(1e3 / (p.Gamma_SR * N), 1)  # ms, superradiant decay time 1/(Gamma_SR N)
+    num["MS_SIGV"] = float("%.0e" % np.sqrt(V20))
+    if "check_rows" in dm:
+        cr = dm["check_rows"]
+        num["MS_CHECK_T"] = int(round(cr[-1, 0] * 1e6))
+        num["MS_CHECK_ERR"] = round(100 * float(np.max(np.abs(cr[:, 1] / cr[:, 2] - 1))), 1)
+        num["MS_CHECK_TABLE"] = " \\\\\n".join(f"{r[0]*1e6:.0f} & {r[1]:.3e} & {r[2]:.3e}" for r in cr) + " \\\\"
+        num["MS_CHECK_TABLE4"] = " \\\\\n".join(f"{r[0]*1e6:.0f} $\\mu$s & {r[1]:.3e} & {r[2]:.3e} & 0.96" for r in cr) + " \\\\"
+        num["MS_ETA_COST"] = round(10 * np.log10(np.sqrt(0.5 / 0.17)), 1)
+    for shape in ["gaussian", "lorentzian"]:
+        for nb in [1e8, 1e9]:
+            k = f"shape_{shape}_n{int(np.log10(nb))}_W"
+            if k in dm:
+                num[f"MS_{shape[:5].upper()}_W{int(np.log10(nb))}"] = round(dB(np.nanmax(dm[k])), 1)
+        if f"shape_{shape}_C1ms" in dm:
+            num[f"MS_{shape[:5].upper()}_C"] = round(float(dm[f"shape_{shape}_C1ms"]), 3)
+    if "check_dephased_rows" in dm:
+        cr = dm["check_dephased_rows"]
+        num["MS_DEPH_VAR"] = float("%.1e" % cr[-1, 1])
+        num["MS_DEPH_T"] = round(cr[-1, 0] * 1e3, 1)
+        num["MS_DEPH_V30"] = float("%.1e" % (1e9 / 4 / 1000))
+        from scipy.integrate import cumulative_trapezoid
+        tD, DD = dm[mkey(1e9, 1e9, "t")], dm[mkey(1e9, 1e9, "D")]
+        ID = cumulative_trapezoid(DD, tD, initial=0)
+        num["MS_DEPH_TABLE"] = " \\\\\n".join(f"{r[0]*1e3:.1f} ms & {r[1]:.2e} & {np.interp(r[0], tD, ID):.2e} & {r[3]:.3f}" for r in cr) + " \\\\"
+        num["MS_DEPH_ERR"] = round(100 * float(np.max(np.abs(cr[:, 1] / np.interp(cr[:, 0], tD, ID) - 1))), 0)
+    if "twist_voigt" in dm:
+        num["SC_30_VOIGT"] = round(-dB(dm["twist_voigt"][0]), 1)
+        num["SC_30_GAUSS"] = round(-dB(dm["twist_gauss"][0]), 1)
+        num["SC_30_LOR"] = round(-dB(dm["twist_lorentz"][0]), 1)
+    # requirements table: SC point and loop-gap
+    p_lg, N_lg = loop_gap_dispersive(6e14, T=0.08, T2=T2_SPIN)
+    rows = []
+    for name, f in [("$\\chi_s/2\\pi$ (Hz)", lambda p, N: p.g**2 / p.Delta / TWO_PI),
+                    ("$\\Gamma_{\\rm SR}N/2\\pi$ (Hz)", lambda p, N: p.Gamma_SR * N / TWO_PI),
+                    ("$n_{\\rm crit}=\\Delta^2/4g^2$", lambda p, N: p.Delta**2 / (4 * p.g**2)),
+                    ("$4g\\sqrt{\\eta_{\\rm d}\\bar n}/\\kappa$ at $\\bar n=10^8$, $\\eta_{\\rm d}=0.5$", lambda p, N: 4 * p.g * np.sqrt(0.5 * 1e8) / p.kappa),
+                    ("$4g\\sqrt{\\eta_{\\rm d}\\bar n}/\\kappa$ at $\\bar n=10^9$, $\\eta_{\\rm d}=0.5$", lambda p, N: 4 * p.g * np.sqrt(0.5 * 1e9) / p.kappa),
+                    ("time to steady state $3/\\sqrt{\\Gamma_mD}$, $\\bar n=10^9$ (ms)", lambda p, N: 3e3 / np.sqrt(64 * 0.5 * (p.g**2 / p.Delta)**2 * 1e9 / p.kappa * p.Gamma_SR * N**2 / 4)),
+                    ("$P_{\\rm in}$, $\\bar n=10^9$ (pW)", lambda p, N: 1e9 * p.kappa * HBAR * (p.omega_s + p.Delta) / 4 * 1e12),
+                    ("Stark shift per photon $2\\chi_s/2\\pi$ (Hz)", lambda p, N: 2 * p.g**2 / p.Delta / TWO_PI),
+                    ("$2\\chi_s\\sqrt N/\\kappa$", lambda p, N: 2 * p.g**2 / p.Delta * np.sqrt(N) / p.kappa),
+                    ("phase per spin $8\\chi_s/\\kappa$ (rad)", lambda p, N: 8 * p.g**2 / p.Delta / p.kappa)]:
+        rows.append(f"{name} & {fmt_sci(f(p, N))} & {fmt_sci(f(p_lg, N_lg))}")
+    num["MS_REQ_TABLE"] = " \\\\\n".join(rows) + " \\\\"
+
 save_json("numbers", num)
 print(json.dumps(num, indent=1, default=str))
 

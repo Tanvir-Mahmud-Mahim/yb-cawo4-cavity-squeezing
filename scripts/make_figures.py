@@ -444,6 +444,118 @@ def fig_beyond():
     savefig(fig, "fig_beyond")
 
 
+def fig_measure():
+    """Squeezing by measurement through the resonator (data/measurement.npz)."""
+    dm = load("measurement")
+    if dm is None:
+        return
+    fig, axs = plt.subplots(1, 4, figsize=(7.0, 2.6))
+    Ns, Deltas, nbars = dm["Ns"], dm["Deltas"], dm["N_bars"]
+    kap = 2 * np.pi * 1e4
+    eta = 0.5
+
+    def key(N, D, name):
+        return f"N{int(np.log10(N))}_D{int(D / 1e6)}_{name}"
+
+    # (a) S(t) and gain at the SC operating point versus photon number
+    ax = axs[0]
+    N, D = 1e10, 3e7
+    t = dm[key(N, D, "t_eval")]
+    g = 2 * np.pi * 1e6 / np.sqrt(N)
+    for k, nb in enumerate(nbars):
+        tag = f"eta{eta}_n{int(np.log10(nb))}"
+        S = dm[key(N, D, f"S_{tag}")]
+        W = dm[key(N, D, f"Wdirect_{tag}")]
+        ax.semilogx(t * 1e3, dB(S), color=C[k], label=r"$\bar n=10^{%d}$" % int(np.log10(nb)))
+        ax.semilogx(t * 1e3, dB(W), color=C[k], ls="--", lw=0.9)
+        ax.axhline(dB(4 * g * np.sqrt(eta * nb) / kap), color=C[k], ls=":", lw=0.7)
+    if "twist_voigt" in dm and "twist_lorentz" in dm:
+        lo, hi = -dB(dm["twist_voigt"][0]), -dB(dm["twist_lorentz"][0])
+        ax.axhspan(min(lo, hi), max(lo, hi), color="0.85", lw=0)
+        ax.text(0.011, min(lo, hi) - 1.9, "twisting, Lorentzian\nto Voigt (grey band)", fontsize=5.2, color="0.35", va="top")
+    ax.set_xlabel("measurement time (ms)")
+    ax.set_ylabel(r"$S$ (solid), $1/\xi^2$ (dashed) (dB)")
+    ax.set_xlim(0.01, 100)
+    ax.set_ylim(-1, 32)
+    legend_below(ax, ncol=2, dy=-0.36, fontsize=6)
+    panel_label(ax, "(a)", x=-0.34)
+    # (b) steady state of every locked point against the formula
+    ax = axs[1]
+    t = dm[key(1e10, 3e7, "t_eval")]
+    xs, ys = [], []
+    for N in Ns:
+        g = 2 * np.pi * 1e6 / np.sqrt(N)
+        for D in Deltas:
+            if D > 1.0e8:
+                continue
+            for et in dm["etas"]:
+                for nb in nbars:
+                    tag = f"eta{et}_n{int(np.log10(nb))}"
+                    kk = key(N, D, f"S_{tag}")
+                    if kk not in dm:
+                        continue
+                    S = dm[kk]
+                    if not np.all(np.isfinite(S)):
+                        continue
+                    if nb > 0.1 * dm[key(N, D, "n_crit")]:
+                        continue
+                    # steady state: read at 3 / sqrt(Gamma_m D), which must lie well before the
+                    # superradiant decay of the ensemble (Gamma_SR N t < 0.1)
+                    Gm, D0 = dm[key(N, D, f"Gm_{tag}")], dm[key(N, D, "D")][0]
+                    tss = 3 / np.sqrt(Gm * D0)
+                    if tss > 0.1 / dm[key(N, D, "GN")] or tss > t[-1]:
+                        continue
+                    Ct = np.interp(tss, dm[key(N, D, "t")], dm[key(N, D, "contrast")])
+                    xs.append(4 * g * np.sqrt(et * nb) / kap)
+                    ys.append(np.interp(tss, t, S) * Ct)
+    xs, ys = np.array(xs), np.array(ys)
+    ax.loglog(xs, ys, "o", ms=2.5, color=C[0], alpha=0.7)
+    rr = np.array([xs.min() / 2, xs.max() * 2])
+    ax.loglog(rr, rr, "-", color="0.4", lw=0.8)
+    ax.set_xlabel(r"$4g\sqrt{\eta\bar n}/\kappa$")
+    ax.set_ylabel("steady-state $S\\,C$ (numerical)")
+    ax.text(0.05, 0.9, f"{len(xs)} points\nmax. deviation {100 * np.nanmax(np.abs(ys / xs - 1)):.1f}%", transform=ax.transAxes, fontsize=6, va="top")
+    panel_label(ax, "(b)", x=-0.34)
+    # (c) best gain versus detuning, direct protocol
+    ax = axs[2]
+    for i, N in enumerate(Ns):
+        for nb, mk, fill in [(1e8, "o", "none"), (1e9, "o", None)]:
+            tag = f"eta{eta}_n{int(np.log10(nb))}"
+            ys = []
+            for D in Deltas:
+                W = dm[key(N, D, f"Wdirect_{tag}")]
+                ys.append(np.nanmax(W) if np.any(np.isfinite(W)) else np.nan)
+            ax.semilogx(Deltas / 1e6, dB(ys), marker=mk, ms=3.5, mfc=fill if fill else C[i], color=C[i], lw=0.9,
+                        label=r"$N=10^{%d}$, $\bar n=10^{%d}$" % (int(np.log10(N)), int(np.log10(nb))))
+    ax.axvline(200, color="0.6", lw=0.7)
+    ax.text(215, 1.0, r"$\Delta_{\rm th}$", fontsize=6, color="0.35")
+    ax.set_xlabel(r"$\Delta/2\pi$ (MHz)")
+    ax.set_ylabel("best metrological gain (dB)")
+    ax.set_ylim(-1, 32)
+    legend_below(ax, ncol=2, dy=-0.36, fontsize=5.5)
+    panel_label(ax, "(c)", x=-0.34)
+    # (d) echo protocol: contrast and gain for N = 1e9
+    ax = axs[3]
+    N = 1e9
+    ax2 = ax.twinx()
+    for k, D in enumerate([3e7, 2e8, 3e8, 1e9]):
+        taus = dm[key(N, D, "taus")]
+        Ce = dm[key(N, D, "C_echo")]
+        ax.semilogx(taus * 1e3, Ce, "o-", ms=3, color=C[k], label=r"$\Delta/2\pi$ = %g MHz" % (D / 1e6))
+        tag = f"eta{eta}_n10"
+        We = dm[key(N, D, f"Wecho_{tag}")]
+        ax2.semilogx(taus * 1e3, dB(We), "s:", ms=3, mfc="none", color=C[k])
+    ax.set_xlabel(r"echo half-time $\tau$ (ms)")
+    ax.set_ylabel("refocused contrast (circles)")
+    ax2.set_ylabel(r"gain, $\bar n=10^{10}$ (dB, squares)", fontsize=7)
+    ax.set_ylim(0, 1.05)
+    ax2.set_ylim(-1, 32)
+    legend_below(ax, ncol=2, dy=-0.36, fontsize=5.5)
+    panel_label(ax, "(d)", x=-0.34)
+    fig.subplots_adjust(left=0.085, right=0.95, top=0.9, bottom=0.42, wspace=0.7)
+    savefig(fig, "fig_measure")
+
+
 if __name__ == "__main__":
     fig_validation()
     fig_benchmark()
@@ -452,3 +564,4 @@ if __name__ == "__main__":
     fig_designmap()
     fig_inhomog_readout()
     fig_beyond()
+    fig_measure()
