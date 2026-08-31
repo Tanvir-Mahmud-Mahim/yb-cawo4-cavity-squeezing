@@ -65,11 +65,12 @@ python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_dev
 # to DejaVu Sans; install the font (for example from a Windows machine, C:\Windows\Fonts)
 # into ~/.fonts and clear ~/.cache/matplotlib to reproduce the published look.
 python extract_numbers.py  # every number quoted in the paper and supplement -> data/numbers.json
+python check_consistency.py # title, version, DOI, citations and cross-references agree across files
 ```
 `run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22148969 (concept DOI, always the latest version; v1.5.0 is https://doi.org/10.5281/zenodo.22182990)
+https://doi.org/10.5281/zenodo.22148969 (concept DOI, always the latest version; v1.5.1 is https://doi.org/10.5281/zenodo.22192059)
 
 ## Minimal example
 
