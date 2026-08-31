@@ -1,11 +1,12 @@
-(a) orbit average: <z> against z_max/2, and the energy identity
-  delta/Omega= 0.20  <z>=0.19253  z_max/2=0.19231  ratio=1.0011  <rho cos psi>=0.96149  1-(delta/Omega)<z>=0.96149  locked
-  delta/Omega= 0.50  <z>=0.39920  z_max/2=0.40000  ratio=0.9980  <rho cos psi>=0.80040  1-(delta/Omega)<z>=0.80040  locked
-  delta/Omega= 0.80  <z>=0.48797  z_max/2=0.48780  ratio=1.0003  <rho cos psi>=0.60963  1-(delta/Omega)<z>=0.60963  locked
-  delta/Omega= 0.95  <z>=0.50018  z_max/2=0.49934  ratio=1.0017  <rho cos psi>=0.52483  1-(delta/Omega)<z>=0.52483  locked
-  delta/Omega= 1.05  <z>=0.49860  z_max/2=0.49941  ratio=0.9984  <rho cos psi>=0.47647  1-(delta/Omega)<z>=0.47647  running
-  delta/Omega= 1.50  <z>=0.46217  z_max/2=0.46154  ratio=1.0014  <rho cos psi>=0.30674  1-(delta/Omega)<z>=0.30674  running
-  delta/Omega= 3.00  <z>=0.29978  z_max/2=0.30000  ratio=0.9993  <rho cos psi>=0.10065  1-(delta/Omega)<z>=0.10065  running
+(a) orbit averages against the analytic values, over 60 full periods
+  delta/Omega= 0.20  <z>=0.1923076923 (z_max/2=0.1923076923, rel err 1.2e-12)  <rho cos psi>=0.9615384615 (1/(1+a^2)=0.9615384615, err 6.8e-13)  period=6.161170 (2pi/sqrt(1+a^2)=6.161170)  locked
+  delta/Omega= 0.50  <z>=0.4000000000 (z_max/2=0.4000000000, rel err 1.2e-13)  <rho cos psi>=0.8000000000 (1/(1+a^2)=0.8000000000, err 1.3e-13)  period=5.619852 (2pi/sqrt(1+a^2)=5.619852)  locked
+  delta/Omega= 0.80  <z>=0.4878048780 (z_max/2=0.4878048780, rel err 5.6e-13)  <rho cos psi>=0.6097560976 (1/(1+a^2)=0.6097560976, err 4.1e-13)  period=4.906343 (2pi/sqrt(1+a^2)=4.906343)  locked
+  delta/Omega= 0.95  <z>=0.4993429698 (z_max/2=0.4993429698, rel err 1.1e-12)  <rho cos psi>=0.5256241787 (1/(1+a^2)=0.5256241787, err 5.6e-13)  period=4.555306 (2pi/sqrt(1+a^2)=4.555306)  locked
+  delta/Omega= 1.05  <z>=0.4994054695 (z_max/2=0.4994054697, rel err 4.4e-10)  <rho cos psi>=0.4756242566 (1/(1+a^2)=0.4756242568, err 2.1e-10)  period=4.333231 (2pi/sqrt(1+a^2)=4.333231)  running
+  delta/Omega= 1.50  <z>=0.4615384616 (z_max/2=0.4615384615, rel err 1.4e-10)  <rho cos psi>=0.3076923077 (1/(1+a^2)=0.3076923077, err 3.5e-11)  period=3.485284 (2pi/sqrt(1+a^2)=3.485284)  running
+  delta/Omega= 3.00  <z>=0.2999999999 (z_max/2=0.3000000000, rel err 1.8e-10)  <rho cos psi>=0.1000000000 (1/(1+a^2)=0.1000000000, err 1.8e-11)  period=1.986918 (2pi/sqrt(1+a^2)=1.986918)  running
+  delta/Omega= 8.00  <z>=0.1230769231 (z_max/2=0.1230769231, rel err 8.1e-12)  <rho cos psi>=0.0153846154 (1/(1+a^2)=0.0153846154, err 1.7e-13)  period=0.779333 (2pi/sqrt(1+a^2)=0.779333)  running
 
 (b) locking threshold of each line shape (units of the FWHM)
   lorentzian  chi N_c = 0.5000 x gamma_inh
@@ -43,5 +44,5 @@
    {'chiN_hz': 25000.0, 'shape': 'gaussian', 'plateau': 0.9928314408520019, 'spread': 0.00116575788898032, 'R_law': 0.9928371299864736}
    {'chiN_hz': 40000.0, 'shape': 'gaussian', 'plateau': 0.9967948057438795, 'spread': 0.000559301508401667, 'R_law': 0.9971900919271265}
    {'chiN_hz': 80000.0, 'shape': 'gaussian', 'plateau': 0.997436255924229, 'spread': 0.0007111984848571329, 'R_law': 0.9992960576164223}
-[locking] 155.8 s
+[locking] 173.4 s
 saved /home/claude/work/yb-cawo4-cavity-squeezing/data/locking.npz
