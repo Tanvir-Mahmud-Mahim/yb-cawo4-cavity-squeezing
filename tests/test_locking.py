@@ -92,3 +92,15 @@ def test_energy_integral():
     psi, z = sol.y
     rho = np.sqrt(np.clip(1.0 - z * z, 0.0, None))
     assert np.max(np.abs(rho * np.cos(psi) - (1.0 - dratio * z))) < 1e-7
+
+
+def test_cross_file_consistency():
+    """The title, version, DOI, citations and cross-references agree across files."""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    r = subprocess.run([sys.executable, str(root / "scripts" / "check_consistency.py")],
+                       capture_output=True, text=True, cwd=root)
+    assert r.returncode == 0, r.stdout + r.stderr
