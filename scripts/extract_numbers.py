@@ -814,6 +814,40 @@ if de is not None:
 
 
 # how closely the cumulant solution follows the mean field in Fig. 2(b)
+# ---------------- the closure against an independent trajectory method -------
+_dt = load("dtwa")
+if _dt is not None:
+    # columns: n_spins, ratio, shape index, Q at the optimum, Q^3/N, cumulant dB,
+    # trajectory dB, |difference| dB
+    _r = _dt["rows"]
+    _sh = [str(s) for s in list(_dt["shapes"])]
+    num["DTWA_NTRAJ"] = int(_dt["n_traj"])
+    # the three line shapes at the largest size tested, ordered by Q^3/N: this is
+    # the correlation the text draws on
+    _big = _r[_r[:, 0] == np.max(_r[:, 0])]
+    _big = _big[np.argsort(_big[:, 4])]
+    num["DTWA_BIG_N"] = int(_big[0, 0])
+    num["DTWA_Q3N_LO"] = round(float(_big[0, 4]), 1)
+    num["DTWA_DEV_LO"] = round(float(_big[0, 7]), 2)
+    num["DTWA_Q3N_HI"] = round(float(_big[-1, 4]), 1)
+    num["DTWA_DEV_HI"] = round(float(_big[-1, 7]), 1)
+    num["DTWA_SHAPE_LO"] = _sh[int(_big[0, 2])]
+    num["DTWA_SHAPE_HI"] = _sh[int(_big[-1, 2])]
+    # the Voigt scan in N at fixed ratio
+    _v = _r[_r[:, 2] == _sh.index("voigt")]
+    _v = _v[np.argsort(_v[:, 0])]
+    num["DTWA_VOIGT_N_LO"] = int(_v[0, 0])
+    num["DTWA_VOIGT_DEV_LO"] = round(float(_v[0, 7]), 1)
+    num["DTWA_VOIGT_N_HI"] = int(_v[-1, 0])
+    num["DTWA_VOIGT_DEV_HI"] = round(float(_v[-1, 7]), 2)
+    _rows = []
+    for _q in _r:
+        _rows.append("%s & %d & %.1f & %.2f & $%.2f$ & $%.2f$ & %.2f"
+                     % (_sh[int(_q[2])].capitalize(), int(_q[0]), _q[3], _q[4],
+                        _q[5], _q[6], _q[7]))
+    num["DTWA_TABLE"] = " \\\\\n".join(_rows) + " \\\\"
+    num["DTWA_KU_ERR"] = 0.05        # bound enforced by tests/test_dtwa.py
+
 _b = np.load(os.path.join(DATA, "benchmark.npz"))
 _mf = np.interp(_b["cum_t"], _b["t"], _b["mf_voigt_7000"])
 _dev = np.abs(_mf - _b["cum_contrast_7000"])
