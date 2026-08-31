@@ -1,4 +1,4 @@
-"""Discretisation of the inhomogeneous ensemble into classes of identical spins.
+"""Discretization of the inhomogeneous ensemble into classes of identical spins.
 
 A class m carries a detuning delta_m (rad/s), a coupling weight w_m
 (dimensionless multiplier of the single-spin coupling g) and an
@@ -60,7 +60,7 @@ def lorentzian(fwhm: float):
 
 
 class _Voigt:
-    """Voigt profile with tabulated cdf/ppf (dense centre, geometric tails)."""
+    """Voigt profile with tabulated cdf/ppf (dense center, geometric tails)."""
 
     def __init__(self, fwhm: float, lorentz_fraction: float):
         # Split the total FWHM between Gaussian and Lorentzian components using
@@ -76,7 +76,7 @@ class _Voigt:
         grid = np.concatenate([-pos[::-1], [0.0], pos])
         pdf = self.pdf(grid)
         cdf = np.concatenate([[0.0], np.cumsum(0.5 * (pdf[1:] + pdf[:-1]) * np.diff(grid))])
-        # add the analytic Lorentzian-like mass beyond the grid (negligible) and normalise
+        # add the analytic Lorentzian-like mass beyond the grid (negligible) and normalize
         cdf = cdf / cdf[-1]
         self._grid, self._cdf = grid, cdf
 
@@ -115,7 +115,7 @@ def lineshape(name: str, fwhm: float, lorentz_fraction: float = 0.3):
 
 
 # ---------------------------------------------------------------------------
-# Discretisation
+# Discretization
 # ---------------------------------------------------------------------------
 
 def equal_probability_classes(dist, M: int, N: float, weights=None) -> Ensemble:
@@ -136,7 +136,7 @@ def homogeneous(N: float, delta: float = 0.0, weight: float = 1.0) -> Ensemble:
 
 
 def product_classes(delta_dist, M_delta: int, weight_values, weight_probs, N: float) -> Ensemble:
-    """Cartesian product of a detuning discretisation and a discrete coupling
+    """Cartesian product of a detuning discretization and a discrete coupling
     weight distribution (weight_values with probabilities weight_probs)."""
     base = equal_probability_classes(delta_dist, M_delta, 1.0)
     weight_values = np.asarray(weight_values, float)
@@ -150,7 +150,7 @@ def product_classes(delta_dist, M_delta: int, weight_values, weight_probs, N: fl
 
 def log_uniform_weights(dynamic_range: float, K: int):
     """K coupling weights spread log-uniformly over [1/sqrt(D), sqrt(D)] with
-    equal probability, normalised so that the mean weight is one."""
+    equal probability, normalized so that the mean weight is one."""
     if dynamic_range <= 1.0 or K == 1:
         return np.ones(1), np.ones(1)
     logs = np.linspace(-0.5 * np.log(dynamic_range), 0.5 * np.log(dynamic_range), K)
@@ -162,7 +162,7 @@ def log_uniform_weights(dynamic_range: float, K: int):
 def tail_resolved_classes(dist, N: float, M_core: int = 32, M_tail: int = 10, core_edge: float = None,
                           delta_max: float = None, fwhm: float = None, weights=None,
                           spectator_beyond: float = None, M_spec: int = 8) -> Ensemble:
-    """Discretisation that resolves heavy (Lorentzian) tails.
+    """Discretization that resolves heavy (Lorentzian) tails.
 
     * core: |delta| < core_edge (default 3 FWHM), M_core equal-probability bins,
       node = bin median;

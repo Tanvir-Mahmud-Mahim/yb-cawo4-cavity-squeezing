@@ -90,7 +90,7 @@ def squeezing_trace(params: CavityParams, ens: Ensemble, t_list, echo: bool = Tr
 
 def optimal_squeezing(params: CavityParams, ens: Ensemble, t_lo: float, t_hi: float, echo: bool = True,
                       weights=None, n_coarse: int = 12, points_per_period: int = 8, max_fine: int = 40, **kw):
-    """Minimise xi^2 over the interaction time in [t_lo, t_hi].
+    """Minimize xi^2 over the interaction time in [t_lo, t_hi].
 
     Stage 1: a coarse geometric grid locates the envelope minimum t*.
     Stage 2: a linear scan over [t*/2, 2 t*] with points_per_period samples per

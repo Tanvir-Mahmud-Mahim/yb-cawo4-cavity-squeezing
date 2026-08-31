@@ -219,7 +219,7 @@ def transverse_variances(J, Cov):
 
 def wineland_xi2(st: State, n, weights=None, spec_n=None):
     """Wineland parameter xi_R^2 (=1 for a coherent spin state); for weighted
-    collective spins the coherent-state normalisation S2/S1^2 is used.
+    collective spins the coherent-state normalization S2/S1^2 is used.
     Returns (xi2, angle, var_min, var_max, |J|)."""
     J, Cov, S1, S2 = collective_moments(st, n, weights, spec_n=spec_n)
     if np.linalg.norm(J) == 0:
@@ -362,7 +362,7 @@ def _add_measurement(Gm, eta, n, st, dPc, dQc, dRc, dZc):
     about z by a common random angle with d Var(angle)/dt = 2 Gamma_phi,
     Gamma_phi = Gm/(8 eta), which adds 2 Gamma_phi (e_z x v_i)^a (e_z x v_j)^b to the
     pair covariance; with eta = 1 the product Var(J_y) Var(J_z) stays minimal.
-    Spectator spins are not conditioned (use a discretisation without spectators)."""
+    Spectator spins are not conditioned (use a discretization without spectators)."""
     v, C = to_cartesian(st)
     dphi = np.stack([-v[:, 1], v[:, 0], np.zeros(st.M)], axis=1)     # d v / d(angle) for a rotation about z
     ez = np.array([0.0, 0.0, 1.0])

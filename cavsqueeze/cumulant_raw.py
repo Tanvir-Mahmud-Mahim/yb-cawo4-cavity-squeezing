@@ -200,7 +200,7 @@ def collective_moments(st: State, n: np.ndarray, weights=None):
 
 def wineland_xi2(st: State, n: np.ndarray, weights=None):
     """Wineland squeezing parameter xi_R^2 (1 for a coherent spin state).
-    For weighted collective spins the coherent-state normalisation
+    For weighted collective spins the coherent-state normalization
     S2 / S1^2 is used so that xi^2 = 1 for a coherent product state.
     Returns (xi2, angle_of_min_variance, var_min, var_max, |J|)."""
     J, Cov, S1, S2 = collective_moments(st, n, weights)
@@ -223,7 +223,7 @@ def wineland_xi2(st: State, n: np.ndarray, weights=None):
 
 
 def coherence(st: State, n: np.ndarray) -> float:
-    """Normalised transverse coherence 2|<J_perp>|/N used in Ramsey experiments."""
+    """Normalized transverse coherence 2|<J_perp>|/N used in Ramsey experiments."""
     J, _, S1, _ = collective_moments(st, n)
     return float(2.0 * np.hypot(J[0], J[1]) / S1)
 
