@@ -1,0 +1,9 @@
+  N=  125  voigt       Q= 7.43  Q^3/N= 3.279  cumulant  -15.59 dB   trajectory  -12.70 dB   |diff| 2.89 dB   [52 s]
+  N=  250  voigt       Q= 7.02  Q^3/N= 1.384  cumulant  -13.27 dB   trajectory  -12.55 dB   |diff| 0.72 dB   [111 s]
+  N=  500  voigt       Q=11.79  Q^3/N= 3.279  cumulant  -13.84 dB   trajectory  -13.25 dB   |diff| 0.59 dB   [281 s]
+  N= 1000  voigt       Q=13.00  Q^3/N= 2.197  cumulant  -14.02 dB   trajectory  -13.50 dB   |diff| 0.52 dB   [728 s]
+  N= 1000  gaussian    Q=18.57  Q^3/N= 6.405  cumulant  -22.70 dB   trajectory  -19.16 dB   |diff| 3.53 dB   [430 s]
+  N= 1000  lorentzian  Q= 7.43  Q^3/N= 0.410  cumulant   -9.71 dB   trajectory   -9.55 dB   |diff| 0.16 dB   [757 s]
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/dtwa.npz
+
+largest |difference|: 3.53 dB at N=1000; smallest 0.16 dB at N=1000
