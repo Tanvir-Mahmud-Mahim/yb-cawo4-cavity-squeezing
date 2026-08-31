@@ -82,8 +82,13 @@ def unlocked_fraction(x_over_gamma, shape, eta=0.3):
 
 
 def savefig(fig, name):
+    # bbox_inches="tight" still leaves matplotlib's default 0.1 inch pad on every
+    # side, which is about a tenth of the height of a wide, short panel row and
+    # shows up as a band of white above and below the figure in the article.
+    # The floats already carry their own separation, so the pad is set to a hair.
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(FIG, f"{name}.{ext}"), bbox_inches="tight")
+        fig.savefig(os.path.join(FIG, f"{name}.{ext}"), bbox_inches="tight",
+                    pad_inches=0.015)
     plt.close(fig)
     print("figure", name)
 

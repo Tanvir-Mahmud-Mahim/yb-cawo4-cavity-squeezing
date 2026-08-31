@@ -606,6 +606,14 @@ if rb is not None and "a_rows" in rb:
             valf = get(1, "duration_noecho", us)
             if valf is not None:
                 num[f"PULSE_SC_FREE{tag[:-2]}_ABS"] = round(valf, 1)
+        # What the finite pi/2 preparation pulse alone is worth: the free-twisting
+        # rows with a pulse of each duration against the ideal free-twisting row,
+        # which starts from a coherent state.  It helps rather than hurts, since
+        # the preparation twisting is about the correct axis.
+        _free_ideal = get(1, "noecho")
+        _prep = [get(1, "duration_noecho", x) for x in (1e-7, 3e-7, 1e-6)]
+        if _free_ideal is not None and all(x is not None for x in _prep):
+            num["PULSE_PREP_MAX"] = _ceil_sig(max(abs(x - _free_ideal) for x in _prep), 2)
         for dev, tag, ideal in [(0, "LG", lg_ideal), (1, "SC", sc_ideal)]:
             vals = [get(dev, "angle", x) for x in [0.01, 0.03, 0.1]]
             if all(x is not None for x in vals):

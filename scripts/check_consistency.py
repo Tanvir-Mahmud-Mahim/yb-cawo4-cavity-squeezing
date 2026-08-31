@@ -214,6 +214,31 @@ def main():
                 fail.append("token %s is %s but LaTeX numbers %s as %d"
                             % (tok, nums[tok], lab, aux_num[lab]))
 
+    # --- LaTeX must not have left a reference or a citation unresolved -----
+    # A mistyped label prints "??" in the PDF and is easy to miss in a long
+    # document, so the build logs are read back and any complaint is a failure.
+    for stem in ("main_filled", "supplement_filled"):
+        # LaTeX logs are not UTF-8 (they carry the font encoding's own bytes),
+        # so they are read with the undecodable bytes replaced.
+        log_path = os.path.join(PAPER, stem + ".log")
+        if not os.path.exists(log_path):
+            continue
+        with open(log_path, encoding="utf-8", errors="replace") as fh:
+            log = fh.read()
+        seen = set()
+        for m in re.finditer(r"(?:Reference|Citation) `([^']+)' on page (\d+) "
+                             r"undefined", log):
+            key = (stem, m.group(1))
+            if key in seen:
+                continue
+            seen.add(key)
+            fail.append("%s.tex: `%s' undefined (page %s), so the PDF prints ??"
+                        % (stem, m.group(1), m.group(2)))
+        if re.search(r"There were undefined references", log) and not seen:
+            fail.append("%s.tex: LaTeX reports undefined references" % stem)
+        if re.search(r"^! ", log, re.M):
+            fail.append("%s.tex: LaTeX reported an error" % stem)
+
     if fail:
         print("consistency check FAILED:")
         for f in fail:
