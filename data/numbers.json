@@ -504,6 +504,7 @@
  "PULSE_SC_03US": 0.4,
  "PULSE_SC_03US_ABS": 18.3,
  "PULSE_SC_FREE03_ABS": 18.1,
+ "PULSE_PREP_MAX": 0.25,
  "ANGLE_LG": "0.1, 0.4 and 1.4",
  "SPREAD_LG": "0.0 and 0.1",
  "ANGLE_SC": "0.4, 2.3 and 1.2",
