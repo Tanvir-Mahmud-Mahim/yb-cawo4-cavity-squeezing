@@ -1,0 +1,47 @@
+(a) orbit average: <z> against z_max/2, and the energy identity
+  delta/Omega= 0.20  <z>=0.19253  z_max/2=0.19231  ratio=1.0011  <rho cos psi>=0.96149  1-(delta/Omega)<z>=0.96149  locked
+  delta/Omega= 0.50  <z>=0.39920  z_max/2=0.40000  ratio=0.9980  <rho cos psi>=0.80040  1-(delta/Omega)<z>=0.80040  locked
+  delta/Omega= 0.80  <z>=0.48797  z_max/2=0.48780  ratio=1.0003  <rho cos psi>=0.60963  1-(delta/Omega)<z>=0.60963  locked
+  delta/Omega= 0.95  <z>=0.50018  z_max/2=0.49934  ratio=1.0017  <rho cos psi>=0.52483  1-(delta/Omega)<z>=0.52483  locked
+  delta/Omega= 1.05  <z>=0.49860  z_max/2=0.49941  ratio=0.9984  <rho cos psi>=0.47647  1-(delta/Omega)<z>=0.47647  running
+  delta/Omega= 1.50  <z>=0.46217  z_max/2=0.46154  ratio=1.0014  <rho cos psi>=0.30674  1-(delta/Omega)<z>=0.30674  running
+  delta/Omega= 3.00  <z>=0.29978  z_max/2=0.30000  ratio=0.9993  <rho cos psi>=0.10065  1-(delta/Omega)<z>=0.10065  running
+
+(b) locking threshold of each line shape (units of the FWHM)
+  lorentzian  chi N_c = 0.5000 x gamma_inh
+  voigt       chi N_c = 0.3825 x gamma_inh
+  gaussian    chi N_c = 0.3388 x gamma_inh
+
+(c) self-consistency against the mean-field solver
+   {'chiN_hz': 3500.0, 'shape': 'lorentzian', 'plateau': 0.2824980790590881, 'spread': 0.08654219907980522, 'R_law': 0.2857142888498412}
+   {'chiN_hz': 4500.0, 'shape': 'lorentzian', 'plateau': 0.44334441443714706, 'spread': 0.06832198749510082, 'R_law': 0.4444444467318565}
+   {'chiN_hz': 5000.0, 'shape': 'lorentzian', 'plateau': 0.4987809044425941, 'spread': 0.06115906053400164, 'R_law': 0.500000001738994}
+   {'chiN_hz': 6500.0, 'shape': 'lorentzian', 'plateau': 0.6153122043474385, 'spread': 0.04382848310488176, 'R_law': 0.6153846150030381}
+   {'chiN_hz': 8000.0, 'shape': 'lorentzian', 'plateau': 0.6877152593659261, 'spread': 0.02841454935493611, 'R_law': 0.6874999967894289}
+   {'chiN_hz': 10000.0, 'shape': 'lorentzian', 'plateau': 0.7501284993243066, 'spread': 0.01978632381712258, 'R_law': 0.7499999919169383}
+   {'chiN_hz': 15000.0, 'shape': 'lorentzian', 'plateau': 0.8334018510272171, 'spread': 0.015590237596852645, 'R_law': 0.833333307567666}
+   {'chiN_hz': 25000.0, 'shape': 'lorentzian', 'plateau': 0.9000031249207707, 'spread': 0.00934520890060112, 'R_law': 0.8999999152989855}
+   {'chiN_hz': 40000.0, 'shape': 'lorentzian', 'plateau': 0.937212810815456, 'spread': 0.0060219620034365874, 'R_law': 0.9374997680102282}
+   {'chiN_hz': 80000.0, 'shape': 'lorentzian', 'plateau': 0.9671079905406733, 'spread': 0.0032918821149138687, 'R_law': 0.9687490306894442}
+   {'chiN_hz': 3500.0, 'shape': 'voigt', 'plateau': 0.5693823669700855, 'spread': 0.05860053942748192, 'R_law': 0.5699062283671511}
+   {'chiN_hz': 4500.0, 'shape': 'voigt', 'plateau': 0.6963916192658602, 'spread': 0.041345776642174516, 'R_law': 0.6963919867831044}
+   {'chiN_hz': 5000.0, 'shape': 'voigt', 'plateau': 0.7372635480938191, 'spread': 0.03532057581148336, 'R_law': 0.7372594098655286}
+   {'chiN_hz': 6500.0, 'shape': 'voigt', 'plateau': 0.8162291405512493, 'spread': 0.022128225424526384, 'R_law': 0.8157346397624201}
+   {'chiN_hz': 8000.0, 'shape': 'voigt', 'plateau': 0.8606852407995706, 'spread': 0.0143477017387163, 'R_law': 0.8599480236244686}
+   {'chiN_hz': 10000.0, 'shape': 'voigt', 'plateau': 0.8957803667851497, 'spread': 0.010683358904208263, 'R_law': 0.8949526038013749}
+   {'chiN_hz': 15000.0, 'shape': 'voigt', 'plateau': 0.9373737892715374, 'spread': 0.006890666624744668, 'R_law': 0.9364441228361879}
+   {'chiN_hz': 25000.0, 'shape': 'voigt', 'plateau': 0.9655877344240889, 'spread': 0.0036752576228868726, 'R_law': 0.9650793515635689}
+   {'chiN_hz': 40000.0, 'shape': 'voigt', 'plateau': 0.9792257123251207, 'spread': 0.0020213029772782206, 'R_law': 0.9793221457329848}
+   {'chiN_hz': 80000.0, 'shape': 'voigt', 'plateau': 0.9884238774819372, 'spread': 0.001220791740732536, 'R_law': 0.990142066408258}
+   {'chiN_hz': 3500.0, 'shape': 'gaussian', 'plateau': 0.6994173242433434, 'spread': 0.04145553526159866, 'R_law': 0.6990159654851136}
+   {'chiN_hz': 4500.0, 'shape': 'gaussian', 'plateau': 0.8076137244369982, 'spread': 0.026424272425795505, 'R_law': 0.8070280017627692}
+   {'chiN_hz': 5000.0, 'shape': 'gaussian', 'plateau': 0.8412924204530225, 'spread': 0.02159900876993153, 'R_law': 0.8404958712926983}
+   {'chiN_hz': 6500.0, 'shape': 'gaussian', 'plateau': 0.9025542577322951, 'spread': 0.01210159235284817, 'R_law': 0.90168749110778}
+   {'chiN_hz': 8000.0, 'shape': 'gaussian', 'plateau': 0.9343949685480529, 'spread': 0.008294532558377652, 'R_law': 0.9335379999247629}
+   {'chiN_hz': 10000.0, 'shape': 'gaussian', 'plateau': 0.9573824717412079, 'spread': 0.004737317694453242, 'R_law': 0.9566622495383204}
+   {'chiN_hz': 15000.0, 'shape': 'gaussian', 'plateau': 0.9806984601241073, 'spread': 0.002556616013398327, 'R_law': 0.9803355877588833}
+   {'chiN_hz': 25000.0, 'shape': 'gaussian', 'plateau': 0.9928314408520019, 'spread': 0.00116575788898032, 'R_law': 0.9928371299864736}
+   {'chiN_hz': 40000.0, 'shape': 'gaussian', 'plateau': 0.9967948057438795, 'spread': 0.000559301508401667, 'R_law': 0.9971900919271265}
+   {'chiN_hz': 80000.0, 'shape': 'gaussian', 'plateau': 0.997436255924229, 'spread': 0.0007111984848571329, 'R_law': 0.9992960576164223}
+[locking] 155.8 s
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/locking.npz
