@@ -4,9 +4,8 @@ Beyond-mean-field simulation of cavity-mediated spin squeezing (one-axis twistin
 for solid-state clock-transition ensembles, applied to 171Yb3+:CaWO4, and of
 squeezing by measurement of the spin population through the resonator.
 
-Companion code for: T. M. Mahim, M. M. Rahman, A. S. M. Mohsin, *Two limits on
-cavity-mediated spin squeezing: collective emission and the unlocked wings of the
-spin line*.
+Companion code for: T. M. Mahim, M. M. Rahman, A. S. M. Mohsin, *Synchronisation
+sets the coherence and the squeezing limit of a spin ensemble in a cavity*.
 
 The package `cavsqueeze` implements
 
@@ -26,6 +25,10 @@ The package `cavsqueeze` implements
   (`protocols.py`);
 * far-detuned spectator spins propagated analytically, which removes the stiffness of
   heavy-tailed lines (`ensemble.tail_resolved_classes`, `cumulant.evolve`).
+
+The mean-field limit of the same equations reduces to a pendulum for each spin in the
+field of the collective spin, whose conserved energy closes into a self-consistency
+equation for the Ramsey contrast; `scripts/run_locking.py` derives, tests and solves it.
 
 ## Installation
 
@@ -52,6 +55,8 @@ python run_robustness.py   # Fig. S6(c,d) data: line shape, T2, finite and imper
 python run_measurement.py  # Fig. 4 data: squeezing by measurement through the resonator (about 1 hour)
 python run_conditional.py  # supplement Table S9: twisting and measurement together, conditional cumulant solver (about 30 min)
 python run_echo.py         # Fig. 5 data: spin echo against the interaction (about 20 min); then run_echo_extra.py (tau scans, no-emission check)
+python run_locking.py      # Fig. 3(a) data: the closed law for the synchronisation order parameter, its threshold, and the orbit average behind it (about 20 min)
+python run_decompose.py    # splits the noise at the optimum into locked core and unlocked wings; the two-limit law of Eq. (8) is tested on this scan (about 1 hour)
 python hyperfine_levels.py # zero-field hyperfine levels and Sz/Sx matrix elements -> data/hyperfine_levels.json
 python make_figures.py        # data figures (main Figs. 2 to 5 and Figs. S1 to S6) -> figures/
 python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_device.*
@@ -64,7 +69,7 @@ python extract_numbers.py  # every number quoted in the paper and supplement -> 
 `run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22148969 (concept DOI, always the latest version; v1.4.5 is https://doi.org/10.5281/zenodo.22182327)
+https://doi.org/10.5281/zenodo.22148969 (concept DOI, always the latest version; v1.5.0 is https://doi.org/10.5281/zenodo.22182990)
 
 ## Minimal example
 
