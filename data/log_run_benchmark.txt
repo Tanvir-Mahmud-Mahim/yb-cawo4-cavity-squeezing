@@ -1,36 +1,40 @@
-[MF chiN=100 gaussian] 0.8 s
-[MF chiN=100 voigt] 55.6 s
-[MF chiN=100 lorentzian] 176.6 s
-[cumulant chiN=100] 156.1 s
+[MF chiN=100 gaussian] 1.8 s
+[MF chiN=100 voigt] 113.1 s
+[MF chiN=100 lorentzian] 360.8 s
+[cumulant chiN=100] 133.1 s
 chiN/2pi=0.1 kHz gaussian   T_1/e = 110 us
 chiN/2pi=0.1 kHz voigt      T_1/e = 100 us
 chiN/2pi=0.1 kHz lorentzian T_1/e = 70 us
-[MF chiN=700 gaussian] 0.7 s
-[MF chiN=700 voigt] 54.2 s
-[MF chiN=700 lorentzian] 179.0 s
-[cumulant chiN=700] 160.2 s
+[MF chiN=700 gaussian] 1.3 s
+[MF chiN=700 voigt] 102.5 s
+[MF chiN=700 lorentzian] 356.9 s
+[cumulant chiN=700] 148.3 s
 chiN/2pi=0.7 kHz gaussian   T_1/e = 110 us
 chiN/2pi=0.7 kHz voigt      T_1/e = 100 us
 chiN/2pi=0.7 kHz lorentzian T_1/e = 70 us
-[MF chiN=2000 gaussian] 0.9 s
-[MF chiN=2000 voigt] 54.9 s
-[MF chiN=2000 lorentzian] 176.7 s
-[cumulant chiN=2000] 167.3 s
+[MF chiN=2000 gaussian] 1.2 s
+[MF chiN=2000 voigt] 105.3 s
+[MF chiN=2000 lorentzian] 358.9 s
+[cumulant chiN=2000] 143.1 s
 chiN/2pi=2.0 kHz gaussian   T_1/e = 120 us
 chiN/2pi=2.0 kHz voigt      T_1/e = 110 us
 chiN/2pi=2.0 kHz lorentzian T_1/e = 70 us
-[MF chiN=4000 gaussian] 0.8 s
-[MF chiN=4000 voigt] 52.7 s
-[MF chiN=4000 lorentzian] 170.6 s
-[cumulant chiN=4000] 144.8 s
+[MF chiN=4000 gaussian] 1.3 s
+[MF chiN=4000 voigt] 108.0 s
+[MF chiN=4000 lorentzian] 345.1 s
+[cumulant chiN=4000] 125.7 s
 chiN/2pi=4.0 kHz gaussian   T_1/e = 5000 us
 chiN/2pi=4.0 kHz voigt      T_1/e = 4800 us
 chiN/2pi=4.0 kHz lorentzian T_1/e = 80 us
-[MF chiN=7000 gaussian] 1.1 s
-[MF chiN=7000 voigt] 49.7 s
-[MF chiN=7000 lorentzian] 171.0 s
-[cumulant chiN=7000] 151.0 s
+[MF chiN=7000 gaussian] 1.7 s
+[MF chiN=7000 voigt] 104.1 s
+[MF chiN=7000 lorentzian] 344.7 s
+[cumulant chiN=7000] 125.2 s
 chiN/2pi=7.0 kHz gaussian   T_1/e = 2740 us
 chiN/2pi=7.0 kHz voigt      T_1/e = 2730 us
 chiN/2pi=7.0 kHz lorentzian T_1/e = 2780 us
+[MF no-kappa chiN=4000] 409.8 s
+chiN/2pi=4.0 kHz voigt, no resonator loss: T_1/e = inf ms (window 24 ms), min contrast 0.470
+[MF no-kappa chiN=7000] 418.7 s
+chiN/2pi=7.0 kHz voigt, no resonator loss: T_1/e = inf ms (window 24 ms), min contrast 0.698
 saved /home/claude/work/yb-cawo4-cavity-squeezing/data/benchmark.npz

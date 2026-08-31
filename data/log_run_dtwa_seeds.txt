@@ -1,0 +1,14 @@
+one-axis-twisting deviation from exact: 0.029 dB
+  N=  125 voigt       seed 11 -> -12.699 dB   [48 s]
+  N=  125 voigt       seed 12 -> -12.460 dB   [45 s]
+  N=  125 voigt       seed 13 -> -12.459 dB   [44 s]
+  N=  125 voigt       seed 14 -> -12.813 dB   [42 s]
+  N=  125 voigt       mean -12.608  sd 0.177  spread 0.354 dB
+
+  N= 1000 lorentzian  seed 11 ->  -9.553 dB   [678 s]
+  N= 1000 lorentzian  seed 12 ->  -9.698 dB   [806 s]
+  N= 1000 lorentzian  seed 13 ->  -9.727 dB   [823 s]
+  N= 1000 lorentzian  seed 14 ->  -9.793 dB   [804 s]
+  N= 1000 lorentzian  mean  -9.693  sd 0.101  spread 0.240 dB
+
+saved /home/claude/work/yb-cawo4-cavity-squeezing/data/dtwa_seeds.npz
