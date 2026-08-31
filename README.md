@@ -44,21 +44,21 @@ pytest tests              # validation testbench (about 10 s)
 cd scripts
 python run_validation.py   # Fig. S1 data (a few minutes)
 python run_benchmark.py    # Fig. 2 data
-python run_scaling.py      # Fig. S2 data, and the two-limit law of Fig. 3(a,b)
-python run_designmap.py    # Fig. 3(c) and Fig. S3 data
+python run_scaling.py      # Fig. S2 data, and the interaction scans of Fig. 3(b,c)
+python run_designmap.py    # Fig. 3(d) and Fig. S3 data
 python run_loopgap.py      # Fig. S4 data
 python run_inhomog.py      # Fig. S5(a) data
 python run_readout.py      # Fig. S5(b,c) data
 python run_elimination.py  # Fig. S6(a) data: resonator kept as a quantum mode, no rotating-wave approximation
 python run_reversal.py     # Fig. S6(b) data: ring-down at the detuning reversal of the twist-untwist readout
 python run_robustness.py   # Fig. S6(c,d) data: line shape, T2, finite and imperfect pulses
-python run_measurement.py  # Fig. 4 data: squeezing by measurement through the resonator (about 1 hour)
-python run_conditional.py  # supplement Table S9: twisting and measurement together, conditional cumulant solver (about 30 min)
-python run_echo.py         # Fig. 5 data: spin echo against the interaction (about 20 min); then run_echo_extra.py (tau scans, no-emission check)
+python run_measurement.py  # Fig. S7 data: squeezing by measurement through the resonator (about 1 hour)
+python run_conditional.py  # supplement Table S10: twisting and measurement together, conditional cumulant solver (about 30 min)
+python run_echo.py         # Fig. 4 data: spin echo against the interaction (about 20 min); then run_echo_extra.py (tau scans, no-emission check)
 python run_locking.py      # Fig. 3(a) data: the closed law for the synchronisation order parameter, its threshold, and the orbit average behind it (about 20 min)
-python run_decompose.py    # splits the noise at the optimum into locked core and unlocked wings; the two-limit law of Eq. (8) is tested on this scan (about 1 hour)
+python run_decompose.py    # splits the noise at the optimum into locked core and unlocked wings; the two-limit law of Eq. (9) is tested on this scan (about 1 hour)
 python hyperfine_levels.py # zero-field hyperfine levels and Sz/Sx matrix elements -> data/hyperfine_levels.json
-python make_figures.py        # data figures (main Figs. 2 to 5 and Figs. S1 to S6) -> figures/
+python make_figures.py        # data figures (main Figs. 2 to 4 and Figs. S1 to S7) -> figures/
 python make_device_figure.py  # 3-D device schematic (Fig. 1) -> figures/fig_device.*
 
 # Figures use the Times New Roman font. If it is not installed, Matplotlib falls back
@@ -70,7 +70,7 @@ python check_consistency.py # title, version, DOI, citations and cross-reference
 `run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22148969 (concept DOI, always the latest version; v1.5.1 is https://doi.org/10.5281/zenodo.22192059)
+https://doi.org/10.5281/zenodo.22148969 (concept DOI, always the latest version; v1.5.2 is https://doi.org/10.5281/zenodo.22207349)
 
 ## Minimal example
 
