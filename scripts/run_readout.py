@@ -3,7 +3,7 @@
 readout, for the loop-gap device (N0 = 6e14, Delta/2pi = 22 MHz) and for
 superconducting resonators with N = 1e9, 1e10, 1e11 (kappa/2pi = 10 kHz, g sqrt N = 1 MHz,
 Delta/2pi = 30 MHz, 20 mK).  Detection noise is given as a fraction of N
-(population resolution).  The interaction time is optimised for each detection noise.
+(population resolution).  The interaction time is optimized for each detection noise.
 """
 from common import *  # noqa
 from cavsqueeze.protocols import twist_untwist, plain_squeezed_readout

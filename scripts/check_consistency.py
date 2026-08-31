@@ -33,7 +33,9 @@ def main():
 
     # --- title: one source, used everywhere -------------------------------
     m = re.search(r"\\title\{(.+?)\}\s*\n", main_tex, re.S)
-    title = " ".join(m.group(1).split()) if m else None
+    # the title carries a \\ so that it breaks in two balanced lines; the plain
+    # text is what README and CITATION.cff have to agree with
+    title = " ".join(m.group(1).replace(r"\\", " ").split()) if m else None
     if title is None:
         fail.append("could not read \\title{...} from paper/main.tex")
     else:
@@ -46,9 +48,12 @@ def main():
     ver_cff = re.search(r"^version:\s*(\S+)", cff or "", re.M)
     doi_readme = re.findall(r"v(\d+\.\d+\.\d+) is https://doi\.org/(10\.5281/zenodo\.\d+)", readme or "")
     doi_paper = set(re.findall(r"10\.5281/zenodo\.(\d+)", main_tex))
+    ver_toml = re.search(r'^version\s*=\s*"(\S+?)"', read("pyproject.toml") or "", re.M)
     if ver_cff and doi_readme:
         if ver_cff.group(1) != doi_readme[0][0]:
             fail.append(f"CITATION.cff version {ver_cff.group(1)} != README version {doi_readme[0][0]}")
+    if ver_cff and ver_toml and ver_cff.group(1) != ver_toml.group(1):
+        fail.append(f"CITATION.cff version {ver_cff.group(1)} != pyproject.toml version {ver_toml.group(1)}")
     if doi_readme and doi_paper:
         want = doi_readme[0][1].split(".")[-1]
         if doi_paper != {want}:
@@ -142,6 +147,54 @@ def main():
         for n in sorted(set(re.findall(r"Eq\. \((\d+)\)", readme))):
             if n not in meq:
                 fail.append(f"README names Eq. ({n}), which the main text does not have")
+
+        # Stronger than the above: where the README names a float it also names
+        # the LaTeX label, so the number can be checked against the label rather
+        # than merely against the set of numbers that exist.  This is what
+        # catches a README pointing at the right kind of float but the wrong one.
+        bylabel = {}
+        for aux_text in (maux, saux):
+            for lab, n in re.findall(r"\\newlabel\{((?:fig|tab|eq):[^}]+)\}\{\{(S?\d+)\}", aux_text):
+                bylabel.setdefault(lab, n)
+        for kind, n, lab in re.findall(
+                r"(Figs?\.|Table|Eq\.) \(?(S?\d+)\)?[^(\n]{0,40}\((?:fig|tab|eq):([^)]+)\)", readme):
+            full = ("fig:" if kind.startswith("Fig") else
+                    "tab:" if kind == "Table" else "eq:") + lab
+            if full not in bylabel:
+                fail.append(f"README names label {full}, which neither document defines")
+            elif bylabel[full] != n:
+                fail.append(f"README calls {full} '{n}' but LaTeX numbers it {bylabel[full]}")
+
+    # --- a claim that rests on a boolean must be true ----------------------
+    # T1E_NOKAPPA_SAFE records whether the loss-free mean-field contrast really
+    # stays above 1/e over the whole window.  The main text asserts that it
+    # does, so the build must fail if a rerun ever contradicts it.
+    nums_for_flags = read("data", "numbers.json")
+    if nums_for_flags:
+        flags = json.loads(nums_for_flags)
+        if flags.get("T1E_NOKAPPA_SAFE") is False:
+            fail.append("the loss-free contrast now falls to 1/e inside the window; "
+                        "the sentence about the non-monotonic 1/e time in main.tex "
+                        "is no longer supported by data/benchmark.npz")
+
+    # --- a relation must not be closed just before a token ------------------
+    # "$x=$ [[TOK]]" renders as a broken space, and when the token itself is a
+    # math group it renders as two adjacent groups.  Write "$x$ is [[TOK]]".
+    for tex, where in ((main_tex, "main.tex"), (supp_tex, "supplement.tex")):
+        for tok in sorted(set(re.findall(
+                r"(?:=|\\approx|\\simeq|<|>|\\le|\\ge|\\lesssim|\\gtrsim)\$[\s~]*\[\[([A-Z0-9_]+)\]\]", tex))):
+            fail.append(f"{where}: a relation is closed just before [[{tok}]]; "
+                        "move the symbol out of the relation instead")
+
+    # --- source whitespace: no trailing spaces, no tabs, no double spaces ---
+    for tex, where in ((main_tex, "main.tex"), (supp_tex, "supplement.tex")):
+        for i, line in enumerate(tex.split("\n"), 1):
+            if line != line.rstrip():
+                fail.append(f"{where}: trailing whitespace on line {i}")
+            if "\t" in line:
+                fail.append(f"{where}: tab character on line {i}")
+            if re.search(r"(?<![.!?:}\)])  +(?=\S)", line[1:] if line[:1] == " " else line):
+                fail.append(f"{where}: repeated space inside a sentence on line {i}")
 
     # --- the token numbers must match what LaTeX actually printed ----------
     aux = read("paper", "main_filled.aux")

@@ -27,12 +27,8 @@ def split_variance(st, ens, inside_mask, n_hat):
     def quad(A):
         return float(nh @ A @ nh)
 
-    M = len(pops)
     ins = np.asarray(inside_mask, bool)
     out = ~ins
-    # pair (inter-spin) part, per group of class pairs
-    full = np.einsum("m,n,mnab->ab", pops, pops, C)
-    self_pair = np.einsum("m,mmab->ab", pops, C)
 
     def pair_block(mask_m, mask_n):
         pm = np.where(mask_m, pops, 0.0)

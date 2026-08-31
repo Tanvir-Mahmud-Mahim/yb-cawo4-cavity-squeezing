@@ -13,9 +13,13 @@ the same Hamiltonian: the line is discretized once, and the truncated Wigner
 run places one classical spin at each class detuning for every member of that
 class.  The comparison therefore isolates the closure, which is what is in
 question; the discretization itself is checked separately in Tables S1 and S2.
-The line is truncated at DELTA_MAX half widths, since spins further out are
+The line is truncated at DELTA_MAX full widths, since spins further out are
 free to the accuracy of the article's own spectator treatment and keeping them
 would only make the classical trajectories stiff without testing anything.
+
+The scan is at one ratio of interaction to linewidth, chi N / gamma_inh = 4.
+That is where the closure is worked hardest at these spin numbers, because the
+optimum runs to larger Q; the supplement says so where the table is discussed.
 
 Results -> data/dtwa.npz
 """
@@ -37,11 +41,11 @@ from cavsqueeze.resonator import CavityParams
 TWO_PI = 2.0 * np.pi
 FW = TWO_PI * GAMMA_INH_HZ                 # line width in rad/s
 SHAPES = ["voigt", "gaussian", "lorentzian"]
-RATIOS = [2.0, 4.0, 8.0]                   # chi N / gamma_inh
+RATIO = 4.0                                # chi N / gamma_inh, the one ratio scanned
 N_TRAJ = 4000
 
 
-DELTA_MAX = 20.0        # line truncated at this many half widths, both solvers
+DELTA_MAX = 20.0        # line truncated at this many full widths, both solvers
 
 
 def shared_ensemble(chiN, shape, N):
@@ -107,8 +111,8 @@ def main():
     # to fail when Q^3/N is of order one, with Q the twisting strength at the
     # optimum; that is the regime these sizes sit in, and the article's
     # ensembles are at least a million times larger.
-    plan = [(N, 4.0, "voigt") for N in (125, 250, 500, 1000)] + \
-           [(1000, 4.0, s) for s in ("gaussian", "lorentzian")]
+    plan = [(N, RATIO, "voigt") for N in (125, 250, 500, 1000)] + \
+           [(1000, RATIO, s) for s in ("gaussian", "lorentzian")]
     for N, ratio, shape in plan:
         chiN = ratio * FW
         t_opt = 3.0 / chiN * N ** (1.0 / 3.0)

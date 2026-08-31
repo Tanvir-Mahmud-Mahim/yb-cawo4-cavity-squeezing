@@ -30,7 +30,7 @@ plt.rcParams.update({
     "pdf.fonttype": 42, "ps.fonttype": 42, "savefig.dpi": 400, "figure.dpi": 200,
 })
 
-# colours
+# colors
 CU = np.array([0.80, 0.52, 0.28])       # copper body
 CU_DARK = CU * 0.62
 CU_LIGHT = np.clip(CU * 1.18, 0, 1)
@@ -43,7 +43,6 @@ ORANGE = "#e06a00"
 BLUE = "#1f6fb2"
 PINK = "#c0509a"
 GREEN = "#1a9c5a"
-GREY = "#5a5a5a"
 
 LIGHT = np.array([-0.45, -0.6, 0.66])
 LIGHT /= np.linalg.norm(LIGHT)
@@ -63,18 +62,18 @@ def quad_normal(poly):
 
 
 class Scene:
-    """Collect polygons (with colours) and draw them as one depth-sorted collection."""
+    """Collect polygons (with colors) and draw them as one depth-sorted collection."""
 
     def __init__(self):
         self.polys, self.fc, self.ec, self.lw, self.alpha = [], [], [], [], []
 
-    def add(self, poly, colour, edge="none", lw=0.0, alpha=1.0, normal=None, flat=None):
+    def add(self, poly, color, edge="none", lw=0.0, alpha=1.0, normal=None, flat=None):
         poly = np.asarray(poly, float)
         if flat is None:
             n = normal if normal is not None else quad_normal(poly)
-            col = shade(colour, n)
+            col = shade(color, n)
         else:
-            col = tuple(colour)
+            col = tuple(color)
         self.polys.append(poly)
         self.fc.append((*col, alpha))
         if edge == "face":
@@ -84,7 +83,7 @@ class Scene:
             self.ec.append(edge if edge != "none" else (0, 0, 0, 0))
         self.lw.append(lw)
 
-    def box(self, x0, x1, y0, y1, z0, z1, colour, edge="none", lw=0.0, alpha=1.0, faces=None):
+    def box(self, x0, x1, y0, y1, z0, z1, color, edge="none", lw=0.0, alpha=1.0, faces=None):
         c = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]]
         c = np.array(c)
         F = {
@@ -94,7 +93,7 @@ class Scene:
         }
         for name, (idx, n) in F.items():
             if faces is None or name in faces:
-                self.add(c[idx], colour, edge=edge, lw=lw, alpha=alpha, normal=n)
+                self.add(c[idx], color, edge=edge, lw=lw, alpha=alpha, normal=n)
 
     def draw(self, ax, zorder=1):
         coll = Poly3DCollection(self.polys, facecolors=self.fc, edgecolors=self.ec, linewidths=self.lw, zsort="average")
@@ -103,7 +102,7 @@ class Scene:
         return coll
 
 
-def cylinder_wall(scene, axis, centre, r, a0, a1, th0, th1, colour, n=28, inner=True, alpha=1.0):
+def cylinder_wall(scene, axis, center, r, a0, a1, th0, th1, color, n=28, inner=True, alpha=1.0):
     """Wall of a cylinder whose axis is along `axis` ('x' or 'z'); the surface spans
     axial coordinate a0..a1 and polar angle th0..th1. `inner` flips the normal."""
     th = np.linspace(th0, th1, n + 1)
@@ -112,30 +111,30 @@ def cylinder_wall(scene, axis, centre, r, a0, a1, th0, th1, colour, n=28, inner=
         tm = 0.5 * (t0 + t1)
         if axis == "x":
             def P(a, t):
-                return [a, centre[0] + r * np.cos(t), centre[1] + r * np.sin(t)]
+                return [a, center[0] + r * np.cos(t), center[1] + r * np.sin(t)]
             nrm = np.array([0, np.cos(tm), np.sin(tm)])
         elif axis == "y":
             def P(a, t):
-                return [centre[0] + r * np.cos(t), a, centre[1] + r * np.sin(t)]
+                return [center[0] + r * np.cos(t), a, center[1] + r * np.sin(t)]
             nrm = np.array([np.cos(tm), 0, np.sin(tm)])
         else:
             def P(a, t):
-                return [centre[0] + r * np.cos(t), centre[1] + r * np.sin(t), a]
+                return [center[0] + r * np.cos(t), center[1] + r * np.sin(t), a]
             nrm = np.array([np.cos(tm), np.sin(tm), 0])
         if inner:
             nrm = -nrm
-        scene.add([P(a0, t0), P(a1, t0), P(a1, t1), P(a0, t1)], colour, normal=nrm, alpha=alpha)
+        scene.add([P(a0, t0), P(a1, t0), P(a1, t1), P(a0, t1)], color, normal=nrm, alpha=alpha)
 
 
-def disc(scene, axis, centre, r, a, colour, th0=0, th1=2 * np.pi, n=40, normal_sign=1, alpha=1.0, edge="none", lw=0):
+def disc(scene, axis, center, r, a, color, th0=0, th1=2 * np.pi, n=40, normal_sign=1, alpha=1.0, edge="none", lw=0):
     th = np.linspace(th0, th1, n + 1)
     if axis == "x":
-        pts = [[a, centre[0] + r * np.cos(t), centre[1] + r * np.sin(t)] for t in th]
+        pts = [[a, center[0] + r * np.cos(t), center[1] + r * np.sin(t)] for t in th]
         nrm = [normal_sign, 0, 0]
     else:
-        pts = [[centre[0] + r * np.cos(t), centre[1] + r * np.sin(t), a] for t in th]
+        pts = [[center[0] + r * np.cos(t), center[1] + r * np.sin(t), a] for t in th]
         nrm = [0, 0, normal_sign]
-    scene.add(pts, colour, normal=nrm, alpha=alpha, edge=edge, lw=lw)
+    scene.add(pts, color, normal=nrm, alpha=alpha, edge=edge, lw=lw)
 
 
 def p2d(ax, x, y, z):
@@ -144,17 +143,17 @@ def p2d(ax, x, y, z):
     return ax.transData.transform((xs, ys))
 
 
-def label3d(fig, ax, xyz, text, xytext, colour="k", fontsize=6.5, ha="left", va="center", arrow=True, lw=0.6, style="-|>", rad=0.0):
+def label3d(fig, ax, xyz, text, xytext, color="k", fontsize=6.5, ha="left", va="center", arrow=True, lw=0.6, style="-|>", rad=0.0):
     """Annotation from a 3-D point to a 2-D figure-fraction text position."""
     disp = p2d(ax, *xyz)
     figc = fig.transFigure.inverted().transform(disp)
-    kw = dict(arrowstyle=style, lw=lw, color=colour, shrinkA=0, shrinkB=1, connectionstyle=f"arc3,rad={rad}") if arrow else None
-    fig.text(xytext[0], xytext[1], text, fontsize=fontsize, ha=ha, va=va, color=colour)
+    kw = dict(arrowstyle=style, lw=lw, color=color, shrinkA=0, shrinkB=1, connectionstyle=f"arc3,rad={rad}") if arrow else None
+    fig.text(xytext[0], xytext[1], text, fontsize=fontsize, ha=ha, va=va, color=color)
     if arrow:
         fig.add_artist(FancyArrowPatch(xytext, figc, transform=fig.transFigure, **kw))
 
 
-def wavy(fig, p0, p1, colour, n=7, amp=0.006, lw=1.0, arrow=True):
+def wavy(fig, p0, p1, color, n=7, amp=0.006, lw=1.0, arrow=True):
     """A wavy (photon) line between two figure-fraction points."""
     p0, p1 = np.asarray(p0), np.asarray(p1)
     d = p1 - p0
@@ -164,9 +163,9 @@ def wavy(fig, p0, p1, colour, n=7, amp=0.006, lw=1.0, arrow=True):
     s = np.linspace(0, 1, 200)
     pts = p0[None, :] + s[:, None] * d[None, :] + (amp * np.sin(2 * np.pi * n * s))[:, None] * v[None, :]
     from matplotlib.lines import Line2D
-    fig.add_artist(Line2D(pts[:, 0], pts[:, 1], transform=fig.transFigure, color=colour, lw=lw, solid_capstyle="round"))
+    fig.add_artist(Line2D(pts[:, 0], pts[:, 1], transform=fig.transFigure, color=color, lw=lw, solid_capstyle="round"))
     if arrow:
-        fig.add_artist(FancyArrowPatch(pts[-8], pts[-1], transform=fig.transFigure, arrowstyle="-|>", mutation_scale=7, lw=lw, color=colour))
+        fig.add_artist(FancyArrowPatch(pts[-8], pts[-1], transform=fig.transFigure, arrowstyle="-|>", mutation_scale=7, lw=lw, color=color))
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +192,7 @@ def loop_gap_scene():
     wx, wz = 6.0, 7.0
     ro, xo = 3.0, 12.0
     gh = 0.35
-    E = tuple(CU * 0.45)          # edge colour of the block
+    E = tuple(CU * 0.45)          # edge color of the block
     EP = tuple(PLATE * 0.55)
     # 1) plate
     S = Scene()
@@ -216,7 +215,7 @@ def loop_gap_scene():
         S.add([[xa, Y0, zc - gh], [xb, Y0, zc - gh], [xb, Y1, zc - gh], [xa, Y1, zc - gh]], CU_DARK * 0.7, normal=[0, 0, 1])
         S.add([[xa, Y0, zc + gh], [xb, Y0, zc + gh], [xb, Y1, zc + gh], [xa, Y1, zc + gh]], CU_DARK * 0.7, normal=[0, 0, -1])
     out.append((S, 2))
-    # 3) crystal glued at the centre of the pocket (4.4 x 4.6 x 5 mm, c axis along y)
+    # 3) crystal glued at the center of the pocket (4.4 x 4.6 x 5 mm, c axis along y)
     S = Scene()
     cy = 0.5 * (Y0 + Y1)
     S.box(-2.2, 2.2, cy - 2.5, cy + 2.5, zc - 2.3, zc + 2.3, CRYSTAL, edge=CRYSTAL_EDGE, lw=0.5, alpha=0.55)
@@ -254,7 +253,7 @@ def loop_gap_scene():
     ]
     for xc in (-xo, xo):
         edges.append([[xc + ro * np.cos(t), Y0, zc + ro * np.sin(t)] for t in th])
-    return out, dict(zc=zc, xo=xo, ro=ro, wx=wx, wz=wz, X0=X0, X1=X1, Y0=Y0, Y1=Y1, Z1=Z1, cy=cy, edges=edges, edge_colour=E)
+    return out, dict(zc=zc, xo=xo, ro=ro, wx=wx, wz=wz, X0=X0, X1=X1, Y0=Y0, Y1=Y1, Z1=Z1, cy=cy, edges=edges, edge_color=E)
 
 
 def crystal_zoom_scene():
@@ -294,30 +293,30 @@ def sc_scene():
     return out
 
 
-def draw_spins_2d(fig, ax, pts3d, colour=ORANGE, size=0.008, lw=0.5, ms=4):
+def draw_spins_2d(fig, ax, pts3d, color=ORANGE, size=0.008, lw=0.5, ms=4):
     for p in pts3d:
         d = fig.transFigure.inverted().transform(p2d(ax, *p))
         fig.add_artist(FancyArrowPatch((d[0], d[1] - size), (d[0], d[1] + size), transform=fig.transFigure,
-                                       arrowstyle="-|>", mutation_scale=ms, lw=lw, color=colour, zorder=25))
+                                       arrowstyle="-|>", mutation_scale=ms, lw=lw, color=color, zorder=25))
 
 
-def marker(fig, xy, num, colour="k", r=0.011, fs=6.0):
-    fig.add_artist(matplotlib.patches.Circle(xy, r, transform=fig.transFigure, fc="white", ec=colour, lw=0.7, zorder=30))
-    fig.text(xy[0], xy[1], str(num), fontsize=fs, ha="center", va="center", color=colour, zorder=31, fontweight="bold")
+def marker(fig, xy, num, color="k", r=0.011, fs=6.0):
+    fig.add_artist(matplotlib.patches.Circle(xy, r, transform=fig.transFigure, fc="white", ec=color, lw=0.7, zorder=30))
+    fig.text(xy[0], xy[1], str(num), fontsize=fs, ha="center", va="center", color=color, zorder=31, fontweight="bold")
 
 
-def marker3d(fig, ax, xyz, num, offset=(0.0, 0.0), colour="k"):
+def marker3d(fig, ax, xyz, num, offset=(0.0, 0.0), color="k"):
     p = fig.transFigure.inverted().transform(p2d(ax, *xyz))
     q = (p[0] + offset[0], p[1] + offset[1])
     if abs(offset[0]) + abs(offset[1]) > 0.012:
-        fig.add_artist(FancyArrowPatch(q, p, transform=fig.transFigure, arrowstyle="-", lw=0.6, color=colour, shrinkA=4, shrinkB=0, zorder=29))
-    marker(fig, q, num, colour=colour)
+        fig.add_artist(FancyArrowPatch(q, p, transform=fig.transFigure, arrowstyle="-", lw=0.6, color=color, shrinkA=4, shrinkB=0, zorder=29))
+    marker(fig, q, num, color=color)
     return q
 
 
-def text3d(fig, ax, xyz, txt, colour="k", fontsize=6.0, ha="center", va="center", rotation=0, **kw):
+def text3d(fig, ax, xyz, txt, color="k", fontsize=6.0, ha="center", va="center", rotation=0, **kw):
     p = fig.transFigure.inverted().transform(p2d(ax, *xyz))
-    fig.text(p[0], p[1], txt, fontsize=fontsize, ha=ha, va=va, color=colour, rotation=rotation, zorder=32, **kw)
+    fig.text(p[0], p[1], txt, fontsize=fontsize, ha=ha, va=va, color=color, rotation=rotation, zorder=32, **kw)
     return p
 
 
@@ -346,33 +345,33 @@ def make():
     setup3d(ax, (-27, 27), (-19, 20), (-3, 23), (54, 39, 26), 1.55, 18, -112)
     for e in G["edges"]:
         e = np.asarray(e, float)
-        ln, = ax.plot(e[:, 0], e[:, 1], e[:, 2], color=G["edge_colour"], lw=0.45, solid_capstyle="round")
+        ln, = ax.plot(e[:, 0], e[:, 1], e[:, 2], color=G["edge_color"], lw=0.45, solid_capstyle="round")
         ln.set_zorder(6)
     fig.canvas.draw()
     zc, xo, ro, wx, wz, cy = G["zc"], G["xo"], G["ro"], G["wx"], G["wz"], G["cy"]
     Y0, Y1, X0, X1, Z1 = G["Y0"], G["Y1"], G["X0"], G["X1"], G["Z1"]
     rng = np.random.default_rng(5)
     spins = [tuple(v) for v in rng.uniform([-1.7, cy - 2.0, zc - 1.8], [1.7, cy + 2.0, zc + 1.8], size=(10, 3))]
-    draw_spins_2d(fig, ax, spins, colour=CRYSTAL_EDGE, size=0.006, lw=0.5, ms=3.5)
+    draw_spins_2d(fig, ax, spins, color=CRYSTAL_EDGE, size=0.006, lw=0.5, ms=3.5)
 
     q0, q1 = p2d(ax, 0, Y0, zc), p2d(ax, 10, Y0, zc)
     ang_x = float(np.degrees(np.arctan2(q1[1] - q0[1], q1[0] - q0[0])))
     fig.text(0.008, 0.985, "(a)", fontsize=9, fontweight="bold", va="top")
     fig.text(0.04, 0.985, "the demonstrated experiment: crystal in a loop-gap microwave resonator", fontsize=6.6, va="top")
     # labels written on the parts themselves
-    text3d(fig, ax, (0, 0.5 * (Y0 + Y1), Z1), r"$\kappa/2\pi = 660$ kHz", colour="w", fontsize=5.8, va="center", rotation=ang_x, rotation_mode="anchor")
-    text3d(fig, ax, (0, -11, 0), "mixing-chamber plate, below 30 mK", colour="k", fontsize=5.8, va="center", rotation=ang_x, rotation_mode="anchor")
-    text3d(fig, ax, (0, Y0, zc - wz - 1.0), "central loop", colour="w", fontsize=5.4, va="top", rotation=ang_x, rotation_mode="anchor")
-    text3d(fig, ax, (-xo - 1.0, Y0, zc + ro + 0.9), "outer loop", colour="w", fontsize=5.4, va="bottom", rotation=ang_x, rotation_mode="anchor")
-    text3d(fig, ax, (xo + 1.0, Y0, zc + ro + 0.9), "outer loop", colour="w", fontsize=5.4, va="bottom", rotation=ang_x, rotation_mode="anchor")
-    text3d(fig, ax, (-wx - 1.5, Y0, zc - 1.0), "gap", colour="w", fontsize=5.0, va="top", ha="center", rotation=ang_x, rotation_mode="anchor")
-    text3d(fig, ax, (wx + 1.5, Y0, zc - 1.0), "gap", colour="w", fontsize=5.0, va="top", ha="center", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (0, 0.5 * (Y0 + Y1), Z1), r"$\kappa/2\pi = 660$ kHz", color="w", fontsize=5.8, va="center", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (0, -11, 0), "mixing-chamber plate, below 30 mK", color="k", fontsize=5.8, va="center", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (0, Y0, zc - wz - 1.0), "central loop", color="w", fontsize=5.4, va="top", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (-xo - 1.0, Y0, zc + ro + 0.9), "outer loop", color="w", fontsize=5.4, va="bottom", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (xo + 1.0, Y0, zc + ro + 0.9), "outer loop", color="w", fontsize=5.4, va="bottom", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (-wx - 1.5, Y0, zc - 1.0), "gap", color="w", fontsize=5.0, va="top", ha="center", rotation=ang_x, rotation_mode="anchor")
+    text3d(fig, ax, (wx + 1.5, Y0, zc - 1.0), "gap", color="w", fontsize=5.0, va="top", ha="center", rotation=ang_x, rotation_mode="anchor")
     # numbered markers placed on the parts (no long leaders)
     marker3d(fig, ax, (6.0, Y0 + 2.0, zc + 4.9), 1)
     marker3d(fig, ax, (X0 + 3.5, Y0, Z1 - 3.0), 2)
-    marker3d(fig, ax, (0, -16.5, zc), 3, colour=RED)
-    marker3d(fig, ax, (-xo, Y0 - 0.2, zc - ro - 3.2), 4, colour=BLUE)
-    marker3d(fig, ax, (xo, Y0 - 0.2, zc - ro - 3.2), 4, colour=BLUE)
+    marker3d(fig, ax, (0, -16.5, zc), 3, color=RED)
+    marker3d(fig, ax, (-xo, Y0 - 0.2, zc - ro - 3.2), 4, color=BLUE)
+    marker3d(fig, ax, (xo, Y0 - 0.2, zc - ro - 3.2), 4, color=BLUE)
     marker3d(fig, ax, (17, -13, 0), 5)
     # microwave signals entering the outer loops, as in the source figure
     for xc, sgn in [(-xo, -1), (xo, 1)]:
@@ -397,7 +396,7 @@ def make():
     fig.canvas.draw()
     rng = np.random.default_rng(7)
     spins = [tuple(v) for v in rng.uniform([-1.7, -2.0, -1.8], [1.7, 2.0, 1.8], size=(12, 3))]
-    draw_spins_2d(fig, bx, spins, colour=CRYSTAL_EDGE, size=0.009, lw=0.6, ms=4.5)
+    draw_spins_2d(fig, bx, spins, color=CRYSTAL_EDGE, size=0.009, lw=0.6, ms=4.5)
     fig.text(0.565, 0.985, "(b)", fontsize=9, fontweight="bold", va="top")
     fig.text(0.595, 0.985, "what the model follows inside the crystal", fontsize=6.6, va="top")
     c = fig.transFigure.inverted().transform(p2d(bx, 0, 0, 0))
@@ -434,7 +433,7 @@ def make():
     fig.canvas.draw()
     rng = np.random.default_rng(3)
     spins = [tuple(v) for v in rng.uniform([-1.4, -1.6, 0.1], [1.4, 1.6, 0.42], size=(16, 3))]
-    draw_spins_2d(fig, cx3, spins, colour=ORANGE, size=0.007, lw=0.5, ms=4)
+    draw_spins_2d(fig, cx3, spins, color=ORANGE, size=0.007, lw=0.5, ms=4)
     fig.text(0.565, 0.515, "(c)", fontsize=9, fontweight="bold", va="top")
     fig.text(0.595, 0.515, "proposed planar superconducting resonator on the same crystal (not built)", fontsize=6.6, va="top")
     marker3d(fig, cx3, (-2.95, -2.9, 0.3), 6, offset=(-0.028, -0.015))          # chip
@@ -442,7 +441,7 @@ def make():
     marker3d(fig, cx3, (1.2, 1.9, 0.52), 8, offset=(0.045, 0.03))                # meander inductor
     marker3d(fig, cx3, (-2.2, 0.0, 0.52), 9)                                     # left pad
     marker3d(fig, cx3, (2.2, 0.0, 0.52), 9)                                      # right pad
-    marker3d(fig, cx3, (0.45, 0, 2.2), 10, offset=(0.04, 0.0), colour=RED)       # optical read-out beam
+    marker3d(fig, cx3, (0.45, 0, 2.2), 10, offset=(0.04, 0.0), color=RED)       # optical read-out beam
 
     # ================= key =================
     kx, ky = 0.012, 0.325
@@ -461,7 +460,7 @@ def make():
     ]
     y = ky - 0.028 * SY
     for num, col, txt in items:
-        marker(fig, (kx + 0.012, y), num, colour=col, r=0.0095, fs=5.2)
+        marker(fig, (kx + 0.012, y), num, color=col, r=0.0095, fs=5.2)
         fig.text(kx + 0.028, y, txt, fontsize=5.3, va="center")
         y -= 0.0265 * SY
 

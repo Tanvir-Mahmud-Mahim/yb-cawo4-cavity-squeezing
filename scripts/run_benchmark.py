@@ -7,6 +7,7 @@ cumulant solution (contrast and hidden transverse variances) for the Voigt line.
 from common import *  # noqa
 from cavsqueeze.protocols import ramsey_meanfield, ramsey_cumulant
 from cavsqueeze import equal_probability_classes, lineshape
+from cavsqueeze.resonator import CavityParams
 
 chiN_list = np.array([0.1e3, 0.7e3, 2e3, 4e3, 7e3])
 times = np.linspace(0, 6e-3, 601)
@@ -37,4 +38,25 @@ for chiN_hz in chiN_list:
         idx = np.where(c < np.exp(-1))[0]
         te = times[idx[0]] if len(idx) else np.inf
         print(f"chiN/2pi={chiN_hz/1e3:.1f} kHz {shape:10s} T_1/e = {te*1e6:.0f} us")
+
+# Why the protected 1/e time is not monotonic in chi N0: at 4 and 7 kHz the line
+# no longer sets the decay, the resonator does, and the rate of decay through the
+# resonator grows with the spin number.  Repeat the two protected cases with the
+# resonator loss switched off (kappa = 0, so no collective emission and no
+# thermal photons) over a longer window; the contrast then stays above 1/e
+# throughout, which is what identifies the resonator as the cause.
+long_t = np.linspace(0, 4 * times[-1], 401)
+out["nokappa_t"] = long_t
+for chiN_hz in (4e3, 7e3):
+    N = TWO_PI * chiN_hz / p0.chi
+    p_nk = CavityParams(g=p0.g, kappa=0.0, Delta=p0.Delta, omega_s=p0.omega_s,
+                        T=0.0, gamma_phi=p0.gamma_phi)
+    ens = equal_probability_classes(lineshape("voigt", TWO_PI * GAMMA_INH_HZ, LORENTZ_FRACTION), 2000, N)
+    with Timer(f"MF no-kappa chiN={chiN_hz:.0f}"):
+        c = ramsey_meanfield(p_nk, ens, long_t)["contrast"]
+    out[f"mf_nokappa_voigt_{int(chiN_hz)}"] = c
+    idx = np.where(c < np.exp(-1))[0]
+    te = long_t[idx[0]] * 1e3 if len(idx) else np.inf
+    print(f"chiN/2pi={chiN_hz/1e3:.1f} kHz voigt, no resonator loss: "
+          f"T_1/e = {te:.2f} ms (window {long_t[-1]*1e3:.0f} ms), min contrast {c.min():.3f}")
 save("benchmark", **out)

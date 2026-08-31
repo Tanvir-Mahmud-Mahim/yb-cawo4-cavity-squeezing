@@ -28,7 +28,7 @@ LORENTZ_FRACTION = 0.3  # Voigt lineshape used in the Supplement of Fukumori et 
 OMEGA_S_HZ = 3.08385e9
 T2_SPIN = 0.15  # s, Tiranov et al.
 
-# discretisation presets: (M_core, M_tail)
+# discretization presets: (M_core, M_tail)
 GRID_STD = (48, 16)
 GRID_LIGHT = (24, 12)
 GRID_SCAN = (32, 12)
@@ -36,7 +36,7 @@ SPECTATOR_FACTOR = 5.0  # spins with |delta| > factor x max(chi N, 2 FWHM) are t
 
 
 def standard_ensemble(N, chiN, shape="voigt", grid=GRID_STD, fwhm_hz=GAMMA_INH_HZ, lorentz_fraction=LORENTZ_FRACTION):
-    """Tail-resolved discretisation of the line; the far tail is capped at
+    """Tail-resolved discretization of the line; the far tail is capped at
     10 max(chi N, 2 FWHM) beyond which spins are free (see Supplement)."""
     fw = TWO_PI * fwhm_hz
     d = lineshape(shape, fw, lorentz_fraction)

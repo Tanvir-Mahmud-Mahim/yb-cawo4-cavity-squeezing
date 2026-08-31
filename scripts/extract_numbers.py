@@ -30,7 +30,9 @@ _main_tex = open(os.path.join(ROOT, "paper", "main.tex"), encoding="utf-8").read
 _m = re.search(r"\\title\{(.+?)\}\s*\n", _main_tex, re.S)
 if _m is None:
     raise SystemExit("could not read \\title{...} from paper/main.tex")
-TITLE = " ".join(_m.group(1).split())
+# the \\ that balances the two title lines of the article is not part of the
+# title itself, and the supplement sets it on one line
+TITLE = " ".join(_m.group(1).replace(r"\\", " ").split())
 num["TITLE"] = TITLE
 
 # Equation and figure numbers of the main text, so that the supplement never
@@ -47,7 +49,7 @@ if os.path.exists(_aux_path):
 
 
 def _number(labels, label):
-    """Number of a labelled object: from the .aux if built, else by label order."""
+    """Number of a labeled object: from the .aux if built, else by label order."""
     if label in _aux:
         return _aux[label]
     return labels.index(label) + 1 if label in labels else None
@@ -109,6 +111,24 @@ if b is not None:
         idx = np.where(con < np.exp(-1))[0]
         num[f"T1E_{c//1000}"] = round(float(t[idx[0]] * 1e3), 2) if len(idx) else None
         num[f"T1E_{c//1000}B"] = round(float(t[idx[0]] * 1e3), 1) if len(idx) else None
+    # The protected 1/e time is not monotonic in chi N0: it is longer at 4 kHz
+    # than at 7 kHz.  With the resonator loss switched off it never falls to 1/e
+    # inside a window several times longer, at either spin number, which
+    # identifies decay through the resonator, whose rate grows with N0, as the
+    # cause rather than the line.
+    if "nokappa_t" in b:
+        _lt = b["nokappa_t"]
+        num["T1E_NOKAPPA_WINDOW"] = int(round(float(_lt[-1]) * 1e3))
+        _reached = False
+        _lowest = 1.0
+        for c in (4000, 7000):
+            _cc = b[f"mf_nokappa_voigt_{c}"]
+            _reached = _reached or bool(np.any(_cc < np.exp(-1)))
+            _lowest = min(_lowest, float(_cc.min()))
+        # True only if the contrast never reaches 1/e inside the window at
+        # either spin number, which is the statement the main text makes.
+        num["T1E_NOKAPPA_SAFE"] = (not _reached)
+        num["T1E_NOKAPPA_MIN"] = round(_lowest, 2)
     tc = b["cum_t"]
     m = tc <= 3.0e-3
     num["ANTISQ_7"] = round(first_dB(np.interp(3e-3, tc, b["cum_varmax_7000"])), 1)
@@ -191,10 +211,22 @@ if _v is not None:
     # Lewis-Swan et al.: 3/2^{2/3} (Gamma/chi)^{2/3} = 3.00 (kappa/2Delta)^{2/3}
     _pert = 3.0 * 2.0 ** (-2.0 / 3.0) * 2.0 ** (2.0 / 3.0)
     num["PREFACTOR_PERT"] = round(_pert, 2)
+    # the same perturbative result written against Gamma_SR/chi rather than
+    # kappa/2Delta, which is the form the supplement quotes
+    num["PREFACTOR_PERT_G"] = round(3.0 * 2.0 ** (-2.0 / 3.0), 2)
     num["PERT_GAIN"] = round(float(10 * np.log10(_pert / _A)), 1)
     num["LAW1_FIT_ERR"] = round(float(100 * np.max(np.abs(_v["c_xi_opt"] / (_A * (1 / _v["c_ratio"]) ** (2 / 3)) - 1))), 0)
+    # How fast the closure error falls with N at fixed Q, measured rather than
+    # quoted from the rounded table: the factor per doubling, over the range of
+    # Q where the deviation at N = 80 is above 0.02 dB and so is resolvable.
+    _dv = {_n: np.abs(10 * np.log10(_v[f"b_xi_cum_N{_n}"])
+                      - 10 * np.log10(_v[f"b_xi_exact_N{_n}"])) for _n in (20, 40, 80)}
+    _ok = _dv[80] > 0.02
+    _pd = np.concatenate([_dv[20][_ok] / _dv[40][_ok], _dv[40][_ok] / _dv[80][_ok]])
+    num["PIQS_RATIO_LO"] = round(float(_pd.min()), 1)
+    num["PIQS_RATIO_HI"] = round(float(_pd.max()), 1)
 
-# ---------------- synchronisation: the locking law and its threshold ----------------
+# ---------------- synchronization: the locking law and its threshold ----------------
 from cavsqueeze.ensemble import lineshape as _lineshape
 from scipy import optimize as _opt
 
@@ -244,6 +276,9 @@ def _threshold(shape, fwhm=_FW, eta=LORENTZ_FRACTION):
 for _sh, _tag in [("voigt", "V"), ("gaussian", "G"), ("lorentzian", "L")]:
     num[f"CHINC_{_tag}"] = round(_threshold(_sh) / _FW, 3)
 num["CHINC_LG_RATIO"] = round(float(TWO_PI * 6.1e3 / _threshold("voigt")), 1)
+# the same interaction expressed against the width of the line rather than
+# against the threshold, which is how the trajectory scan is parameterized
+num["CHIN_OVER_GINH_LG"] = round(float(TWO_PI * 6.1e3 / _FW), 1)
 
 # Weight of the Lorentzian line outside the locking field Omega = chi N0 R of the
 # demonstrated device.  This is the criterion of the two-limit law; the older
@@ -330,6 +365,33 @@ if s is not None:
         sat.append(r[ok[0], 1] / GAMMA_INH_HZ if len(ok) else np.nan)
         num[f"SCAL_{ratio}"] = [[float(a / GAMMA_INH_HZ), round(first_dB(x), 1)] for a, x in zip(r[:, 1], r[:, 3])]
     num["SAT_RATIO"] = int(np.nanmax(sat)) if np.isfinite(np.nanmax(sat)) else None
+    # The scan carries both sequences at 2 Delta/kappa = 10^3 and Fig. 3(b,c)
+    # plots the better of the two at each point.  This is by how much, and where,
+    # free twisting is the better one, which the caption states.
+    _e = rows[(rows[:, 0] == 1000) & (rows[:, 2] == 0)]
+    _win = []
+    for _c in np.unique(_e[:, 1]):
+        _a = _e[(_e[:, 1] == _c) & (_e[:, 8] == 1)]
+        _b = _e[(_e[:, 1] == _c) & (_e[:, 8] == 0)]
+        if len(_a) and len(_b) and _b[0, 3] < _a[0, 3]:
+            _win.append((float(dB(_a[0, 3]) - dB(_b[0, 3])), _c / GAMMA_INH_HZ))
+    if _win:
+        num["SCAL_FREE_WIN"] = round(max(_win)[0], 1)
+        num["SCAL_FREE_WIN_AT"] = round(max(_win)[1], 1)
+        num["SCAL_FREE_WIN_N"] = len(_win)
+    # How close the scan actually gets to the collective-emission limit at the
+    # largest interaction it reaches.  The scan stops at chi N / gamma_inh = 16,
+    # so the limit is approached within 1 dB only at the smallest 2 Delta/kappa;
+    # the text states this rather than implying that 16 is always enough.
+    _r16 = {}
+    for ratio in [100, 1000, 10000]:
+        r = best_over_echo(rows[(rows[:, 0] == ratio) & (rows[:, 2] == 0)])
+        r = r[np.argsort(r[:, 1])]
+        _r16[ratio] = round(float(dB(r[-1, 3]) - dB(1.43 * (1 / ratio) ** (2 / 3))), 1)
+    num["SCAL_MAXRATIO"] = int(round(rows[:, 1].max() / GAMMA_INH_HZ))
+    num["SCAL_GAP16_LO"] = _r16[100]
+    num["SCAL_GAP16_MID"] = _r16[1000]
+    num["SCAL_GAP16_HI"] = _r16[10000]
     # the two-limit law is evaluated on the decomposition scan below, which carries
     # the contrast needed for the locking field; the numbers appear as LAW2_*.
     if "b_rows" in s:
@@ -354,6 +416,15 @@ if s is not None:
         ok = np.where(dB(r[:, 2]) - ref < 0.5)[0]
         num["T2_LIMIT"] = round(float(r[ok[0], 1] * 1e3), 0) if len(ok) else None
         num["T2_TABLE"] = [[float(a * 1e3), round(first_dB(x), 2)] for a, x in zip(r[:, 1], r[:, 2])]
+        # What one millisecond of single-spin dephasing actually costs on this
+        # scan, at each of the two loss ratios, so that the supplement can give
+        # the number instead of calling the effect "irrelevant".
+        for _ratio, _tag in [(66.7, "LG"), (6000, "SC")]:
+            _rr = rc[np.isclose(rc[:, 0], _ratio)]
+            _rr = _rr[np.argsort(_rr[:, 1])]
+            _k = int(np.argmin(np.abs(_rr[:, 1] - 1e-3)))
+            num[f"T2_1MS_COST_{_tag}"] = _ceil_sig(float(dB(_rr[_k, 2]) - dB(_rr[-1, 2])), 1)
+
 
 # ---------------- design map ----------------
 m = load("designmap")
@@ -379,6 +450,16 @@ if m is not None:
     vals, cnt = np.unique(best[:, 2], return_counts=True)
     num["NU_OPT"] = int(vals[np.argmax(cnt)])
     num["NU_HIST"] = {int(v): int(c) for v, c in zip(vals, cnt)}
+    # In some cells the detuning rule is bound by its 5 g sqrt(N) branch for
+    # every nu, so all three give the same detuning and the same answer and the
+    # winner is decided by the tie-break, not by the physics.  Count them, so
+    # that the text can say so instead of reading a trend into them.
+    _cells = {}
+    for _r in m["all"]:
+        _cells.setdefault((_r[0], _r[1]), []).append(_r[4])
+    num["NU_CELLS"] = len(_cells)
+    num["NU_TIED"] = sum(1 for _v in _cells.values()
+                         if np.all(np.abs(np.array(_v) - min(_v)) < 1e-12))
 
 # ---------------- inhomogeneity ----------------
 i = load("inhomog")
@@ -403,7 +484,15 @@ if r is not None:
         num[f"GAIN0_TU_{key}"] = round(first_dB(gtu[0]), 1)
         num[f"GAIN0_PL_{key}"] = round(first_dB(gpl[0]), 1)
     if "GAIN0_TU_SC" in num:
+        # What the twist-untwist sequence costs in the noiseless limit, where its
+        # amplification buys nothing.  It is negative at the superconducting
+        # point, where the sequence is better than a plain readout even there,
+        # and positive for the loop-gap ensemble, where the amplification is too
+        # small to pay for the extra evolution.
         num["TU_LOSS"] = round(num["GAIN0_PL_SC"] - num["GAIN0_TU_SC"], 1)
+        num["TU_GAIN_SC"] = round(num["GAIN0_TU_SC"] - num["GAIN0_PL_SC"], 1)
+        if "GAIN0_TU_LG" in num:
+            num["TU_LOSS_LG"] = round(num["GAIN0_PL_LG"] - num["GAIN0_TU_LG"], 1)
         if isinstance(num.get("EPS_SC"), float) and isinstance(num.get("EPSPL_SC"), float):
             num["TU_FACTOR"] = round(num["EPS_SC"] / num["EPSPL_SC"], 0)
 
@@ -503,6 +592,7 @@ if rb is not None and "a_rows" in rb:
     lg_ideal, sc_ideal = get(0, "ideal"), get(1, "ideal")
     if lg_ideal is not None and sc_ideal is not None:
         num["SC_ECHO"] = round(sc_ideal, 1)
+        _SC_ECHO_RAW = sc_ideal
         num["SC_NOECHO"] = round(get(1, "noecho"), 1)
         for us, tag in [(3e-6, "3US"), (1e-5, "10US")]:
             val = get(0, "duration", us)
@@ -698,6 +788,16 @@ if dm is not None:
             num["SC_30_GAP"] = float("%.1f" % (np.ceil(10 * (num["SC_BEST_ABS"] + dB(dm["twist_voigt"][0]))) / 10))
         num["SC_30_GAUSS"] = round(-dB(dm["twist_gauss"][0]), 1)
         num["SC_30_LOR"] = round(-dB(dm["twist_lorentz"][0]), 1)
+        # The same configuration (ideal echo twist, Voigt line, superconducting
+        # operating point, light grid) is optimized independently here and in
+        # run_robustness.py, over different time brackets.  The difference
+        # between the two is the numerical precision of the optimum; the
+        # supplement quotes it, because the two land either side of a rounding
+        # boundary and so appear in the article as 18.8 and 18.7 dB.
+        try:
+            num["SC_REPEAT_ERR"] = _ceil_sig(abs(-dB(dm["twist_voigt"][0]) - _SC_ECHO_RAW), 1)
+        except NameError:
+            pass
     # requirements table: SC point and loop-gap
     p_lg, N_lg = loop_gap_dispersive(6e14, T=0.08, T2=T2_SPIN)
     rows = []
@@ -748,10 +848,14 @@ if dc is not None and dm is not None:
     num["MS_COND_TABLE"] = " \\\\\n".join(rows_t) + " \\\\"
     # How much the combination loses against twisting alone, and how much it gains
     # over the better of the two, taken over the probe numbers of the table.
+    # Each returns the worst (or best) case together with the probe number at
+    # which it occurs, so that the text can name it rather than quote a bare
+    # extremum over an unstated range.
     def _pen(shape):
         tw = dB(best(f"{shape}_n0_eta0.5", 4))
-        return max(tw - dB(best(f"{shape}_n{nb}_eta0.5", 4)) for nb in [8, 9]
-                   if f"{shape}_n{nb}_eta0.5" in dc)
+        c = [(tw - dB(best(f"{shape}_n{nb}_eta0.5", 4)), nb) for nb in [8, 9]
+             if f"{shape}_n{nb}_eta0.5" in dc]
+        return max(c)
 
     def _gain(shape):
         tw = dB(best(f"{shape}_n0_eta0.5", 4))
@@ -759,10 +863,76 @@ if dc is not None and dm is not None:
         for nb in [8, 9]:
             k = f"{shape}_n{nb}_eta0.5"
             if k in dc:
-                out.append(dB(best(k, 4)) - max(tw, dB(best(k, 3))))
+                out.append((dB(best(k, 4)) - max(tw, dB(best(k, 3))), nb))
         return max(out)
-    num["MS_COND_PEN_G"] = round(float(_pen("gaussian")), 1)
-    num["MS_COND_GAIN_L"] = round(float(_gain("lorentzian")), 1)
+    _p, _pn = _pen("gaussian")
+    _g, _gn = _gain("lorentzian")
+    num["MS_COND_PEN_G"] = round(float(_p), 1)
+    num["MS_COND_PEN_G_NB"] = int(_pn)
+    num["MS_COND_GAIN_L"] = round(float(_g), 1)
+    num["MS_COND_GAIN_L_NB"] = int(_gn)
+
+# ---------------- discretization convergence (Tables S1 and S2) --------------
+# The tables are built from data/convergence.json rather than typed, so that a
+# grid added to run_convergence.py cannot be left out of the supplement, and the
+# bounds quoted in the text are the largest deviations actually measured.
+_cv = None
+_cv_path = os.path.join(DATA, "convergence.json")
+if os.path.exists(_cv_path):
+    _cv = json.load(open(_cv_path))
+if _cv:
+    _cases = ["SC", "LG-echo", "LG-free"]
+    _tail = {}
+    _eq = {}
+    for _lab, _Mc, _Mt, _f, _M, _K, _db, _C in _cv:
+        if _lab.endswith("-equalprob"):
+            _eq.setdefault(int(_Mc), {})[_lab[:-len("-equalprob")]] = (_db, _C)
+        else:
+            _tail.setdefault((int(_Mc), int(_Mt), int(_f)), {})[_lab] = (_db, _C)
+    _ref = (96, 16, 5)
+    _rows = []
+    for _g in sorted(_tail, key=lambda k: (sum(_tail[k][c][0] for c in _cases), k)):
+        _M = None
+        for _lab, _Mc, _Mt, _f, _MM, _K, _db, _C in _cv:
+            if (int(_Mc), int(_Mt), int(_f)) == _g and not _lab.endswith("-equalprob"):
+                _M = int(_MM)
+                break
+        _cells = []
+        for _c in _cases:
+            _d, _ct = _tail[_g][_c]
+            _cells.append("$%.2f$ & %.3f" % (_d, _ct))
+        _rows.append("%d & %d & %d & %d & %s" % (_g[0], _g[1], _g[2], _M, " & ".join(_cells)))
+    # keep the table in the order the grids are listed in run_convergence.py
+    _order = []
+    for _lab, _Mc, _Mt, _f, _M, _K, _db, _C in _cv:
+        _k = (int(_Mc), int(_Mt), int(_f))
+        if not _lab.endswith("-equalprob") and _k not in _order:
+            _order.append(_k)
+    _rows = []
+    for _g in _order:
+        _M = [int(r[4]) for r in _cv if (int(r[1]), int(r[2]), int(r[3])) == _g
+              and not r[0].endswith("-equalprob")][0]
+        _cells = [("$%.2f$ & %.3f" % _tail[_g][_c][:2]) for _c in _cases]
+        _rows.append("%d & %d & %d & %d & %s" % (_g[0], _g[1], _g[2], _M, " & ".join(_cells)))
+    num["CONV_TABLE"] = " \\\\\n".join(_rows) + " \\\\"
+    _rows2 = []
+    for _M in sorted(_eq):
+        _cells = [("$%.2f$ & %.3f" % _eq[_M][_c][:2]) for _c in _cases]
+        _rows2.append("%d & %s" % (_M, " & ".join(_cells)))
+    num["CONV2_TABLE"] = " \\\\\n".join(_rows2) + " \\\\"
+
+    def _dev(grid):
+        return max(abs(_tail[grid][_c][0] - _tail[_ref][_c][0]) for _c in _cases)
+    num["CONV_STD_DEV"] = _ceil_sig(_dev((48, 16, 5)), 1)
+    num["CONV_SCAN_DEV"] = _ceil_sig(_dev((32, 12, 5)), 1)
+    num["CONV_LIGHT_DEV"] = _ceil_sig(_dev((24, 12, 5)), 1)
+    num["CONV_SWEEP_DEV"] = _ceil_sig(max(_dev((32, 12, 5)), _dev((24, 12, 5))), 1)
+    num["CONV_REF_M"] = [int(r[4]) for r in _cv
+                         if (int(r[1]), int(r[2]), int(r[3])) == _ref
+                         and not r[0].endswith("-equalprob")][0]
+    _eqerr = [abs(_eq[m]["SC"][0] - _tail[_ref]["SC"][0]) for m in _eq]
+    num["CONV_EQ_SC_LO"] = round(min(_eqerr), 1)
+    num["CONV_EQ_SC_HI"] = round(max(_eqerr), 1)
 
 de = load("echo")
 if de is not None:
@@ -831,8 +1001,8 @@ if _dt is not None:
     num["DTWA_DEV_LO"] = round(float(_big[0, 7]), 2)
     num["DTWA_Q3N_HI"] = round(float(_big[-1, 4]), 1)
     num["DTWA_DEV_HI"] = round(float(_big[-1, 7]), 1)
-    num["DTWA_SHAPE_LO"] = _sh[int(_big[0, 2])]
-    num["DTWA_SHAPE_HI"] = _sh[int(_big[-1, 2])]
+    num["DTWA_SHAPE_LO"] = _sh[int(_big[0, 2])].capitalize()
+    num["DTWA_SHAPE_HI"] = _sh[int(_big[-1, 2])].capitalize()
     # the Voigt scan in N at fixed ratio
     _v = _r[_r[:, 2] == _sh.index("voigt")]
     _v = _v[np.argsort(_v[:, 0])]
@@ -840,13 +1010,40 @@ if _dt is not None:
     num["DTWA_VOIGT_DEV_LO"] = round(float(_v[0, 7]), 1)
     num["DTWA_VOIGT_N_HI"] = int(_v[-1, 0])
     num["DTWA_VOIGT_DEV_HI"] = round(float(_v[-1, 7]), 2)
+    # the Voigt row that lands on the same Q^3/N as the smallest one: the text
+    # uses it to say that Q^3/N alone does not order the rows
+    _tie = int(np.argmin(np.abs(_v[1:, 4] - _v[0, 4]))) + 1
+    num["DTWA_TIE_N"] = int(_v[_tie, 0])
+    num["DTWA_TIE_DEV"] = round(float(_v[_tie, 7]), 2)
+    # how much the last doubling-of-doublings in N is worth, in dB
+    num["DTWA_TAIL_GAIN"] = round(float(_v[-3, 7] - _v[-1, 7]), 1)
+    num["DTWA_TAIL_FACTOR"] = int(round(_v[-1, 0] / _v[-3, 0]))
+    # the spread of the Voigt rows after the first, which is what has to be
+    # compared with the seed-to-seed standard deviation before it is called a trend
+    num["DTWA_TAIL_SPAN"] = round(float(_v[1:, 7].max() - _v[1:, 7].min()), 2)
+    # how far below the smallest value reached here the article's regime sits
+    num["DTWA_Q3N_GAP"] = int(round(float(_big[0, 4]) / 1e-3, -2))
     _rows = []
     for _q in _r:
         _rows.append("%s & %d & %.1f & %.2f & $%.2f$ & $%.2f$ & %.2f"
                      % (_sh[int(_q[2])].capitalize(), int(_q[0]), _q[3], _q[4],
                         _q[5], _q[6], _q[7]))
     num["DTWA_TABLE"] = " \\\\\n".join(_rows) + " \\\\"
-    num["DTWA_KU_ERR"] = 0.05        # bound enforced by tests/test_dtwa.py
+
+# ---------------- the sampling error of that trajectory check ----------------
+# Measured by repeating two rows of the table with independent seeds
+# (scripts/run_dtwa_seeds.py), rather than asserted.  DTWA_KU_ERR is the
+# deviation from the exact one-axis-twisting optimum that is actually observed;
+# tests/test_dtwa.py separately enforces a 0.05 dB bound on it.
+_ds = load("dtwa_seeds")
+if _ds is not None:
+    _sr = _ds["rows"]                # N, mean dB, standard deviation, spread
+    num["DTWA_KU_ERR"] = _ceil_sig(float(_ds["ku_dev"]), 2)
+    num["DTWA_NSEED"] = int(len(_ds["seeds"]))
+    num["DTWA_SEED_SD"] = _ceil_sig(float(np.max(_sr[:, 2])), 2)
+    num["DTWA_SEED_SD_N"] = int(_sr[int(np.argmax(_sr[:, 2])), 0])
+    num["DTWA_SEED_SD_MIN"] = _ceil_sig(float(np.min(_sr[:, 2])), 2)
+    num["DTWA_SEED_SD_MIN_N"] = int(_sr[int(np.argmin(_sr[:, 2])), 0])
 
 _b = np.load(os.path.join(DATA, "benchmark.npz"))
 _mf = np.interp(_b["cum_t"], _b["t"], _b["mf_voigt_7000"])

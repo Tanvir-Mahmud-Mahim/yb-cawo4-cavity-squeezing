@@ -2,7 +2,7 @@
 gamma_inh/2pi = 5 kHz, T = 20 mK, T2 = 150 ms).
 For each (kappa, g sqrt N) the cavity detuning is chosen from the candidate set
 Delta = (g sqrt N)^2 / (nu gamma_inh), nu in {4, 8, 16}, subject to the dispersive
-condition Delta >= 5 g sqrt N, and the interaction time is optimised.  The best
+condition Delta >= 5 g sqrt N, and the interaction time is optimized.  The best
 (Delta, t) pair and the resulting xi^2 are stored.
 """
 from common import *  # noqa

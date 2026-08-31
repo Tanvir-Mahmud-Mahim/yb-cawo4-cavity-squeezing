@@ -43,7 +43,7 @@ def best_of(p, ens, echo, t_lo=1e-5, t_hi=2e-3, **kw):
 
 
 def opt_generic(p, ens, seq_fn, t_lo, t_hi, n_coarse=10, max_fine=24, weights=None):
-    """Same two-stage time optimisation as optimal_squeezing for an arbitrary sequence."""
+    """Same two-stage time optimization as optimal_squeezing for an arbitrary sequence."""
     rt = Rates.from_params(p, ens)
 
     def f(t):

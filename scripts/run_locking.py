@@ -1,4 +1,4 @@
-"""The gap-protected coherence as a synchronisation order parameter.
+"""The gap-protected coherence as a synchronization order parameter.
 
 Mean-field reduction (Sec. S6).  With the resonator eliminated, each spin
 precesses in the field of the collective spin.  Writing the Bloch vector of a

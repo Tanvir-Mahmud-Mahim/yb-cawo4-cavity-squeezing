@@ -22,7 +22,7 @@ def build(D):
     ww = np.tile(w, base.M)
     n = np.repeat(base.n, len(w)) * np.tile(pw, base.M) * N
     # spectators (0.3% of the spins here) carry unit weight; their contribution to the
-    # weighted normalisation is negligible at this level
+    # weighted normalization is negligible at this level
     return Ensemble(delta=d, weight=ww, n=n, spec_delta=base.spec_delta, spec_n=base.spec_n * N)
 
 

@@ -281,7 +281,7 @@ def fig_designmap():
         Dl[i, j] = row[3]
     fig, axs = plt.subplots(1, 4, figsize=(7.1, 1.56))
 
-    # (a) synchronisation: the order parameter against the interaction
+    # (a) synchronization: the order parameter against the interaction
     lk = load("locking")
     ax = axs[0]
     if lk is not None:
