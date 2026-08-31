@@ -10,6 +10,83 @@ def first_dB(x):
     return float(dB(x))
 
 
+# ---------------- single source of truth for the article title ----------------
+# The supplement carries [[TITLE]] rather than a copy, so the two can never drift,
+# and the same string is checked against README.md and CITATION.cff below.
+_main_tex = open(os.path.join(ROOT, "paper", "main.tex"), encoding="utf-8").read()
+_m = re.search(r"\\title\{(.+?)\}\s*\n", _main_tex, re.S)
+if _m is None:
+    raise SystemExit("could not read \\title{...} from paper/main.tex")
+TITLE = " ".join(_m.group(1).split())
+num["TITLE"] = TITLE
+
+# Equation and figure numbers of the main text, so that the supplement never
+# hard-codes one.  The authority is main_filled.aux, which LaTeX writes; the order
+# of the \label commands in main.tex is the fallback for the very first build,
+# before any .aux exists.  The build runs this script, compiles, and runs it
+# again, so the published numbers always come from the .aux.
+_aux_path = os.path.join(ROOT, "paper", "main_filled.aux")
+_aux = {}
+if os.path.exists(_aux_path):
+    _auxtxt = open(_aux_path, encoding="utf-8").read()
+    for _lab, _n in re.findall(r"\\newlabel\{([^}]+)\}\{\{(\d+)\}", _auxtxt):
+        _aux[_lab] = int(_n)
+
+
+def _number(labels, label):
+    """Number of a labelled object: from the .aux if built, else by label order."""
+    if label in _aux:
+        return _aux[label]
+    return labels.index(label) + 1 if label in labels else None
+
+
+_eqlabels = re.findall(r"\\label\{(eq:[^}]+)\}", _main_tex)
+for _lab, _tok in [("eq:TC", "EQ_TC"), ("eq:rates", "EQ_RATES"), ("eq:lawhomo", "EQ_LAWHOMO"),
+                   ("eq:pendulum", "EQ_PENDULUM"), ("eq:zdot", "EQ_ZDOT"),
+                   ("eq:locking", "EQ_LOCKING"), ("eq:twolimits", "EQ_TWOLIMITS"),
+                   ("eq:rule", "EQ_RULE"), ("eq:gm_main", "EQ_GM")]:
+    _v = _number(_eqlabels, _lab)
+    if _v is not None:
+        num[_tok] = _v
+
+# Section numbers of the main text, for the same reason.  These only exist once
+# the document has been compiled once, so they come from the .aux alone.
+_auxsec = {}
+if os.path.exists(_aux_path):
+    for _lab, _n in re.findall(r"\\newlabel\{(sec:[^}]+)\}\{\{([^}]*)\}", _auxtxt):
+        _auxsec[_lab] = _n
+for _lab, _tok in [("sec:model", "SEC_MODEL"), ("sec:benchmark", "SEC_BENCHMARK"),
+                   ("sec:sync", "SEC_SYNC"), ("sec:design", "SEC_DESIGN"),
+                   ("sec:loopgap", "SEC_LOOPGAP"), ("sec:readout", "SEC_READOUT"),
+                   ("sec:beyond", "SEC_BEYOND"), ("sec:measure", "SEC_MEASURE"),
+                   ("sec:echo", "SEC_ECHO")]:
+    if _lab in _auxsec:
+        num[_tok] = _auxsec[_lab]
+
+# Supplement figure and table numbers, so that the main text never hard-codes one.
+# They come from supplement_filled.aux, which the build produces before the second
+# pass over the main text.
+_saux_path = os.path.join(ROOT, "paper", "supplement_filled.aux")
+if os.path.exists(_saux_path):
+    _sauxtxt = open(_saux_path, encoding="utf-8").read()
+    _snum = dict(re.findall(r"\\newlabel\{((?:fig|tab):[^}]+)\}\{\{(S\d+)\}", _sauxtxt))
+    for _lab, _tok in [("fig:validation", "SFIG_VALIDATION"), ("fig:scaling", "SFIG_SCALING"),
+                       ("fig:designmap_extra", "SFIG_DESIGNMAP_EXTRA"),
+                       ("fig:loopgap", "SFIG_LOOPGAP"),
+                       ("fig:inhomog_readout", "SFIG_INHOMOG"), ("fig:beyond", "SFIG_BEYOND"),
+                       ("fig:measure", "SFIG_MEASURE"), ("tab:t2", "STAB_T2"),
+                       ("tab:cond", "STAB_COND"), ("tab:echo", "STAB_ECHO"),
+                       ("tab:fom", "STAB_FOM")]:
+        if _lab in _snum:
+            num[_tok] = _snum[_lab]
+
+_figlabels = re.findall(r"\\label\{(fig:[^}]+)\}", _main_tex)
+for _lab, _tok in [("fig:device", "FIG_DEVICE"), ("fig:benchmark", "FIG_BENCHMARK"),
+                   ("fig:designmap", "FIG_DESIGNMAP"), ("fig:echo", "FIG_ECHO")]:
+    _v = _number(_figlabels, _lab)
+    if _v is not None:
+        num[_tok] = _v
+
 # ---------------- benchmark ----------------
 b = load("benchmark")
 if b is not None:
@@ -145,6 +222,14 @@ for _sh, _tag in [("voigt", "V"), ("gaussian", "G"), ("lorentzian", "L")]:
     num[f"CHINC_{_tag}"] = round(_threshold(_sh) / _FW, 3)
 num["CHINC_LG_RATIO"] = round(float(TWO_PI * 6.1e3 / _threshold("voigt")), 1)
 
+# Weight of the Lorentzian line outside the locking field Omega = chi N0 R of the
+# demonstrated device.  This is the criterion of the two-limit law; the older
+# comparison with chi N0 alone underestimates the unlocked weight.
+_chiN0_rad = TWO_PI * 6134.98                       # chi N0 at N0 = 6e14
+_R_lg_lor = _R_law(_chiN0_rad, "lorentzian")
+num["LOR_TAIL_OMEGA"] = round(100 * _tail(_chiN0_rad * _R_lg_lor, "lorentzian"), 0)
+num["LOR_R_LG"] = round(float(_R_lg_lor), 2)
+
 _lk = load("locking")
 if _lk is not None:
     _rows, _shp = _lk["rows"], _lk["shape"]
@@ -153,9 +238,11 @@ if _lk is not None:
     num["SYNC_MEAN_DEV"] = float(f"{np.mean(_dev):.4f}")
     num["SYNC_MAX_DEV"] = float(f"{np.max(_dev):.4f}")
     num["SYNC_NPTS"] = int(len(_dev))
-    _orb = _lk["orbit"]                       # dratio, <z>, zmax/2, proj, 1-dr<z>, running
-    num["ORBIT_MAX_ERR"] = round(float(100 * np.max(np.abs(_orb[:, 1] / _orb[:, 2] - 1))), 1)
-    num["ORBIT_ID_ERR"] = float(f"{np.max(np.abs(_orb[:, 3] - _orb[:, 4])):.1e}")
+    # orbit: dratio, <z>, z_max/2, <rho cos psi>, 1/(1+a^2), period, 2pi/sqrt(1+a^2), running
+    _orb = _lk["orbit"]
+    num["ORBIT_Z_ERR"] = float(f"{np.max(np.abs(_orb[:, 1] / _orb[:, 2] - 1)):.0e}")
+    num["ORBIT_PROJ_ERR"] = float(f"{np.max(np.abs(_orb[:, 3] - _orb[:, 4])):.0e}")
+    num["ORBIT_PERIOD_ERR"] = float(f"{np.max(np.abs(_orb[:, 5] / _orb[:, 6] - 1)):.0e}")
     # table: contrast from the law against the mean-field plateau, shapes side by side
     _xs = np.unique(np.round(_rows[:, _k["chiN_hz"]] / GAMMA_INH_HZ, 3))
     _lines = []
@@ -595,6 +682,23 @@ if dc is not None and dm is not None:
             if k in dc:
                 rows_t.append(f"Voigt & $10^{{{nb}}}$ & {eta} & {dB(best('voigt_n0_eta0.5', 4)):.1f} & {dB(best(k, 3)):.1f} & {dB(best(k, 4)):.1f}")
     num["MS_COND_TABLE"] = " \\\\\n".join(rows_t) + " \\\\"
+    # How much the combination loses against twisting alone, and how much it gains
+    # over the better of the two, taken over the probe numbers of the table.
+    def _pen(shape):
+        tw = dB(best(f"{shape}_n0_eta0.5", 4))
+        return max(tw - dB(best(f"{shape}_n{nb}_eta0.5", 4)) for nb in [8, 9]
+                   if f"{shape}_n{nb}_eta0.5" in dc)
+
+    def _gain(shape):
+        tw = dB(best(f"{shape}_n0_eta0.5", 4))
+        out = []
+        for nb in [8, 9]:
+            k = f"{shape}_n{nb}_eta0.5"
+            if k in dc:
+                out.append(dB(best(k, 4)) - max(tw, dB(best(k, 3))))
+        return max(out)
+    num["MS_COND_PEN_G"] = round(float(_pen("gaussian")), 1)
+    num["MS_COND_GAIN_L"] = round(float(_gain("lorentzian")), 1)
 
 de = load("echo")
 if de is not None:
@@ -627,6 +731,8 @@ if de is not None:
         ext = [i for i in range(1, len(r) - 1) if tf[i] < 3.5e-4 and ((r[i] < r[i-1] and r[i] <= r[i+1]) or (r[i] > r[i-1] and r[i] >= r[i+1]))]
         num[f"ECHO_{tag}_SEQ"] = ", ".join(f"{r[i]:.2f} at {tf[i]*1e3:.3f} ms" for i in ext)
     num["ECHO_PERIOD_US"] = int(round(1e6 / (p0.chi * 6e14 / TWO_PI)))
+    # echo contrast at the half free-evolution time of the published twisting run
+    num["ECHO_TAU50"] = round(at("fine_N0_6e+14", 0, 50e-6), 2)
     mf1 = np.interp(de["cum_N0s"], de["N0s"], ev[:, k1])
     num["ECHO_CUM_ERR"] = float(np.ceil(100 * np.max(np.abs(de["cum_echo_1ms"] - mf1))) / 100)
     dif = max(np.max(np.abs(de["noem_01"][:, 0] - ev[:, k01])), np.max(np.abs(de["noem_03"][:, 0] - ev[:, k03])))

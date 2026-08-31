@@ -44,19 +44,30 @@ RATIO = 1.0e5           # 2 Delta/kappa; collective emission negligible over the
 FW = TWO_PI * GAMMA_INH_HZ
 
 
-# --- (a) the orbit average that closes the self-consistency -----------------
-def orbit_average(dratio, T=400.0, n=200001):
-    """Time averages of z and of rho cos(psi) on the orbit through (0,0), Omega=1."""
+# --- (a) the orbit averages, over a whole number of periods -----------------
+def orbit_average(dratio, nper=60, npts=120001):
+    """Averages of z and of rho cos(psi) on the orbit through (0,0), Omega = 1.
+
+    Averaged over `nper` full periods 2 pi / sqrt(1 + a^2), so the result should
+    reproduce the analytic z_max/2 and 1/(1 + a^2) to integration accuracy."""
+    T = 2.0 * np.pi / np.sqrt(1.0 + dratio**2)
+
     def rhs(t, y):
         psi, z = y
         rho = np.sqrt(max(1e-16, 1.0 - z * z))
         return [dratio - z * np.cos(psi) / rho, rho * np.sin(psi)]
-    s = solve_ivp(rhs, (0, T), [0.0, 0.0], t_eval=np.linspace(0, T, n),
-                  rtol=1e-11, atol=1e-13, method="DOP853")
-    psi, z = s.y
+
+    t = np.linspace(0.0, nper * T, npts)
+    sol = solve_ivp(rhs, (0, nper * T), [0.0, 0.0], t_eval=t,
+                    rtol=1e-12, atol=1e-14, method="DOP853")
+    psi, z = sol.y
     rho = np.sqrt(np.clip(1.0 - z * z, 0.0, None))
+    zbar = float(np.trapezoid(z, t) / (nper * T))
+    proj = float(np.trapezoid(rho * np.cos(psi), t) / (nper * T))
+    peaks = np.where((z[1:-1] > z[:-2]) & (z[1:-1] >= z[2:]))[0] + 1
+    period = float(np.mean(np.diff(t[peaks]))) if len(peaks) > 2 else float("nan")
     running = bool(np.abs(psi).max() > np.pi)
-    return float(z.mean()), float((rho * np.cos(psi)).mean()), running
+    return zbar, proj, running, period, T
 
 
 # --- (b) the self-consistency ----------------------------------------------
@@ -114,15 +125,18 @@ def job(args):
 
 
 if __name__ == "__main__":
-    print("(a) orbit average: <z> against z_max/2, and the energy identity")
+    print("(a) orbit averages against the analytic values, over 60 full periods")
     orb = []
-    for dr in [0.2, 0.5, 0.8, 0.95, 1.05, 1.5, 3.0]:
-        zbar, proj, run = orbit_average(dr)
-        zmax_half = dr / (1.0 + dr * dr)
-        orb.append([dr, zbar, zmax_half, proj, 1.0 - dr * zbar, 1.0 if run else 0.0])
-        print(f"  delta/Omega={dr:5.2f}  <z>={zbar:.5f}  z_max/2={zmax_half:.5f}  "
-              f"ratio={zbar/zmax_half:.4f}  <rho cos psi>={proj:.5f}  "
-              f"1-(delta/Omega)<z>={1.0-dr*zbar:.5f}  {'running' if run else 'locked'}", flush=True)
+    for dr in [0.2, 0.5, 0.8, 0.95, 1.05, 1.5, 3.0, 8.0]:
+        zbar, proj, run, per, per_pred = orbit_average(dr)
+        zmax_half = dr / (1.0 + dr * dr)          # z_max/2, analytic
+        proj_pred = 1.0 / (1.0 + dr * dr)         # Omega^2/(Omega^2 + delta^2), analytic
+        orb.append([dr, zbar, zmax_half, proj, proj_pred, per, per_pred, 1.0 if run else 0.0])
+        print(f"  delta/Omega={dr:5.2f}  <z>={zbar:.10f} (z_max/2={zmax_half:.10f}, "
+              f"rel err {abs(zbar/zmax_half-1):.1e})  <rho cos psi>={proj:.10f} "
+              f"(1/(1+a^2)={proj_pred:.10f}, err {abs(proj-proj_pred):.1e})  "
+              f"period={per:.6f} (2pi/sqrt(1+a^2)={per_pred:.6f})  "
+              f"{'running' if run else 'locked'}", flush=True)
 
     print("\n(b) locking threshold of each line shape (units of the FWHM)")
     thr = {}
