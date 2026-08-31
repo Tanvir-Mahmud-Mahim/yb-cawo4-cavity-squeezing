@@ -46,6 +46,41 @@ def legend_below(ax, ncol=2, dy=-0.40, **kw):
     return ax.legend(loc="upper center", bbox_to_anchor=(0.5, dy), ncol=ncol, borderaxespad=0.0, **kw)
 
 
+def unlocked_fraction(x_over_gamma, shape, eta=0.3):
+    """Mass of the line outside the locking field Omega = chi N R, as a function of
+    chi N in units of the FWHM.  R solves the self-consistency of Eq. (5)."""
+    from cavsqueeze.ensemble import lineshape
+    from scipy import optimize
+    fw = TWO_PI * GAMMA_INH_HZ
+    ls = lineshape(shape, fw, eta)
+    pos = np.geomspace(1e-4 * fw, 300 * fw, 100000)
+    dd = np.concatenate([-pos[::-1], [0.0], pos])
+    pdf = np.asarray(ls.pdf(dd), float)
+
+    def R_of(chiN):
+        def rhs(R):
+            if R <= 0:
+                return 0.0
+            W = chiN * R
+            return float(np.trapezoid(pdf * W * W / (W * W + dd * dd), dd))
+        f = lambda R: rhs(R) - R
+        if f(1.0) > 0:
+            return 1.0
+        lo = None
+        for R in np.linspace(1.0, 1e-5, 400):
+            if f(R) > 0:
+                lo = R
+                break
+        return 0.0 if lo is None else float(optimize.brentq(f, lo, 1.0, xtol=1e-10))
+
+    out = []
+    for xv in np.atleast_1d(x_over_gamma):
+        chiN = TWO_PI * xv * GAMMA_INH_HZ
+        R = R_of(chiN)
+        out.append(2.0 * (1.0 - ls.cdf(chiN * R)) if R > 0 else 1.0)
+    return np.array(out)
+
+
 def savefig(fig, name):
     for ext in ("pdf", "png"):
         fig.savefig(os.path.join(FIG, f"{name}.{ext}"), bbox_inches="tight")
@@ -244,11 +279,33 @@ def fig_designmap():
         Z[i, j] = dB(row[4])
         Tt[i, j] = row[5]
         Dl[i, j] = row[3]
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 1.56))
+    fig, axs = plt.subplots(1, 4, figsize=(7.1, 1.56))
 
-    # (a) the two limits against the interaction-to-linewidth ratio
-    sc = load("scaling")
+    # (a) synchronisation: the order parameter against the interaction
+    lk = load("locking")
     ax = axs[0]
+    if lk is not None:
+        rows, shp = lk["rows"], lk["shape"]
+        kk = {k: i for i, k in enumerate(list(lk["keys"]))}
+        thr = lk["threshold"]        # voigt, gaussian, lorentzian, in units of the FWHM
+        for k, (code, lab, tc) in enumerate([(1, "Gaussian", thr[1]), (0, "Voigt", thr[0]),
+                                             (2, "Lorentzian", thr[2])]):
+            m = shp == code
+            x = rows[m, kk["chiN_hz"]] / GAMMA_INH_HZ
+            o = np.argsort(x)
+            ax.semilogx(x[o], rows[m, kk["plateau"]][o], "o", ms=2.8, mfc="none", color=C[k], label=lab)
+            ax.semilogx(x[o], rows[m, kk["R_law"]][o], "-", color=C[k], lw=1.0)
+            ax.axvline(tc, color=C[k], ls=":", lw=0.7)
+        ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
+        ax.set_ylabel(r"order parameter $R$")
+        ax.set_ylim(0, 1.05)
+        ax.set_title("mean field (circles), locking law (lines)", fontsize=6.5)
+        legend_below(ax, ncol=3, dy=-0.545, fontsize=6)
+        panel_label(ax, "(a)", x=0.035, y=0.965)
+
+    # (b) the two limits against the interaction-to-linewidth ratio
+    sc = load("scaling")
+    ax = axs[1]
     if sc is not None:
         rows = sc["a_rows"]
         for k, ratio in enumerate([100, 1000, 10000]):
@@ -260,14 +317,15 @@ def fig_designmap():
                         label=r"$2\Delta/\kappa=10^{%d}$" % round(np.log10(ratio)))
             ax.axhline(dB(1.43 * (1 / ratio) ** (2 / 3)), color=C[k], ls=":", lw=0.7)
         xx = np.geomspace(0.5, 20, 60)
-        ax.semilogx(xx, dB(0.30 / (np.pi * xx)), "--", color="0.35", lw=0.9, label="wing floor")
+        ax.semilogx(xx, dB(unlocked_fraction(xx, "voigt")), "--", color="0.35", lw=0.9,
+                    label="unlocked fraction")
         ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
         legend_below(ax, ncol=2, dy=-0.545, fontsize=6)
-        panel_label(ax, "(a)", x=0.035, y=0.28)
+        panel_label(ax, "(b)", x=0.035, y=0.28)
 
-    # (b) the same at one loss ratio for the three line shapes, each with its own floor
-    ax = axs[1]
+    # (c) the same at one loss ratio for the three line shapes, each with its own floor
+    ax = axs[2]
     if sc is not None:
         rows = sc["a_rows"]
         for k, (shape, lab, eta) in enumerate([(1, "Gaussian", 0.0), (0, "Voigt", 0.30), (2, "Lorentzian", 1.0)]):
@@ -276,17 +334,19 @@ def fig_designmap():
             o = np.argsort(r[:, 1])
             x = r[o, 1] / GAMMA_INH_HZ
             ax.semilogx(x, dB(r[o, 3]), "o-", ms=2.5, color=C[k], lw=1.0, label=lab)
-            if eta > 0:
-                xx = np.geomspace(1.0, 20, 40)
-                ax.semilogx(xx, dB(eta / (np.pi * xx)), ":", color=C[k], lw=0.9)
+            xx = np.geomspace(1.0, 20, 40)
+            fl = unlocked_fraction(xx, {0: "voigt", 1: "gaussian", 2: "lorentzian"}[shape])
+            if np.nanmax(fl) > 1e-6:
+                ax.semilogx(xx, dB(fl), ":", color=C[k], lw=0.9)
         ax.axhline(dB(1.43 * (1 / 1000) ** (2 / 3)), color="0.35", ls="--", lw=0.9)
         ax.set_xlabel(r"$\chi N/\gamma_{\rm inh}$")
         ax.set_ylabel(r"$\xi^2_{\rm opt}$ (dB)")
+        ax.set_ylim(-30, 2)
         legend_below(ax, ncol=3, dy=-0.545, fontsize=6)
-        panel_label(ax, "(b)", x=0.035, y=0.28)
+        panel_label(ax, "(c)", x=0.035, y=0.28)
 
-    # (c) the design map that follows from the two limits
-    ax = axs[2]
+    # (d) the design map that follows from the two limits
+    ax = axs[3]
     im = ax.imshow(Z, origin="lower", aspect="auto", cmap="viridis_r")
     ax.set_xticks(range(len(gNs)))
     ax.set_xticklabels([f"{g/1e6:g}" for g in gNs])
@@ -304,8 +364,8 @@ def fig_designmap():
                 rgba = cm((Z[i, j] - vmin_) / (vmax_ - vmin_ + 1e-12))
                 lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
                 ax.text(j, i, f"{Z[i,j]:.1f}", ha="center", va="center", fontsize=4.2, color="k" if lum > 0.5 else "w")
-    ax.text(0.0, 1.06, "(c)", transform=ax.transAxes, fontweight="bold", fontsize=8.5, va="bottom", ha="left")
-    layout(fig, wspace=0.70, right=0.945)
+    ax.text(0.0, 1.06, "(d)", transform=ax.transAxes, fontweight="bold", fontsize=8.5, va="bottom", ha="left")
+    layout(fig, wspace=0.78, right=0.945)
     savefig(fig, "fig_designmap")
 
 

@@ -94,6 +94,112 @@ if _v is not None:
     num["PERT_GAIN"] = round(float(10 * np.log10(_pert / _A)), 1)
     num["LAW1_FIT_ERR"] = round(float(100 * np.max(np.abs(_v["c_xi_opt"] / (_A * (1 / _v["c_ratio"]) ** (2 / 3)) - 1))), 0)
 
+# ---------------- synchronisation: the locking law and its threshold ----------------
+from cavsqueeze.ensemble import lineshape as _lineshape
+from scipy import optimize as _opt
+
+_SHNAME = {0: "voigt", 1: "gaussian", 2: "lorentzian"}
+_FW = TWO_PI * GAMMA_INH_HZ
+
+
+def _dgrid(fwhm, n=200001):
+    pos = np.geomspace(1e-4 * fwhm, 300 * fwhm, n // 2)
+    return np.concatenate([-pos[::-1], [0.0], pos])
+
+
+def _R_law(chiN, shape, fwhm=_FW, eta=LORENTZ_FRACTION):
+    """Largest root of R = int p(d) Omega^2/(Omega^2+d^2) dd, Omega = chi N R."""
+    ls = _lineshape(shape, fwhm, eta)
+    dd = _dgrid(fwhm)
+    pd = np.asarray(ls.pdf(dd), float)
+
+    def rhs(R):
+        if R <= 0:
+            return 0.0
+        W = chiN * R
+        return float(np.trapezoid(pd * W * W / (W * W + dd * dd), dd))
+
+    f = lambda R: rhs(R) - R
+    if f(1.0) > 0:
+        return 1.0
+    lo = None
+    for R in np.linspace(1.0, 1e-5, 800):
+        if f(R) > 0:
+            lo = R
+            break
+    return 0.0 if lo is None else float(_opt.brentq(f, lo, 1.0, xtol=1e-12))
+
+
+def _tail(x_rad, shape, fwhm=_FW, eta=LORENTZ_FRACTION):
+    """Mass of the line outside |delta| > x."""
+    return float(2.0 * (1.0 - _lineshape(shape, fwhm, eta).cdf(x_rad)))
+
+
+def _threshold(shape, fwhm=_FW, eta=LORENTZ_FRACTION):
+    """chi N_c = 1/(pi p(0)); half the Kuramoto value 2/(pi p(0))."""
+    p0 = float(np.atleast_1d(_lineshape(shape, fwhm, eta).pdf(0.0))[0])
+    return 1.0 / (np.pi * p0)
+
+
+for _sh, _tag in [("voigt", "V"), ("gaussian", "G"), ("lorentzian", "L")]:
+    num[f"CHINC_{_tag}"] = round(_threshold(_sh) / _FW, 3)
+num["CHINC_LG_RATIO"] = round(float(TWO_PI * 6.1e3 / _threshold("voigt")), 1)
+
+_lk = load("locking")
+if _lk is not None:
+    _rows, _shp = _lk["rows"], _lk["shape"]
+    _k = {k: i for i, k in enumerate(list(_lk["keys"]))}
+    _dev = np.abs(_rows[:, _k["R_law"]] - _rows[:, _k["plateau"]])
+    num["SYNC_MEAN_DEV"] = float(f"{np.mean(_dev):.4f}")
+    num["SYNC_MAX_DEV"] = float(f"{np.max(_dev):.4f}")
+    num["SYNC_NPTS"] = int(len(_dev))
+    _orb = _lk["orbit"]                       # dratio, <z>, zmax/2, proj, 1-dr<z>, running
+    num["ORBIT_MAX_ERR"] = round(float(100 * np.max(np.abs(_orb[:, 1] / _orb[:, 2] - 1))), 1)
+    num["ORBIT_ID_ERR"] = float(f"{np.max(np.abs(_orb[:, 3] - _orb[:, 4])):.1e}")
+    # table: contrast from the law against the mean-field plateau, shapes side by side
+    _xs = np.unique(np.round(_rows[:, _k["chiN_hz"]] / GAMMA_INH_HZ, 3))
+    _lines = []
+    for _x in _xs:
+        _cells = []
+        for _code in (2, 0, 1):                    # Lorentzian, Voigt, Gaussian
+            _m = (_shp == _code) & (np.abs(_rows[:, _k["chiN_hz"]] / GAMMA_INH_HZ - _x) < 1e-6)
+            if not _m.any():
+                _cells += ["--", "--"]
+                continue
+            _j = int(np.flatnonzero(_m)[0])
+            _cells += ["%.3f" % _rows[_j, _k["plateau"]], "%.3f" % _rows[_j, _k["R_law"]]]
+        _lines.append("%.1f & " % _x + " & ".join(_cells) + r" \\")
+    num["SYNC_TABLE"] = "\n".join(_lines)
+
+# ---------------- the two limits, tested on the decomposition scan ----------------
+_dc = load("decompose")
+if _dc is not None:
+    _rows, _shp = _dc["rows"], _dc["shape"]
+    _k = {k: i for i, k in enumerate(list(_dc["keys"]))}
+    _cand = {a: [] for a in "ACE"}
+    _gauss, _cost, _cost_g = [], [], []
+    for _r, _s in zip(_rows, _shp):
+        _sh = _SHNAME[int(_s)]
+        _ratio, _chiN = _r[_k["ratio"]], TWO_PI * _r[_k["chiN_hz"]]
+        _xi2, _core = _r[_k["xi2"]], _r[_k["xi2_core"]]
+        _R = _R_law(_chiN, _sh)
+        _res = 1.43 * (1.0 / _ratio) ** (2.0 / 3.0)
+        _cand["A"].append(dB(max(_res, _tail(_chiN, _sh))) - dB(_xi2))
+        _cand["C"].append(dB(max(_res, _tail(_chiN * max(_R, 1e-12), _sh))) - dB(_xi2))
+        _cand["E"].append(dB(max(_res, 1.0 - _R)) - dB(_xi2))
+        if int(_s) == 1:
+            _gauss.append(abs(float(_cand["C"][-1])))
+            _cost_g.append(float(dB(_xi2) - dB(_core)))
+        _cost.append(float(dB(_xi2) - dB(_core)))
+    num["LAW2_MEAN_DEV"] = round(float(np.mean(np.abs(_cand["C"]))), 2)
+    num["LAW2_MAX_DEV"] = round(float(np.max(np.abs(_cand["C"]))), 2)
+    num["LAW2_NPTS"] = int(len(_cand["C"]))
+    num["LAW2_GAUSS_DEV"] = round(float(np.max(_gauss)), 2)
+    num["LAW2_NAIVE_DEV"] = round(float(np.mean(np.abs(_cand["A"]))), 2)
+    num["LAW2_ALT_DEV"] = round(float(np.mean(np.abs(_cand["E"]))), 2)
+    num["WINGS_COST_MAX"] = round(float(np.max(_cost)), 1)
+    num["WINGS_COST_GAUSS"] = round(float(np.max(np.abs(_cost_g))), 2)
+
 # ---------------- scaling ----------------
 s = load("scaling")
 if s is not None:
@@ -114,27 +220,8 @@ if s is not None:
         sat.append(r[ok[0], 1] / GAMMA_INH_HZ if len(ok) else np.nan)
         num[f"SCAL_{ratio}"] = [[float(a / GAMMA_INH_HZ), round(first_dB(x), 1)] for a, x in zip(r[:, 1], r[:, 3])]
     num["SAT_RATIO"] = int(np.nanmax(sat)) if np.isfinite(np.nanmax(sat)) else None
-    # the two-limit law: xi^2 = max[ resonator limit , unlocked wing fraction ]
-    ETA_SHAPE = {0: 0.30, 1: 0.0, 2: 1.0}          # Voigt (30% Lorentzian), Gaussian, Lorentzian
-    devs, gauss_devs = [], []
-    for row in rows:
-        if row[8] != 1:                             # echo twist only
-            continue
-        ratio, chiN, shape, xi2 = row[0], row[1], int(row[2]), row[3]
-        if chiN < 4 * GAMMA_INH_HZ:                 # away from the locking threshold
-            continue
-        res = 1.43 * (1 / ratio) ** (2 / 3)
-        floor = ETA_SHAPE[shape] * GAMMA_INH_HZ / (np.pi * chiN)
-        d_dB = dB(xi2) - dB(max(res, floor))
-        devs.append(abs(float(d_dB)))
-        if shape == 1:
-            gauss_devs.append(abs(float(d_dB)))
-    if devs:
-        num["LAW2_MEAN_DEV"] = round(float(np.mean(devs)), 2)
-        num["LAW2_MAX_DEV"] = round(float(np.max(devs)), 1)
-        num["LAW2_NPTS"] = len(devs)
-    if gauss_devs:
-        num["LAW2_GAUSS_DEV"] = round(float(np.max(gauss_devs)), 2)
+    # the two-limit law is evaluated on the decomposition scan below, which carries
+    # the contrast needed for the locking field; the numbers appear as LAW2_*.
     if "b_rows" in s:
         rb = s["b_rows"]
         for ratio, tag in [(66.7, "LG"), (6000, "SC")]:
