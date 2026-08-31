@@ -10,6 +10,19 @@ def first_dB(x):
     return float(dB(x))
 
 
+def _ceil_sig(x, sig=2):
+    """Smallest number with `sig` significant figures that is >= x.
+
+    A bound printed with ordinary rounding can be smaller than the quantity it
+    bounds, which turns "to X or better" into a false statement; this rounds the
+    other way."""
+    x = float(abs(x))
+    if x == 0.0:
+        return 0.0
+    e = int(np.floor(np.log10(x))) - (sig - 1)
+    return float(f"%.{sig}g" % (np.ceil(x / 10.0 ** e) * 10.0 ** e))
+
+
 # ---------------- single source of truth for the article title ----------------
 # The supplement carries [[TITLE]] rather than a copy, so the two can never drift,
 # and the same string is checked against README.md and CITATION.cff below.
@@ -156,8 +169,18 @@ if d is not None and "a_xi_homogeneous_echo" in d:
         rv = best_per_N(rows[rows[:, 2] == 1])
         rh = best_per_N(rows[rows[:, 2] == 0])
         diff = dB(rv[:, 3]) - dB(rh[:, 3])
-        within = np.where(diff < 1.0)[0]
-        num["LG_NRATIO"] = round(float(rv[within[0], 6] / GAMMA_INH_HZ), 0) if len(within) else None
+        # Interpolate the 1 dB crossing rather than taking the first scanned point,
+        # which sat 0.02 dB from the threshold and moved the answer by a factor of two.
+        _x = rv[:, 6] / GAMMA_INH_HZ
+        _o = np.argsort(_x)
+        _xs_, _ds_ = _x[_o], diff[_o]
+        _cross = np.where(_ds_ < 1.0)[0]
+        if len(_cross) and _cross[0] > 0:
+            _i = _cross[0]
+            _f = (_ds_[_i - 1] - 1.0) / (_ds_[_i - 1] - _ds_[_i])
+            num["LG_NRATIO"] = round(float(_xs_[_i - 1] + _f * (_xs_[_i] - _xs_[_i - 1])), 0)
+        else:
+            num["LG_NRATIO"] = round(float(_xs_[_cross[0]]), 0) if len(_cross) else None
         num["LG_N_TABLE"] = [[float(a), round(first_dB(x), 1), round(first_dB(y), 1)] for a, x, y in zip(rv[:, 0], rv[:, 3], rh[:, 3])]
 
 # ---------------- the collective-emission law and its perturbative counterpart ----------------
@@ -236,13 +259,13 @@ if _lk is not None:
     _k = {k: i for i, k in enumerate(list(_lk["keys"]))}
     _dev = np.abs(_rows[:, _k["R_law"]] - _rows[:, _k["plateau"]])
     num["SYNC_MEAN_DEV"] = float(f"{np.mean(_dev):.4f}")
-    num["SYNC_MAX_DEV"] = float(f"{np.max(_dev):.4f}")
+    num["SYNC_MAX_DEV"] = _ceil_sig(np.max(_dev))
     num["SYNC_NPTS"] = int(len(_dev))
     # orbit: dratio, <z>, z_max/2, <rho cos psi>, 1/(1+a^2), period, 2pi/sqrt(1+a^2), running
     _orb = _lk["orbit"]
-    num["ORBIT_Z_ERR"] = float(f"{np.max(np.abs(_orb[:, 1] / _orb[:, 2] - 1)):.0e}")
-    num["ORBIT_PROJ_ERR"] = float(f"{np.max(np.abs(_orb[:, 3] - _orb[:, 4])):.0e}")
-    num["ORBIT_PERIOD_ERR"] = float(f"{np.max(np.abs(_orb[:, 5] / _orb[:, 6] - 1)):.0e}")
+    num["ORBIT_Z_ERR"] = _ceil_sig(np.max(np.abs(_orb[:, 1] / _orb[:, 2] - 1)))
+    num["ORBIT_PROJ_ERR"] = _ceil_sig(np.max(np.abs(_orb[:, 3] - _orb[:, 4])))
+    num["ORBIT_PERIOD_ERR"] = _ceil_sig(np.max(np.abs(_orb[:, 5] / _orb[:, 6] - 1)))
     # table: contrast from the law against the mean-field plateau, shapes side by side
     _xs = np.unique(np.round(_rows[:, _k["chiN_hz"]] / GAMMA_INH_HZ, 3))
     _lines = []
@@ -319,6 +342,10 @@ if s is not None:
             x300 = dB(r[np.isclose(r[:, 1], 0.3), 3][0])
             num[f"TH_{tag}"] = round(float(x80 - x0), 1)
             num[f"TH_{tag}300"] = round(float(x300 - x0), 1)
+        # The analytic cost 2/3 x 10 log10(1 + 2 n_th); it contains no loss ratio,
+        # so it is one number, to be compared with the two scanned values above.
+        _nth80 = float(s["b_rows"][np.isclose(s["b_rows"][:, 1], 0.08), 2][0])
+        num["TH_FORMULA"] = round(float(2 / 3 * 10 * np.log10(1 + 2 * _nth80)), 1)
     if "c_rows" in s:
         rc = s["c_rows"]
         r = rc[np.isclose(rc[:, 0], 6000)]
@@ -596,6 +623,9 @@ if dm is not None:
     num["MS_T1_VAR"] = float(round(N / (2 * 3 * 3600) * 0.1, -3))
     w = np.geomspace(1, 10, 100001)  # log-uniform coupling spread of one order of magnitude
     num["MS_NEFF_10"] = round(float(np.mean(w**2) ** 2 / np.mean(w**4)), 2)
+    # Hu et al. rescale the coupling as well as the spin number: c_eff = <c^2>/<c>
+    # with c_j = w_j^2, quoted relative to the mean coupling <c>.
+    num["MS_CEFF_10"] = round(float(np.mean(w**4) / np.mean(w**2) / np.mean(w**2)), 2)
     phi_st = 2 * chi_s * 1e9 * 1e-3
     num["MS_BAL_30"] = float("%.0e" % (0.14 / phi_st))
     num["MS_EPS_20DB"] = round(1e3 * np.sqrt(eta) / 100, 1)
@@ -609,9 +639,16 @@ if dm is not None:
     if "check_rows" in dm:
         cr = dm["check_rows"]
         num["MS_CHECK_T"] = int(round(cr[-1, 0] * 1e6))
-        num["MS_CHECK_ERR"] = round(100 * float(np.max(np.abs(cr[:, 1] / cr[:, 2] - 1))), 1)
+        num["MS_CHECK_ERR"] = _ceil_sig(100 * float(np.max(np.abs(cr[:, 1] / cr[:, 2] - 1))))
         num["MS_CHECK_TABLE"] = " \\\\\n".join(f"{r[0]*1e6:.0f} & {r[1]:.3e} & {r[2]:.3e}" for r in cr) + " \\\\"
-        num["MS_CHECK_TABLE4"] = " \\\\\n".join(f"{r[0]*1e6:.0f} $\\mu$s & {r[1]:.3e} & {r[2]:.3e} & 0.96" for r in cr) + " \\\\"
+        # The contrast at each check time, read from the trajectory of the same
+        # operating point rather than assumed: Eq. (D) takes it to be 1, and the
+        # table shows how far from 1 it actually is.
+        _ct, _cc = dm["N10_D30_t"], dm["N10_D30_contrast"]
+        _con = np.interp(cr[:, 0], _ct, _cc)
+        num["MS_CHECK_TABLE4"] = " \\\\\n".join(
+            f"{r[0]*1e6:.0f} $\\mu$s & {r[1]:.3e} & {r[2]:.3e} & {c:.3f}"
+            for r, c in zip(cr, _con)) + " \\\\"
         num["MS_ETA_COST"] = round(10 * np.log10(np.sqrt(0.5 / 0.17)), 1)
     for shape in ["gaussian", "lorentzian"]:
         for nb in [1e8, 1e9]:
@@ -630,8 +667,35 @@ if dm is not None:
         ID = cumulative_trapezoid(DD, tD, initial=0)
         num["MS_DEPH_TABLE"] = " \\\\\n".join(f"{r[0]*1e3:.1f} ms & {r[1]:.2e} & {np.interp(r[0], tD, ID):.2e} & {r[3]:.3f}" for r in cr) + " \\\\"
         num["MS_DEPH_ERR"] = round(100 * float(np.max(np.abs(cr[:, 1] / np.interp(cr[:, 0], tD, ID) - 1))), 0)
+    # Probe-induced common rotation Gamma_phi t = S/(2 eta_d N): its size at the
+    # operating points the text quotes, and its largest value anywhere on the
+    # scanned map that respects the n_bar <= 0.1 n_crit linearity cut.
+    _phi_op, _phi_max = [], []
+    for _N in (1e9, 1e10, 1e11):
+        for _D in (10, 30, 100, 200, 300, 1000):
+            _pre = "N%d_D%d_" % (round(np.log10(_N)), _D)
+            if _pre + "n_crit" not in dm:
+                continue
+            _ncrit = float(dm[_pre + "n_crit"])
+            for _key in list(dm.keys()):
+                if not _key.startswith(_pre + "S_eta"):
+                    continue
+                _nb = 10.0 ** int(_key.split("_n")[-1])
+                if _nb > 0.1 * _ncrit:
+                    continue
+                _eta = float(_key.split("eta")[1].split("_")[0])
+                _v = float(np.nanmax(dm[_key])) / (2 * _eta * _N)
+                _phi_max.append(_v)
+                if _N == 1e10 and _D == 30:
+                    _phi_op.append(_v)
+    if _phi_max:
+        num["MS_PHI_OP"] = _ceil_sig(max(_phi_op), 1) if _phi_op else None
+        num["MS_PHI_MAX"] = _ceil_sig(max(_phi_max), 1)
     if "twist_voigt" in dm:
         num["SC_30_VOIGT"] = round(-dB(dm["twist_voigt"][0]), 1)
+        # Gap to the design-map optimum, rounded up so the stated bound holds.
+        if "SC_BEST_ABS" in num:
+            num["SC_30_GAP"] = float("%.1f" % (np.ceil(10 * (num["SC_BEST_ABS"] + dB(dm["twist_voigt"][0]))) / 10))
         num["SC_30_GAUSS"] = round(-dB(dm["twist_gauss"][0]), 1)
         num["SC_30_LOR"] = round(-dB(dm["twist_lorentz"][0]), 1)
     # requirements table: SC point and loop-gap

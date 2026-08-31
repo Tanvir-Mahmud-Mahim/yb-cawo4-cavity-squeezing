@@ -118,9 +118,30 @@ def main():
                     "use the [[SFIG_*]] / [[STAB_*]] tokens instead")
 
     # --- nor a main-text section number; those come from [[SEC_*]] ---------
-    for n in sorted(set(re.findall(r"Sec(?:tion)?\.?~([IVX]+)\\,?[A-Z]?", supp_tex))):
+    for n in sorted(set(re.findall(r"Secs?(?:tion)?\.?~([IVX]+)\\,?[A-Z]?", supp_tex))):
         fail.append(f"supplement hard-codes Sec. {n} of the main text; "
                     "use the [[SEC_*]] tokens instead")
+
+    # --- the figure and table numbers the README quotes must be real -------
+    saux = read("paper", "supplement_filled.aux")
+    maux = read("paper", "main_filled.aux")
+    if readme and saux and maux:
+        mfig = set(re.findall(r"\\newlabel\{fig:[^}]+\}\{\{(\d+)\}", maux))
+        meq = set(re.findall(r"\\newlabel\{eq:[^}]+\}\{\{(\d+)\}", maux))
+        sfig = set(re.findall(r"\\newlabel\{fig:[^}]+\}\{\{(S\d+)\}", saux))
+        stab = set(re.findall(r"\\newlabel\{tab:[^}]+\}\{\{(S\d+)\}", saux))
+        for n in sorted(set(re.findall(r"Figs?\. (S\d+)", readme))):
+            if n not in sfig:
+                fail.append(f"README names Fig. {n}, which the supplement does not have")
+        for n in sorted(set(re.findall(r"Table (S\d+)", readme))):
+            if n not in stab:
+                fail.append(f"README names Table {n}, which the supplement does not have")
+        for n in sorted(set(re.findall(r"Fig\. (\d+)", readme))):
+            if n not in mfig:
+                fail.append(f"README names main Fig. {n}, which the main text does not have")
+        for n in sorted(set(re.findall(r"Eq\. \((\d+)\)", readme))):
+            if n not in meq:
+                fail.append(f"README names Eq. ({n}), which the main text does not have")
 
     # --- the token numbers must match what LaTeX actually printed ----------
     aux = read("paper", "main_filled.aux")
