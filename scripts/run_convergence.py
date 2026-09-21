@@ -1,4 +1,4 @@
-"""Discretization convergence tables for the Supplement (Tables S1, S2)."""
+"""Discretization convergence tables of the appendix on discretization (tab:conv, tab:conv2)."""
 from common import *  # noqa
 from cavsqueeze.protocols import squeezing_after
 from cavsqueeze import equal_probability_classes

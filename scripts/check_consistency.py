@@ -23,11 +23,10 @@ def read(*parts):
 def main():
     fail = []
     main_tex = read("paper", "main.tex")
-    supp_tex = read("paper", "supplement.tex")
     readme = read("README.md")
     cff = read("CITATION.cff")
     bib = read("paper", "refs.bib")
-    if main_tex is None or supp_tex is None:
+    if main_tex is None:
         print("check_consistency: paper sources not found, nothing to check")
         return 0
 
@@ -39,8 +38,6 @@ def main():
     if title is None:
         fail.append("could not read \\title{...} from paper/main.tex")
     else:
-        if "[[TITLE]]" not in supp_tex:
-            fail.append("paper/supplement.tex must carry [[TITLE]], not a copy of the title")
         if readme and title not in " ".join(readme.split()):
             fail.append("README.md does not carry the current article title")
 
@@ -65,16 +62,15 @@ def main():
     if bib:
         defined = set(re.findall(r"@\w+\{([^,]+),", bib))
         used = set()
-        for t in (main_tex, supp_tex):
-            for grp in re.findall(r"\\cite\{([^}]*)\}", t):
-                used |= {k.strip() for k in grp.split(",")}
+        for grp in re.findall(r"\\cite\{([^}]*)\}", main_tex):
+            used |= {k.strip() for k in grp.split(",")}
         for k in sorted(used - defined):
             fail.append(f"cited but not in refs.bib: {k}")
         for k in sorted(defined - used):
             fail.append(f"in refs.bib but never cited: {k}")
 
     # --- no unresolved tokens in the filled files --------------------------
-    for name in ("main_filled.tex", "supplement_filled.tex"):
+    for name in ("main_filled.tex",):
         t = read("paper", name)
         if t and "[[" in t:
             left = sorted(set(re.findall(r"\[\[([A-Z0-9_]+)\]\]", t)))
@@ -82,7 +78,7 @@ def main():
 
     # --- panel references point at panels that exist ----------------------
     panels = {}
-    for tex, prefix in ((main_tex, ""), (supp_tex, "")):
+    for tex in (main_tex,):
         for blk in re.finditer(r"\\begin\{figure\*?\}(.*?)\\end\{figure\*?\}", tex, re.S):
             lab = re.search(r"\\label\{(fig:[^}]+)\}", blk.group(1))
             cap = re.search(r"\\caption\{(.*)", blk.group(1), re.S)
@@ -90,7 +86,7 @@ def main():
                 letters = set(re.findall(r"\(([a-z])\)", cap.group(1)[:2500]))
                 if letters:
                     panels[lab.group(1)] = max(letters)
-    for tex, where in ((main_tex, "main"), (supp_tex, "supplement")):
+    for tex, where in ((main_tex, "main"),):
         for ref, pans in re.findall(r"\\ref\{(fig:[a-z_]+)\}\(([a-z, ]+)\)", tex):
             if ref not in panels:
                 continue
@@ -98,49 +94,34 @@ def main():
                 if ch > panels[ref]:
                     fail.append(f"{where}: {ref} has no panel ({ch}); highest is ({panels[ref]})")
 
-    # --- supplement section numbers referred to from the main text exist ---
-    secs = set(re.findall(r"\\section\*\{S(\d+)\.", supp_tex))
-    for n in sorted(set(re.findall(r"Sec\.~S(\d+)", main_tex))):
-        if n not in secs:
-            fail.append(f"main.tex refers to Sec. S{n}, which the supplement does not have")
+    # --- one document: no trace of the former Supplemental Material --------
+    for pat, what in ((r"Sec\.~S\d", "a supplement section (Sec.~S...)"),
+                      (r"(?:Figs?\.|Figure|Tables?)~S\d", "a supplement float number"),
+                      (r"Supplemental Material", "the Supplemental Material"),
+                      (r"of the main text", "'the main text'"),
+                      (r"\[\[(?:SFIG|STAB|TITLE)_?[A-Z0-9_]*\]\]", "a cross-document token")):
+        for m in re.finditer(pat, main_tex):
+            line = main_tex.count("\n", 0, m.start()) + 1
+            fail.append(f"main.tex line {line} refers to {what}")
 
-    # --- the supplement must not hard-code a main-text equation number -----
-    for n in sorted(set(re.findall(r"Eq\.~\((\d+)\)", supp_tex))):
-        fail.append(f"supplement hard-codes Eq. ({n}); use the [[EQ_*]] tokens instead")
-
-    # --- the supplement must not hard-code a supplement figure number ------
-    for n in sorted(set(re.findall(r"Fig\.~S(\d+)", supp_tex))):
-        fail.append(f"supplement hard-codes Fig. S{n}; use \\ref{{fig:...}} instead")
-
-    # --- nor a main-text figure number; those come from the [[FIG_*]] tokens
-    for n in sorted(set(re.findall(r"Fig(?:ure|s)?\.?~(\d+)", supp_tex))):
-        fail.append(f"supplement hard-codes Fig. {n} of the main text; "
-                    "use the [[FIG_*]] tokens instead")
-
-    # --- the main text must not hard-code a supplement float number --------
-    for n in sorted(set(re.findall(r"(?:Figs?\.|Figure|Tables?|Table)~S(\d+)", main_tex))):
-        fail.append(f"main.tex hard-codes S{n} of the supplement; "
-                    "use the [[SFIG_*]] / [[STAB_*]] tokens instead")
-
-    # --- nor a main-text section number; those come from [[SEC_*]] ---------
-    for n in sorted(set(re.findall(r"Secs?(?:tion)?\.?~([IVX]+)\\,?[A-Z]?", supp_tex))):
-        fail.append(f"supplement hard-codes Sec. {n} of the main text; "
-                    "use the [[SEC_*]] tokens instead")
+    # --- no hard-coded equation, figure, table or section number -----------
+    for pat in (r"Eqs?\.~\(\d", r"Fig(?:ure|s)?\.?~\d", r"Tables?~(?:\d|[IVX]+\b)",
+                r"Secs?(?:tion)?\.?~[IVX]+\b", r"Appendix~[A-Z]\b"):
+        for m in re.finditer(pat, main_tex):
+            line = main_tex.count("\n", 0, m.start()) + 1
+            fail.append(f"main.tex line {line} hard-codes a number ({m.group(0)}); use \\ref")
 
     # --- the figure and table numbers the README quotes must be real -------
-    saux = read("paper", "supplement_filled.aux")
     maux = read("paper", "main_filled.aux")
-    if readme and saux and maux:
+    if readme and maux:
         mfig = set(re.findall(r"\\newlabel\{fig:[^}]+\}\{\{(\d+)\}", maux))
         meq = set(re.findall(r"\\newlabel\{eq:[^}]+\}\{\{(\d+)\}", maux))
-        sfig = set(re.findall(r"\\newlabel\{fig:[^}]+\}\{\{(S\d+)\}", saux))
-        stab = set(re.findall(r"\\newlabel\{tab:[^}]+\}\{\{(S\d+)\}", saux))
-        for n in sorted(set(re.findall(r"Figs?\. (S\d+)", readme))):
-            if n not in sfig:
-                fail.append(f"README names Fig. {n}, which the supplement does not have")
-        for n in sorted(set(re.findall(r"Table (S\d+)", readme))):
-            if n not in stab:
-                fail.append(f"README names Table {n}, which the supplement does not have")
+        mtab = set(re.findall(r"\\newlabel\{tab:[^}]+\}\{\{([IVXL]+)\}", maux))
+        for n in sorted(set(re.findall(r"(?:Figs?\.|Table) S\d+", readme))):
+            fail.append(f"README names {n}; the paper no longer has a supplement")
+        for n in sorted(set(re.findall(r"Table ([IVXL]+)\b", readme))):
+            if n not in mtab:
+                fail.append(f"README names Table {n}, which the paper does not have")
         for n in sorted(set(re.findall(r"Fig\. (\d+)", readme))):
             if n not in mfig:
                 fail.append(f"README names main Fig. {n}, which the main text does not have")
@@ -153,15 +134,14 @@ def main():
         # than merely against the set of numbers that exist.  This is what
         # catches a README pointing at the right kind of float but the wrong one.
         bylabel = {}
-        for aux_text in (maux, saux):
-            for lab, n in re.findall(r"\\newlabel\{((?:fig|tab|eq):[^}]+)\}\{\{(S?\d+)\}", aux_text):
-                bylabel.setdefault(lab, n)
+        for lab, n in re.findall(r"\\newlabel\{((?:fig|tab|eq):[^}]+)\}\{\{([0-9IVXL]+)\}", maux):
+            bylabel.setdefault(lab, n)
         for kind, n, lab in re.findall(
-                r"(Figs?\.|Table|Eq\.) \(?(S?\d+)\)?[^(\n]{0,40}\((?:fig|tab|eq):([^)]+)\)", readme):
+                r"(Figs?\.|Table|Eq\.) \(?([0-9IVXL]+)\)?[^(\n]{0,40}\((?:fig|tab|eq):([^)]+)\)", readme):
             full = ("fig:" if kind.startswith("Fig") else
                     "tab:" if kind == "Table" else "eq:") + lab
             if full not in bylabel:
-                fail.append(f"README names label {full}, which neither document defines")
+                fail.append(f"README names label {full}, which the paper does not define")
             elif bylabel[full] != n:
                 fail.append(f"README calls {full} '{n}' but LaTeX numbers it {bylabel[full]}")
 
@@ -180,14 +160,14 @@ def main():
     # --- a relation must not be closed just before a token ------------------
     # "$x=$ [[TOK]]" renders as a broken space, and when the token itself is a
     # math group it renders as two adjacent groups.  Write "$x$ is [[TOK]]".
-    for tex, where in ((main_tex, "main.tex"), (supp_tex, "supplement.tex")):
+    for tex, where in ((main_tex, "main.tex"),):
         for tok in sorted(set(re.findall(
                 r"(?:=|\\approx|\\simeq|<|>|\\le|\\ge|\\lesssim|\\gtrsim)\$[\s~]*\[\[([A-Z0-9_]+)\]\]", tex))):
             fail.append(f"{where}: a relation is closed just before [[{tok}]]; "
                         "move the symbol out of the relation instead")
 
     # --- source whitespace: no trailing spaces, no tabs, no double spaces ---
-    for tex, where in ((main_tex, "main.tex"), (supp_tex, "supplement.tex")):
+    for tex, where in ((main_tex, "main.tex"),):
         for i, line in enumerate(tex.split("\n"), 1):
             if line != line.rstrip():
                 fail.append(f"{where}: trailing whitespace on line {i}")
@@ -217,7 +197,7 @@ def main():
     # --- LaTeX must not have left a reference or a citation unresolved -----
     # A mistyped label prints "??" in the PDF and is easy to miss in a long
     # document, so the build logs are read back and any complaint is a failure.
-    for stem in ("main_filled", "supplement_filled"):
+    for stem in ("main_filled",):
         # LaTeX logs are not UTF-8 (they carry the font encoding's own bytes),
         # so they are read with the undecodable bytes replaced.
         log_path = os.path.join(PAPER, stem + ".log")
@@ -238,6 +218,27 @@ def main():
             fail.append("%s.tex: LaTeX reports undefined references" % stem)
         if re.search(r"^! ", log, re.M):
             fail.append("%s.tex: LaTeX reported an error" % stem)
+
+    # --- no figure or table may appear once the reference list has begun ---
+    pdf = os.path.join(PAPER, "main_filled.pdf")
+    if os.path.exists(pdf):
+        import subprocess
+        try:
+            n = int(re.search(r"Pages:\s+(\d+)", subprocess.run(
+                ["pdfinfo", pdf], capture_output=True, text=True).stdout).group(1))
+            first_ref = last_float = None
+            for pg in range(1, n + 1):
+                txt = subprocess.run(["pdftotext", "-f", str(pg), "-l", str(pg), pdf, "-"],
+                                     capture_output=True, text=True).stdout
+                if first_ref is None and re.search(r"^\[1\] ", txt, re.M):
+                    first_ref = pg
+                if re.search(r"^(TABLE [IVXL]+\.|FIG\. \d+\.)", txt, re.M):
+                    last_float = pg
+            if first_ref and last_float and last_float >= first_ref:
+                fail.append(f"a figure or table is on page {last_float}, at or after the "
+                            f"reference list, which starts on page {first_ref}")
+        except (OSError, AttributeError):
+            pass
 
     if fail:
         print("consistency check FAILED:")

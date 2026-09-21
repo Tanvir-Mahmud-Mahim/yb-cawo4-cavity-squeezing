@@ -1,4 +1,4 @@
-"""Generate every figure of the paper and the supplement from data/*.npz."""
+"""Generate every figure of the paper from data/*.npz."""
 from common import *  # noqa
 import matplotlib
 import matplotlib.patches
@@ -376,7 +376,7 @@ def fig_designmap():
 
 # ---------------------------------------------------------------------------
 def fig_designmap_extra():
-    """Supplement: the optimum time and detuning across the same design map."""
+    """Appendix figure: the optimum time and detuning across the same design map."""
     m = load("designmap")
     if m is None:
         return

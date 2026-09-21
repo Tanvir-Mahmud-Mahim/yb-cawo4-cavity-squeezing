@@ -24,19 +24,19 @@ def _ceil_sig(x, sig=2):
 
 
 # ---------------- single source of truth for the article title ----------------
-# The supplement carries [[TITLE]] rather than a copy, so the two can never drift,
-# and the same string is checked against README.md and CITATION.cff below.
+# The title is read from main.tex, and the same string is checked against
+# README.md and CITATION.cff below.
 _main_tex = open(os.path.join(ROOT, "paper", "main.tex"), encoding="utf-8").read()
 _m = re.search(r"\\title\{(.+?)\}\s*\n", _main_tex, re.S)
 if _m is None:
     raise SystemExit("could not read \\title{...} from paper/main.tex")
 # the \\ that balances the two title lines of the article is not part of the
-# title itself, and the supplement sets it on one line
+# title itself
 TITLE = " ".join(_m.group(1).replace(r"\\", " ").split())
 num["TITLE"] = TITLE
 
-# Equation and figure numbers of the main text, so that the supplement never
-# hard-codes one.  The authority is main_filled.aux, which LaTeX writes; the order
+# Equation, section and figure numbers of the paper, recorded in numbers.json.
+# The authority is main_filled.aux, which LaTeX writes; the order
 # of the \label commands in main.tex is the fallback for the very first build,
 # before any .aux exists.  The build runs this script, compiles, and runs it
 # again, so the published numbers always come from the .aux.
@@ -77,23 +77,6 @@ for _lab, _tok in [("sec:model", "SEC_MODEL"), ("sec:benchmark", "SEC_BENCHMARK"
                    ("sec:echo", "SEC_ECHO")]:
     if _lab in _auxsec:
         num[_tok] = _auxsec[_lab]
-
-# Supplement figure and table numbers, so that the main text never hard-codes one.
-# They come from supplement_filled.aux, which the build produces before the second
-# pass over the main text.
-_saux_path = os.path.join(ROOT, "paper", "supplement_filled.aux")
-if os.path.exists(_saux_path):
-    _sauxtxt = open(_saux_path, encoding="utf-8").read()
-    _snum = dict(re.findall(r"\\newlabel\{((?:fig|tab):[^}]+)\}\{\{(S\d+)\}", _sauxtxt))
-    for _lab, _tok in [("fig:validation", "SFIG_VALIDATION"), ("fig:scaling", "SFIG_SCALING"),
-                       ("fig:designmap_extra", "SFIG_DESIGNMAP_EXTRA"),
-                       ("fig:loopgap", "SFIG_LOOPGAP"),
-                       ("fig:inhomog_readout", "SFIG_INHOMOG"), ("fig:beyond", "SFIG_BEYOND"),
-                       ("fig:measure", "SFIG_MEASURE"), ("tab:t2", "STAB_T2"),
-                       ("tab:cond", "STAB_COND"), ("tab:echo", "STAB_ECHO"),
-                       ("tab:fom", "STAB_FOM")]:
-        if _lab in _snum:
-            num[_tok] = _snum[_lab]
 
 _figlabels = re.findall(r"\\label\{(fig:[^}]+)\}", _main_tex)
 for _lab, _tok in [("fig:device", "FIG_DEVICE"), ("fig:benchmark", "FIG_BENCHMARK"),
@@ -212,7 +195,7 @@ if _v is not None:
     _pert = 3.0 * 2.0 ** (-2.0 / 3.0) * 2.0 ** (2.0 / 3.0)
     num["PREFACTOR_PERT"] = round(_pert, 2)
     # the same perturbative result written against Gamma_SR/chi rather than
-    # kappa/2Delta, which is the form the supplement quotes
+    # kappa/2Delta, which is the form the appendices quote
     num["PREFACTOR_PERT_G"] = round(3.0 * 2.0 ** (-2.0 / 3.0), 2)
     num["PERT_GAIN"] = round(float(10 * np.log10(_pert / _A)), 1)
     num["LAW1_FIT_ERR"] = round(float(100 * np.max(np.abs(_v["c_xi_opt"] / (_A * (1 / _v["c_ratio"]) ** (2 / 3)) - 1))), 0)
@@ -417,7 +400,7 @@ if s is not None:
         num["T2_LIMIT"] = round(float(r[ok[0], 1] * 1e3), 0) if len(ok) else None
         num["T2_TABLE"] = [[float(a * 1e3), round(first_dB(x), 2)] for a, x in zip(r[:, 1], r[:, 2])]
         # What one millisecond of single-spin dephasing actually costs on this
-        # scan, at each of the two loss ratios, so that the supplement can give
+        # scan, at each of the two loss ratios, so that the appendices can give
         # the number instead of calling the effect "irrelevant".
         for _ratio, _tag in [(66.7, "LG"), (6000, "SC")]:
             _rr = rc[np.isclose(rc[:, 0], _ratio)]
@@ -800,7 +783,7 @@ if dm is not None:
         # operating point, light grid) is optimized independently here and in
         # run_robustness.py, over different time brackets.  The difference
         # between the two is the numerical precision of the optimum; the
-        # supplement quotes it, because the two land either side of a rounding
+        # appendices quote it, because the two land either side of a rounding
         # boundary and so appear in the article as 18.8 and 18.7 dB.
         try:
             num["SC_REPEAT_ERR"] = _ceil_sig(abs(-dB(dm["twist_voigt"][0]) - _SC_ECHO_RAW), 1)
@@ -880,9 +863,9 @@ if dc is not None and dm is not None:
     num["MS_COND_GAIN_L"] = round(float(_g), 1)
     num["MS_COND_GAIN_L_NB"] = int(_gn)
 
-# ---------------- discretization convergence (Tables S1 and S2) --------------
+# ---------------- discretization convergence (tab:conv and tab:conv2) --------
 # The tables are built from data/convergence.json rather than typed, so that a
-# grid added to run_convergence.py cannot be left out of the supplement, and the
+# grid added to run_convergence.py cannot be left out of the appendices, and the
 # bounds quoted in the text are the largest deviations actually measured.
 _cv = None
 _cv_path = os.path.join(DATA, "convergence.json")
@@ -1089,7 +1072,4 @@ def repl(mo):
 
 filled = re.sub(r"\[\[([A-Z0-9_]+)\]\]", repl, tex)
 open(os.path.join(ROOT, "paper", "main_filled.tex"), "w").write(filled)
-tex = open(os.path.join(ROOT, "paper", "supplement.tex")).read()
-filled = re.sub(r"\[\[([A-Z0-9_]+)\]\]", repl, tex)
-open(os.path.join(ROOT, "paper", "supplement_filled.tex"), "w").write(filled)
 print("missing placeholders:", sorted(missing))

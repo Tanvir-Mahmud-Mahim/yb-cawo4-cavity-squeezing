@@ -1,4 +1,4 @@
-"""Validation testbench data (Fig. 1 and Supplement):
+"""Validation testbench data (Fig. 2 and the appendix on validation):
  (a) N = 8 disordered spins: exact master equation versus cumulant.
  (b) Homogeneous N = 20, 40, 80 with collective decay and pumping: PIQS exact versus cumulant.
  (c) Homogeneous large-N limit: optimum squeezing versus 2 Delta/kappa against the

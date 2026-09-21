@@ -11,7 +11,7 @@ t resolves J_z to a variance 1/(Gamma_m t) with
 
     Gamma_m = 64 eta (g^2/Delta)^2 n_bar / kappa      (one-port reflection),
 
-n_bar being the mean intracavity photon number (Supplemental Material).
+n_bar being the mean intracavity photon number (appendix on measurement squeezing).
 Conditioned on the record, the variance of J_z obeys
 
     dV/dt = - Gamma_m V^2 + D(t),

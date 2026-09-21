@@ -12,14 +12,14 @@ and is therefore independent of the closure.  Both solvers are given exactly
 the same Hamiltonian: the line is discretized once, and the truncated Wigner
 run places one classical spin at each class detuning for every member of that
 class.  The comparison therefore isolates the closure, which is what is in
-question; the discretization itself is checked separately in Tables S1 and S2.
+question; the discretization itself is checked separately in the convergence tables.
 The line is truncated at DELTA_MAX full widths, since spins further out are
 free to the accuracy of the article's own spectator treatment and keeping them
 would only make the classical trajectories stiff without testing anything.
 
 The scan is at one ratio of interaction to linewidth, chi N / gamma_inh = 4.
 That is where the closure is worked hardest at these spin numbers, because the
-optimum runs to larger Q; the supplement says so where the table is discussed.
+optimum runs to larger Q; the appendix on validation says so where the table is discussed.
 
 Results -> data/dtwa.npz
 """
