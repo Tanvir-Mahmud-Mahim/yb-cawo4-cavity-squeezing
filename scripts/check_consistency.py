@@ -51,10 +51,16 @@ def main():
             fail.append(f"CITATION.cff version {ver_cff.group(1)} != README version {doi_readme[0][0]}")
     if ver_cff and ver_toml and ver_cff.group(1) != ver_toml.group(1):
         fail.append(f"CITATION.cff version {ver_cff.group(1)} != pyproject.toml version {ver_toml.group(1)}")
+    concept = re.search(r"https://doi\.org/10\.5281/zenodo\.(\d+) \(concept DOI", readme or "")
     if doi_readme and doi_paper:
         want = doi_readme[0][1].split(".")[-1]
-        if doi_paper != {want}:
-            fail.append(f"main.tex cites zenodo {sorted(doi_paper)} but README names {want}")
+        allowed = {want} | ({concept.group(1)} if concept else set())
+        if not doi_paper <= allowed or len(doi_paper) != 1:
+            fail.append(f"main.tex cites zenodo {sorted(doi_paper)} but README names {sorted(allowed)}")
+        # citing the concept DOI is only safe when the version is named beside it
+        if concept and doi_paper == {concept.group(1)} and ver_cff:
+            if f"version {ver_cff.group(1)}" not in main_tex:
+                fail.append(f"main.tex cites the concept DOI without naming version {ver_cff.group(1)}")
     if len(doi_paper) > 1:
         fail.append(f"main.tex cites more than one Zenodo record: {sorted(doi_paper)}")
 
