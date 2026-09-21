@@ -61,5 +61,13 @@
   ]
  ],
  "A_par_GHz": 0.787,
- "A_perp_GHz": 3.08384
+ "A_perp_GHz": 3.08384,
+ "g_par_Tiranov": 1.053,
+ "g_perp_Tiranov": 3.916,
+ "coupling_ratio_per_eps": 2.6296582669767528,
+ "detuning_1_23_GHz": 1.17042,
+ "detuning_23_4_GHz": 1.95742,
+ "shift_per_level_eps2": 0.12998091046269025,
+ "shift_total_eps2": 0.4154034300064586,
+ "shift_total_15deg": 0.02982462440693735
 }
