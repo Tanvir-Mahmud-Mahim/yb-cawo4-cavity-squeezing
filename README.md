@@ -46,37 +46,37 @@ pytest tests              # validation testbench (about 2 minutes)
 
 ```
 cd scripts
-python run_validation.py   # Fig. S1 (fig:validation) data (a few minutes)
-python run_benchmark.py    # Fig. 2 (fig:benchmark) data
-python run_scaling.py      # Fig. S2 (fig:scaling) data, and the interaction scans of Fig. 3 (fig:designmap)(b,c)
-python run_designmap.py    # Fig. 3 (fig:designmap)(d) and Fig. S3 (fig:designmap_extra) data
-python run_loopgap.py      # Fig. S4 (fig:loopgap) data
-python run_inhomog.py      # Fig. S5 (fig:inhomog_readout)(a) data
-python run_readout.py      # Fig. S5 (fig:inhomog_readout)(b,c) data
-python run_elimination.py  # Fig. S6 (fig:beyond)(a) data: resonator kept as a quantum mode, no rotating-wave approximation
-python run_reversal.py     # Fig. S6 (fig:beyond)(b) data: ring-down at the detuning reversal of the twist-untwist readout
-python run_robustness.py   # Fig. S6 (fig:beyond)(c,d) data: line shape, T2, finite and imperfect pulses
-python run_measurement.py  # Fig. S7 (fig:measure) data: squeezing by measurement through the resonator (about 1 hour)
-python run_conditional.py  # supplement Table S11 (tab:cond): twisting and measurement together, conditional cumulant solver (about 30 min)
-python run_echo.py         # Fig. 4 (fig:echo) data: spin echo against the interaction (about 20 min); then run_echo_extra.py (tau scans, no-emission check)
-python run_locking.py      # Fig. 3 (fig:designmap)(a) data: the closed law for the synchronization order parameter, its threshold, and the orbit average behind it (about 20 min)
+python run_validation.py   # Fig. 2 (fig:validation) data (a few minutes)
+python run_benchmark.py    # Fig. 3 (fig:benchmark) data
+python run_scaling.py      # Fig. 9 (fig:scaling) data, and the interaction scans of Fig. 4 (fig:designmap)(b,c)
+python run_designmap.py    # Fig. 4 (fig:designmap)(d) and Fig. 10 (fig:designmap_extra) data
+python run_loopgap.py      # Fig. 5 (fig:loopgap) data
+python run_inhomog.py      # Fig. 6 (fig:inhomog_readout)(a) data
+python run_readout.py      # Fig. 6 (fig:inhomog_readout)(b,c) data
+python run_elimination.py  # Fig. 11 (fig:beyond)(a) data: resonator kept as a quantum mode, no rotating-wave approximation
+python run_reversal.py     # Fig. 11 (fig:beyond)(b) data: ring-down at the detuning reversal of the twist-untwist readout
+python run_robustness.py   # Fig. 11 (fig:beyond)(c,d) data: line shape, T2, finite and imperfect pulses
+python run_measurement.py  # Fig. 7 (fig:measure) data: squeezing by measurement through the resonator (about 1 hour)
+python run_conditional.py  # Table XII (tab:cond): twisting and measurement together, conditional cumulant solver (about 30 min)
+python run_echo.py         # Fig. 8 (fig:echo) data: spin echo against the interaction (about 20 min); then run_echo_extra.py (tau scans, no-emission check)
+python run_locking.py      # Fig. 4 (fig:designmap)(a) data: the closed law for the synchronization order parameter, its threshold, and the orbit average behind it (about 20 min)
 python run_decompose.py    # splits the noise at the optimum into locked core and unlocked wings; the two-limit law of Eq. (9) (eq:twolimits) is tested on this scan (about 1 hour)
 python run_dtwa.py         # independent check of the cumulant closure for an inhomogeneous line, against discrete truncated Wigner trajectories (about 30 min)
 python run_dtwa_seeds.py   # sampling error of that check, from repeated seeds, and its deviation from the exact one-axis-twisting optimum (about 1 hour)
 python hyperfine_levels.py # zero-field hyperfine levels and Sz/Sx matrix elements -> data/hyperfine_levels.json
-python make_figures.py        # data figures (main Figs. 2 to 4 and Figs. S1 to S7) -> figures/
+python make_figures.py        # data figures (Figs. 2 to 11) -> figures/
 python make_device_figure.py  # 3-D device schematic, Fig. 1 (fig:device) -> figures/fig_device.*
 
 # Figures use the Times New Roman font. If it is not installed, Matplotlib falls back
 # to DejaVu Sans; install the font (for example from a Windows machine, C:\Windows\Fonts)
 # into ~/.fonts and clear ~/.cache/matplotlib to reproduce the published look.
-python extract_numbers.py  # every number quoted in the paper and supplement -> data/numbers.json
+python extract_numbers.py  # every number quoted in the paper -> data/numbers.json
 python check_consistency.py # title, version, DOI, citations and cross-references agree across files
 ```
 `run_all.sh` chains the data scripts (about 7 hours on two cores; set
 `OPENBLAS_NUM_THREADS=1`, which the scripts do automatically, or the workers oversubscribe
 the cores). All datasets, the extracted numbers and the figures are archived on Zenodo:
-https://doi.org/10.5281/zenodo.22148969 (concept DOI, always the latest version; v1.6.2 is https://doi.org/10.5281/zenodo.22216059)
+https://doi.org/10.5281/zenodo.22148969 (concept DOI, always the latest version; v1.6.3 is https://doi.org/10.5281/zenodo.22868084)
 
 ## Minimal example
 

@@ -11,8 +11,8 @@ authors:
   - family-names: Mohsin
     given-names: Abu S. M.
     affiliation: BRAC University
-version: 1.6.2
-date-released: 2026-08-31
+version: 1.6.3
+date-released: 2026-09-21
 identifiers:
   - type: doi
     value: 10.5281/zenodo.22148969
